@@ -1,0 +1,59 @@
+# Copyright 2022 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Train
+description: Trains a T5 model on a GCE VM cluster
+
+inputs:
+- {name: Cluster Prefix, type: String, description: 'Prefix for names of VMs in the cluster.'}
+- {name: Node Count, type: Integer, default: '1', description: 'Number of VMs in the cluster.'}
+- {name: Machine Type, type: String, default: 'a2-highgpu-1g', description: 'GCE machine type.'}
+- {name: GPU Type, type: String, description: 'Type of GPU used in cluster VMs.'}
+- {name: GPU Count, type: Integer, default: '1', description: 'Number of VMs in the cluster.'}
+- {name: Model Checkpoint, type: String, description: 'T5 pretrained model checkpoint.'}
+- {name: Data, type: Dataset, description: 'Preprocessed Data records to train the model on.'}
+- {name: Zone, type: String, description: 'Compute zone to create the cluster VMs in'}
+- {name: Project, type: String, description: 'Project ID where training should run'}
+- {name: Batch Size, type: Integer, description: 'Training batch size'}
+- {name: Epochs, type: Integer, description: 'Training Epochs'}
+- {name: ID, type: String, description: 'Identifier for the training job'}
+- {name: IMAGE_TAG, type: String, description: 'Trainer image tag'}
+
+outputs:
+- {name: Model, type: Model, description: 'Path to output model and checkpoints.'}
+
+implementation:
+  container:
+    image: gcr.io/llm-containers/batch
+    # command is a list of strings (command-line arguments). 
+    # The YAML language has two syntaxes for lists and you can use either of them. 
+    # Here we use the "flow syntax" - comma-separated strings inside square brackets.
+    command: [
+      ./run_batch.sh, 
+      # Path of the program inside the container
+      {inputValue: Cluster Prefix},
+      {inputValue: Node Count},
+      {inputValue: Model Checkpoint},
+      {inputPath: Data},
+      {outputPath: Model},
+      {inputValue: Zone},
+      {inputValue: Project},
+      {inputValue: Machine Type},
+      {inputValue: GPU Type},
+      {inputValue: GPU Count},
+      {inputValue: Batch Size},
+      {inputValue: Epochs},
+      {inputValue: ID},
+      {inputValue: IMAGE_TAG},
+    ]

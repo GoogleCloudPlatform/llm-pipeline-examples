@@ -1,0 +1,44 @@
+# Copyright 2022 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Preprocess
+description: Tokenizes a datasets and saves output to GCS
+
+inputs:
+- {name: Model Checkpoint, type: String, default: 't5-small', description: 'T5 pretrained model checkpoint.'}
+- {name: Document Column, type: String, description: 'Name of document column in the dataset.'}
+- {name: Summary Column, type: String, description: 'Name of summary column in the dataset.'}
+- {name: raw_dataset, type: Dataset, description: 'Path to raw dataset.'}
+
+
+outputs:
+- {name: output_dataset, type: Dataset, description: 'Path to preprocessed dataset.'}
+
+implementation:
+  container:
+    image: gcr.io/llm-containers/train
+    command: [
+      python,
+      preprocess.py,
+      --model_checkpoint,
+      {inputValue: Model Checkpoint},
+      --document_column,
+      {inputValue: Document Column},
+      --summary_column,
+      {inputValue: Summary Column},
+      --dataset_path,
+      {inputPath: raw_dataset},
+      --tokenized_dataset_path,
+      {outputPath: output_dataset},
+    ]
