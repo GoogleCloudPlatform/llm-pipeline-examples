@@ -414,7 +414,7 @@ The pipeline only supports data that is loadable using
 It works well for data less than 100GB. For larger dataset, users will need to
 write custom processing scripts on Dataflow.
 
-###Compute
+### Compute
 
 The pipeline VM types supported by GCP Compute Engine. For a full list, check
 [GCE GPU Platforms](https://cloud.google.com/compute/docs/gpus). You can create
