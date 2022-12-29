@@ -68,6 +68,10 @@ class GCSSaveCallback(TrainerCallback):
     checkpoint_folder = f'checkpoint-{state.global_step}'
     local_output_dir = os.path.join(args.output_dir, checkpoint_folder)
     if not os.path.exists(local_output_dir):
+      logging.error(
+          'Check point called for a non existing checkpoint %s',
+          local_output_dir,
+      )
       return
     gcs_root, gcs = utils.gcs_path(FLAGS.gcs_output)
     gcs_output_dir = os.path.join(gcs_root, local_output_dir)
