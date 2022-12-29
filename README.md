@@ -66,7 +66,7 @@ project. Here is a summary of task and tooling we are going to use:
  * **Data Storage**: Google Cloud Storage
 
 ## Quick Start Guide
-###Prerequisites
+### Prerequisites
 
 1.  Make sure you have gcloud installed and that you are authenticated including
     application default authentication
@@ -82,7 +82,7 @@ project. Here is a summary of task and tooling we are going to use:
     pip install kfp absl-py google-cloud-aiplatform
     ```
 
-###Instructions
+### Instructions
 
     
 Follow these instructions To run T5 training on a GPU cluster:
@@ -139,9 +139,9 @@ Follow these instructions To run T5 training on a GPU cluster:
     The tool displays a link to the pipeline after it finishes. Go to the link
     to watch the pipeline progress. The pipeline looks like:
 
-    ![pipeline](img/pipeline.png){style="display:block;margin:auto"}
+    ![pipeline](img/pipeline.png)
 
-###Test your pipeline
+### Test your pipeline
 
 1. After your pipeline completes successfully, expand the 'condition' node and click on the 'deploy' node inside. Under 'Output Parameters', copy the Value of 'endpoint'. Create an environment variable with the value:
 
@@ -171,7 +171,7 @@ Follow these instructions To run T5 training on a GPU cluster:
         -d "@prediction.json"
     ```
 
-###Customize your pipeline
+### Customize your pipeline
 
 Aside from those standard configurations. You can configure your pipeline to run
 on any dataset, use any supported model, using any GCP hardware as well as other
@@ -224,8 +224,9 @@ Here is a description of what each configuration parameter does:
 *   **deploy_gpu_type**: Type of GPU attached to serving VM.
 *   **deploy_gpu_count**: Number of GPUs attached to serving VM.
 
-##How it works
-###Download
+## How it works
+
+### Download
 
 This is the ingestion step for the data. Currently, it uses huggingface.co
 datasets library. To learn more about loading datasets using this library, check
@@ -241,14 +242,14 @@ component takes the dataset and version as input. These correspond to the ‘pat
 and ‘name’ parameters passed directly to datasets.load_dataset. You can learn
 more about loading datasets here:
 
-![Download component](img/downlod.png){style="display:block;margin:auto"}
-![Download Parameters](img/download_params.png){style="display:block;margin:auto"}
+![Download component](img/download.png)
+![Download Parameters](img/download_params.png)
 
 In the example, we use the
 [CNN Dailymail dataset](https://huggingface.co/datasets/cnn_dailymail). The code
 is packaged in a container available [here](gcr.io/llm-containers/train).
 
-##Preprocessing
+## Preprocessing
 
 As part of the summarization task, we tokenize our dataset during the
 preprocessing stage. The full script for tokenization can be found [here]. When
@@ -260,10 +261,10 @@ This component allows the use of dataset formats supported by
 All the user needs to do is specify which column in the dataset contains the
 document body and which column contains the document summary.
 
-![Preprocess component](img/preprocess.png){style="display:block;margin:auto"}
-![Preprocess Parameters](img/preprocess_params.png){style="display:block;margin:auto"}
+![Preprocess component](img/preprocess.png)
+![Preprocess Parameters](img/preprocess_params.png)
 
-###Fine Tuning
+### Fine Tuning
 
 In this step of the pipeline we take the tokenized dataset and train a base
 model to be finetuned on the dataset. For large language models, this is
@@ -271,8 +272,8 @@ typically the step that consumes most resources and takes a significant amount
 of time. Depending on how much GPUs are used for training and how many epochs
 you run the training for, this could vary from hours to days.
 
-![Fine tuning component](img/train.png){style="display:block;margin:auto"}
-![Fine tuning Parameters](img/train_params.png){style="display:block;margin:auto"}
+![Fine tuning component](img/train.png)
+![Fine tuning Parameters](img/train_params.png)
 
 The general workflow for finetuning is that we spawn a cluster of GPU VMs on
 GCP. In the example shown we use 8 A2 plus matches with 8 A100 GPUs. We
@@ -358,7 +359,7 @@ class GCSSaveCallback(TrainerCallback):
 
 When the model is completely trained we also save the final copy to GCS.
 
-####Evaluation and metrics
+#### Evaluation and metrics
 
 When the model finishes training, we run our evaluation to collect the model
 accuracy number. In this case, since it is a summarization task, we collect
@@ -371,7 +372,7 @@ again as in the example below:
 
 ![Metrics](img/metrics.png)
 
-###Model deployment
+### Model deployment
 
 Now that our model is ready, we want to provide it as a service for authorized
 users to call. This can serve as a backend to a frontend web application. We go
@@ -383,8 +384,8 @@ For this purpose, we use
 which provides us with the quickest path to serve our model. In future work, we
 will discuss serving using NVidia Triton Inference Server.
 
-![Deployment component](img/deploy.png){style="display:block;margin:auto"}
-![Deployment Parameters](img/deploy_params.png){style="display:block;margin:auto"}
+![Deployment component](img/deploy.png)
+![Deployment Parameters](img/deploy_params.png)
 
 We package the model serving code in a simple prediction container which is
 available [here](httpgcr.io/llm-containers/predict). The container packs a Flask
@@ -392,7 +393,7 @@ server with a simple python script that uses deepspeed to perform prediction
 from the model. It implements the necessary REST APIs required by Vertex AI
 Prediction.
 
-###Deciding to deploy 
+### Deciding to deploy 
 
 When we upload the model to Vertex AI, we attach the model metrics as labels to
 the model. This way we can easily look up the model accuracy just by looking at
@@ -402,11 +403,11 @@ performing better than the previous model. This assures us that we are always
 improving the model performance as we run the training pipeline in consecutive
 iterations.
 
-![Should deploy component](img/should_deploy.png){style="display:block;margin:auto"}
+![Should deploy component](img/should_deploy.png)
 
-##Current Pipeline Limitations
+## Current Pipeline Limitations
 
-###Data
+### Data
 
 The pipeline only supports data that is loadable using
 [load_dataset](https://huggingface.co/docs/datasets/v1.11.0/loading_datasets.htmlhttps://huggingface.co/docs/datasets/v1.11.0/loading_datasets.html).
@@ -419,7 +420,7 @@ The pipeline VM types supported by GCP Compute Engine. For a full list, check
 [GCE GPU Platforms](https://cloud.google.com/compute/docs/gpus). You can create
 a cluster of any size as long as you have the quota for it.
 
-###Models
+### Models
 
 For the summarization task, we support any sequence to sequence model in the
 huggingface.co model repository. This includes T5, mT5, BART and Marian models.
@@ -428,34 +429,34 @@ For more information about sequence 2 sequence models, check
 as long as corresponding parameters (batch size, number of nodes, number of
 GPUs, etc ..) can make the model fit into the compute cluster.
 
-###Deployment Scale
+### Deployment Scale
 
 Currently we support SKUs that are available for Vertex AI Prediction which can
 be found
 [here](https://cloud.google.com/vertex-ai/docs/predictions/configure-compute#machine-types).
 
-##Future Work
+## Future Work
 
-###Dataflow Processing
+### Dataflow Processing
 
 To process larger datasets, preprocessing can’t happen on a single node. It
 needs to be done in parallel using Dataflow. We will add support to processing
 large datasets using Dataflow. This will allow training on large corpuses (e.g
 C4) .
 
-###NVidia Megatron
+### NVidia Megatron
 
 Currently, the pipeline uses deepspeed ZeRO for model partitioning which uses
 distributed data parallel processing of the model. To allow even larger models
 (e.g. GPT3) and use Model Parallel , we will add support to NVidia Megatron.
 
-###More Tasks
+### More Tasks
 
 We currently only implement a summarization task. We can add support to more
 tasks that support different classes of models (e.g. encoder only and decoder
 only models).
 
-###Integration with DGCM monitoring
+### Integration with DGCM monitoring
 
 With the new
 [release](https://cloud.google.com/blog/products/containers-kubernetes/monitoring-gpu-workloads-on-gke-with-nvidia-data-center-gpu-manager)
@@ -463,12 +464,12 @@ of the DGCM monitoring plugin for GKE, we will be able to view GPU metrics in
 the cluster as the training makes progress. This will allow for better
 visibility and profiling.
 
-###NVidia Triton Server
+### NVidia Triton Server
 
 We can switch serving to an NVidia triton server instead of deepspeed. This will
 allow for very fast inference suitable for production use.
 
-###Automatic restart from a check point  of failure
+### Automatic restart from a check point  of failure
 
 Currently restart is done manually from a checkpoint. We need to have failure
 detection and automatic restart from the last checkpoint if a failure occurs.
