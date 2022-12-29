@@ -1,4 +1,4 @@
-# Trainig Large Language Models on Google Cloud
+# Training Large Language Models on Google Cloud
 
 Large language models are one of the most popular machine learning models. They
 have been shown to achieve high scores in benchmarks on different NLP tasks.
@@ -468,7 +468,7 @@ of the DGCM monitoring plugin for GKE, we will be able to view GPU metrics in
 the cluster as the training makes progress. This will allow for better
 visibility and profiling.
 
-### NVidia Triton Server
+### NVIDIA Triton Server
 
 We can switch serving to an NVidia triton server instead of deepspeed. This will
 allow for very fast inference suitable for production use.
