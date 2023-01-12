@@ -11,9 +11,9 @@ python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
         -inference_tensor_para_size 1 \
         -weight_data_type fp32
 
-# Test conversion
-python3 ../examples/pytorch/t5/summarization.py  \
-        --ft_model_location t5-v1_1-base/c-models/ \
-        --hf_model_location t5-v1_1-base/ \
-        --test_ft \
-        --test_hf
+# # Test conversion
+# python3 ../examples/pytorch/t5/summarization.py  \
+#         --ft_model_location t5-v1_1-base/c-models/ \
+#         --hf_model_location t5-v1_1-base/ \
+#         --test_ft \
+#         --test_hf

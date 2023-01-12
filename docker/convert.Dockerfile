@@ -21,5 +21,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update
 RUN apt-get install cmake git -y
 
-COPY scripts/fasttransformer/faster_transformer_install.sh .
+# For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
+COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
+COPY --chmod=777 scripts/fasttransformer/convert_t5v1-1.sh
+
 RUN ./faster_transformer_install.sh
+RUN ./convert_t5v1-1.sh
