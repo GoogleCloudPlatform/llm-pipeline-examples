@@ -1,3 +1,7 @@
+# Install dependencies for t5 transformations
+cd FasterTransformer/build
+pip install -r ../examples/pytorch/t5/requirement.txt
+
 # Download model
 apt-get update
 apt-get install git-lfs
@@ -17,3 +21,5 @@ python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
 #         --hf_model_location t5-v1_1-base/ \
 #         --test_ft \
 #         --test_hf
+
+cd ../..

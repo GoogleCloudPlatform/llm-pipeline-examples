@@ -24,6 +24,4 @@ cmake -DSM=80 -DCMAKE_BUILD_TYPE=Release -DBUILD_PYT=ON -DBUILD_MULTI_GPU=ON ..
 # cmake -DSM=80 -DCMAKE_BUILD_TYPE=Release -DBUILD_TF2=ON -DTF_PATH=/usr/local/lib/python3.8/dist-packages/tensorflow/ -DBUILD_MULTI_GPU=ON ..
 
 make -j12
-
-# Install dependencies for t5 transformations
-pip install -r ../examples/pytorch/t5/requirement.txt
+cd ../..
