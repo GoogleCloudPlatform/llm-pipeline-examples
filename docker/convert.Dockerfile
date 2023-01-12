@@ -14,8 +14,12 @@
 
 
 FROM nvcr.io/nvidia/pytorch:22.09-py3
+
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN apt-get update
-RUN apt-get install cmake git
+RUN apt-get install cmake git -y
 
 COPY scripts/fasttransformer/faster_transformer_install.sh .
 RUN ./faster_transformer_install.sh
