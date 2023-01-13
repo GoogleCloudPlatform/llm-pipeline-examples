@@ -175,6 +175,7 @@ Follow these instructions To run T5 training on a GPU cluster:
 ### Expected Output
 
 1. If you used a configurtion with the T5 small model (60M parameters), the output would be like:
+```bash
 {
   "predictions": [
     "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a",
@@ -184,6 +185,7 @@ Follow these instructions To run T5 training on a GPU cluster:
   "modelDisplayName": "t5",
   "modelVersionId": "12"
 }
+```
 
 2. If you use a configurtion with the T5 XXL (11B parameters), the output would be like:
 ```bash
@@ -196,6 +198,7 @@ Follow these instructions To run T5 training on a GPU cluster:
   "modelDisplayName": "t5",
   "modelVersionId": "12"
 }
+```
 
 ### Customize your pipeline
 
