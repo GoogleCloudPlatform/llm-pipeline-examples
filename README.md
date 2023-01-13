@@ -13,7 +13,7 @@ model size grows. For example, the T5 model comes in various sizes:
 
 The T5 XXL achieves higher benchmark scores on multiple NLP tasks in comparison
 to smaller T5 models. When we fine tune it for summarization, we get better
-output quality as you can see some of our [sample results](#Expected Output)
+output quality as you can see some of our [sample results](#expected-output)
 
 The challenges of training large language models are multiple. To start with, it
 needs a large infrastructure of compute resources. Multiple machines with
@@ -119,7 +119,7 @@ Follow these instructions To run T5 training on a GPU cluster:
     ```
 
     Replace **\<config>** with one of the precreated configs below or create
-    your own config as described in [here](#Customize your pipeline):
+    your own config as described in [here](#customize-pipeline):
 
     *   **small1vm1gpu.json** To create a single VM cluster with 1 A100 GPU and
         finetune T5 small on it.
@@ -172,7 +172,7 @@ Follow these instructions To run T5 training on a GPU cluster:
         -d "@prediction.json"
     ```
 
-### Expected Output
+### Expected Output {#expected-output}
 
 1. If you used a configurtion with the T5 small model (60M parameters), the output would be like:
 {
@@ -197,7 +197,7 @@ Follow these instructions To run T5 training on a GPU cluster:
   "modelVersionId": "12"
 }
 
-### Customize your pipeline
+### Customize your pipeline {#customize-pipeline}
 
 Aside from those standard configurations. You can configure your pipeline to run
 on any dataset, use any supported model, using any GCP hardware as well as other
