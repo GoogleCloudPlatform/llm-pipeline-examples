@@ -119,7 +119,7 @@ Follow these instructions To run T5 training on a GPU cluster:
     ```
 
     Replace **\<config>** with one of the precreated configs below or create
-    your own config as described in [here](#customize-pipeline):
+    your own config as described in [here](#customize-my-pipeline):
 
     *   **small1vm1gpu.json** To create a single VM cluster with 1 A100 GPU and
         finetune T5 small on it.
@@ -172,7 +172,7 @@ Follow these instructions To run T5 training on a GPU cluster:
         -d "@prediction.json"
     ```
 
-### Expected Output {#expected-output}
+### Expected Output
 
 1. If you used a configurtion with the T5 small model (60M parameters), the output would be like:
 {
@@ -197,7 +197,7 @@ Follow these instructions To run T5 training on a GPU cluster:
   "modelVersionId": "12"
 }
 
-### Customize your pipeline {#customize-pipeline}
+### Customize your pipeline
 
 Aside from those standard configurations. You can configure your pipeline to run
 on any dataset, use any supported model, using any GCP hardware as well as other
