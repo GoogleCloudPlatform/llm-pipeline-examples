@@ -5,15 +5,15 @@ have been shown to achieve high scores in benchmarks on different NLP tasks.
 There is a tendency of noticeable improvements which have been recorded as the
 model size grows. For example, the T5 model comes in various sizes:
 
-T5 small : 60 million parameters
-T5 base: 220 million parameters
-T5 large: 770 million parameters
-T5 XL: 3 billion parameters
-T5 XXL: 11 billions parameters
+* T5 small : 60 million parameters
+* T5 base: 220 million parameters
+* T5 large: 770 million parameters
+* T5 XL: 3 billion parameters
+* T5 XXL: 11 billions parameters
 
 The T5 XXL achieves higher benchmark scores on multiple NLP tasks in comparison
 to smaller T5 models. When we fine tune it for summarization, we get better
-output quality as you can see some of our [sample results](# Expected Output)
+output quality as you can see some of our [sample results](#Expected Output)
 
 The challenges of training large language models are multiple. To start with, it
 needs a large infrastructure of compute resources. Multiple machines with
