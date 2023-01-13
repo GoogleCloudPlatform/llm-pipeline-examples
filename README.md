@@ -12,7 +12,8 @@ T5 XL: 3 billion parameters
 T5 XXL: 11 billions parameters
 
 The T5 XXL achieves higher benchmark scores on multiple NLP tasks in comparison
-to smaller T5 models.
+to smaller T5 models. When we fine tune it for summarization, we get better
+output quality as you can see some of our [sample results](# Expected Output)
 
 The challenges of training large language models are multiple. To start with, it
 needs a large infrastructure of compute resources. Multiple machines with
@@ -170,6 +171,31 @@ Follow these instructions To run T5 training on a GPU cluster:
         https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/endpoints/${ENDPOINT_ID}:predict \
         -d "@prediction.json"
     ```
+
+### Expected Output
+
+1. If you used a configurtion with the T5 small model (60M parameters), the output would be like:
+{
+  "predictions": [
+    "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a",
+  ],
+  "deployedModelId": "8744807401842016256",
+  "model": "projects/649215667094/locations/us-central1/models/6720808805245911040",
+  "modelDisplayName": "t5",
+  "modelVersionId": "12"
+}
+
+2. If you use a configurtion with the T5 XXL (11B parameters), the output would be like:
+```bash
+{
+  "predictions": [
+    "Tapi Tapi is an ice cream parlor in Cape Town, South Africa.",
+  ],
+  "deployedModelId": "8744807401842016256",
+  "model": "projects/649215667094/locations/us-central1/models/6720808805245911040",
+  "modelDisplayName": "t5",
+  "modelVersionId": "12"
+}
 
 ### Customize your pipeline
 
