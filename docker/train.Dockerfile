@@ -15,7 +15,7 @@
 
 FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
 
-
+RUN apt-get update
 RUN apt install -yq openssh-server openssh-client
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
