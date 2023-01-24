@@ -15,7 +15,7 @@ client = httpclient.InferenceServerClient(
 
 # Initialize tokenizers from HuggingFace to do pre and post processings 
 # (convert text into tokens and backward) at the client side
-tokenizer = T5Tokenizer.from_pretrained("./model_v1/model_v1")
+tokenizer = T5Tokenizer.from_pretrained("google/t5-v1_1-base")
 
 # Implement the function that takes text converts it into the tokens using 
 # HFtokenizer and prepares tensorts for sending to Triton
