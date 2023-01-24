@@ -268,7 +268,7 @@ def my_pipeline(
         gpu_count=deploy_gpu_count)
 
 
-def main(argv: Sequence[str]) -> None:
+def main(argv: Sequence) -> None:
   if len(argv) > 1:
     raise app.UsageError("Too many command-line arguments.")
 
