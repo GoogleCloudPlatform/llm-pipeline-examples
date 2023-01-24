@@ -1,3 +1,38 @@
+import logging
+import contextlib
+try:
+    from http.client import HTTPConnection # py3
+except ImportError:
+    from httplib import HTTPConnection # py2
+
+def debug_requests_on():
+    '''Switches on logging of the requests module.'''
+    HTTPConnection.debuglevel = 1
+
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+
+def debug_requests_off():
+    '''Switches off logging of the requests module, might be some side-effects'''
+    HTTPConnection.debuglevel = 0
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.WARNING)
+    root_logger.handlers = []
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.WARNING)
+    requests_log.propagate = False
+
+@contextlib.contextmanager
+def debug_requests():
+    '''Use with 'with'!'''
+    debug_requests_on()
+    yield
+    debug_requests_off()
+
 # Import libraries
 import numpy as np
 import torch
@@ -56,6 +91,8 @@ def preprocess(t5_task_input):
     inputs[1].set_data_from_numpy(mem_seq_len)
     inputs[2].set_data_from_numpy(max_output_len)
     inputs[3].set_data_from_numpy(runtime_top_k)
+
+    print(inputs[0]._data)
     return inputs
     
 
@@ -75,5 +112,6 @@ def postprocess(result):
 # Run translation task with T5
 text = "Sandwiched between a second-hand bookstore and record shop in Cape Town's charmingly grungy suburb of Observatory is a blackboard reading 'Tapi Tapi -- Handcrafted, authentic African ice cream.' The parlor has become one of Cape Town's most talked about food establishments since opening in October 2020. And in its tiny kitchen, Jeff is creating ice cream flavors like no one else. Handwritten in black marker on the shiny kitchen counter are today's options: Salty kapenta dried fish (blitzed), toffee and scotch bonnet chile Sun-dried blackjack greens and caramel, Malted millet ,Hibiscus, cloves and anise. Using only flavors indigenous to the African continent, Guzha's ice cream has become the tool through which he is reframing the narrative around African food. 'This (is) ice cream for my identity, for other people's sake,' Jeff tells CNN. 'I think the (global) food story doesn't have much space for Africa ... unless we're looking at the generic idea of African food,' he adds. 'I'm not trying to appeal to the global universe -- I'm trying to help Black identities enjoy their culture on a more regular basis.'"
 inputs = preprocess(text)
-result = client.infer("fastertransformer", inputs)
+with debug_requests():
+    result = client.infer("fastertransformer", inputs)
 postprocess(result)
