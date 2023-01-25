@@ -125,7 +125,7 @@ class T5TritonProcessor:
         self.postprocess(result)
 
     
-    def _get_inference_request(inputs, request_id, outputs, sequence_id,
+    def _get_inference_request(self, inputs, request_id, outputs, sequence_id,
                             sequence_start, sequence_end, priority, timeout):
         infer_request = {}
         parameters = {}
