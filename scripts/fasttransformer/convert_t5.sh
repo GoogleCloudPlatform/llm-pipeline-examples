@@ -10,8 +10,8 @@ git lfs clone https://huggingface.co/t5-base
 
 # Convert
 python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
-        -saved_dir t5-v1_1-base/c-models \
-        -in_file t5-v1_1-base/ \
+        -saved_dir t5-base/c-models \
+        -in_file t5-base/ \
         -inference_tensor_para_size 1 \
         -weight_data_type fp32
 
