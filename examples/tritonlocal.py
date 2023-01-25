@@ -55,10 +55,10 @@ class T5TritonProcessor:
                 np_to_triton_dtype(runtime_top_k.dtype)
             )
         ]
-        inputs[0].set_data_from_numpy(input_ids)
-        inputs[1].set_data_from_numpy(mem_seq_len)
-        inputs[2].set_data_from_numpy(max_output_len)
-        inputs[3].set_data_from_numpy(runtime_top_k)
+        inputs[0].set_data_from_numpy(input_ids, False)
+        inputs[1].set_data_from_numpy(mem_seq_len, False)
+        inputs[2].set_data_from_numpy(max_output_len, False)
+        inputs[3].set_data_from_numpy(runtime_top_k, False)
 
         return inputs
         
