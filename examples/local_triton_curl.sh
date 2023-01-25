@@ -1,0 +1,1 @@
+curl -X POST -d @json_request localhost:8000/v2/model/fastertransformer/infer

@@ -113,7 +113,7 @@ class T5TritonProcessor:
         if json_size is not None:
             if headers is None:
                 headers = {}
-            headers["Inference-Header-Content-Length"] = json_size
+            headers["Inference-Header-Content-Length"] = str(json_size)
 
         return request_body, headers
 
