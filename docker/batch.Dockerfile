@@ -15,7 +15,7 @@ FROM gcr.io/llm-containers/cluster-provision-image:release
 
 RUN apt-get -yq install jq python3-distutils
 
-RUN wget https://bootstrap.pypa.io/get-pip.py; python3 get-pip.py
+RUN apt install python3-pip
 RUN pip3 install yq
 
 COPY scripts/train/run_batch.sh .
