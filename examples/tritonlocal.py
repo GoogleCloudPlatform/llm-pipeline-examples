@@ -6,15 +6,15 @@ from transformers import (
     ) 
 import tritonclient.http as httpclient
 from tritonclient.utils import np_to_triton_dtype
+import json
+import struct
 
 class T5TritonProcessor:
     def __init__(self, local_triton=False):
         # Initialize client
-        self.client = {}
-        if (local_triton):
-            self.client = httpclient.InferenceServerClient(
-                "localhost:8000",verbose=True
-            )
+        self.client = httpclient.InferenceServerClient(
+            "localhost:8000",verbose=True
+        )
 
         # Initialize tokenizers from HuggingFace to do pre and post processings 
         # (convert text into tokens and backward) at the client side
@@ -123,3 +123,53 @@ class T5TritonProcessor:
         inputs = self.preprocess(text)
         result = self.client.infer("fastertransformer", inputs)
         self.postprocess(result)
+
+    
+    def _get_inference_request(inputs, request_id, outputs, sequence_id,
+                            sequence_start, sequence_end, priority, timeout):
+        infer_request = {}
+        parameters = {}
+        if request_id != "":
+            infer_request['id'] = request_id
+        if sequence_id != 0 and sequence_id != "":
+            parameters['sequence_id'] = sequence_id
+            parameters['sequence_start'] = sequence_start
+            parameters['sequence_end'] = sequence_end
+        if priority != 0:
+            parameters['priority'] = priority
+        if timeout is not None:
+            parameters['timeout'] = timeout
+
+        infer_request['inputs'] = [
+            this_input._get_tensor() for this_input in inputs
+        ]
+        if outputs:
+            infer_request['outputs'] = [
+                this_output._get_tensor() for this_output in outputs
+            ]
+        else:
+            # no outputs specified so set 'binary_data_output' True in the
+            # request so that all outputs are returned in binary format
+            parameters['binary_data_output'] = True
+
+        if parameters:
+            infer_request['parameters'] = parameters
+
+        request_body = json.dumps(infer_request)
+        json_size = len(request_body)
+        binary_data = None
+        for input_tensor in inputs:
+            raw_data = input_tensor._get_binary_data()
+            if raw_data is not None:
+                if binary_data is not None:
+                    binary_data += raw_data
+                else:
+                    binary_data = raw_data
+
+        if binary_data is not None:
+            request_body = struct.pack(
+                '{}s{}s'.format(len(request_body), len(binary_data)),
+                request_body.encode(), binary_data)
+            return request_body, json_size
+
+        return request_body, None
