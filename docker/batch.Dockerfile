@@ -11,11 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/llm-containers/cluster-provision-image:release
+FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.1.0
 
-RUN apt-get -yq install jq python3-distutils
+RUN apt-get -yq install jq python3-distutils python3-pip
 
-RUN apt install python3-pip
 RUN pip3 install yq
 
 COPY scripts/train/run_batch.sh .
