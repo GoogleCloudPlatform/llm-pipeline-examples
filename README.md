@@ -93,7 +93,7 @@ Follow these instructions To run T5 training on a GPU cluster:
 
     ```bash
         export PROJECT_ID=<your project ID>
-        gcloud services enable aiplatform.googleapis.com cloudfunctions compute.googleapis.com iam.googleapis.com --project=${PROJECT_ID}
+        gcloud services enable aiplatform.googleapis.com cloudfunctions compute.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com --project=${PROJECT_ID}
     ```
 
 1.  Create a regional bucket in the same project. Make sure you choose to make
