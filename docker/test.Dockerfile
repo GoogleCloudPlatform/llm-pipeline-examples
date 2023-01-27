@@ -17,5 +17,7 @@ RUN pip install kfp absl-py google-cloud-aiplatform
 
 COPY config/small1vm1gpu.json .
 COPY pipelyine.py .
+COPY predict_payload.json .
+COPY predict_result.json .
 
-ENTRYPOINT ["python3",  "pipeline.py", "--config=configs/small1vm1gpu.json", "--verify",  "--override_deploy"]
+ENTRYPOINT ["python3",  "pipeline.py", "--config=small1vm1gpu.json", "--verify",  "--override_deploy"]
