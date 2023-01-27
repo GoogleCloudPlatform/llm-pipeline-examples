@@ -16,7 +16,7 @@ FROM python:slim
 RUN pip install kfp absl-py google-cloud-aiplatform
 
 COPY configs/small1vm1gpu.json .
-COPY pipelyine.py .
+COPY pipeline.py .
 COPY predict_payload.json .
 COPY predict_result.json .
 
