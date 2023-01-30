@@ -19,11 +19,11 @@ Utility module for preprocessing and fine tuning.
 import gcsfs
 
 
-def gcs_path(path: str):
+def gcs_path(path: str, gcs_prefix=''):
   if path.startswith('gs://'):
     fs = gcsfs.GCSFileSystem()
-    return path.replace('gs://', ''), fs
+    return path.replace('gs://', gcs_prefix), fs
   if path.startswith('/gcs/'):
     fs = gcsfs.GCSFileSystem()
-    return path.replace('/gcs/', ''), fs
+    return path.replace('/gcs/', gcs_prefix), fs
   return path, None

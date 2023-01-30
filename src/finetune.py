@@ -89,8 +89,8 @@ def train(argv):
   del argv
 
   logging.info('Loading Dataset....')
-  path, gcs = utils.gcs_path(FLAGS.tokenized_dataset_path)
-  tokenized_datasets = load_from_disk(path, fs=gcs)
+  path, _ = utils.gcs_path(path=FLAGS.tokenized_dataset_path, gcs_prefix='gs://')
+  tokenized_datasets = load_from_disk(path)
   tokenizer = AutoTokenizer.from_pretrained(
       FLAGS.model_checkpoint, model_max_length=FLAGS.max_input_length
   )

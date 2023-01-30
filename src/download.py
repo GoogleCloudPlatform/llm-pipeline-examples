@@ -35,7 +35,7 @@ def main(argv):
   del argv
 
   src, src_fs = gcs_path(FLAGS.dataset)
-  dst, dst_fs = gcs_path(FLAGS.download_path)
+  dst, _ = gcs_path(path=FLAGS.download_path, gcs_prefix='gs://')
   if src_fs:
     logging.info('Copying Dataset....')
     src_fs.cp(src, dst, recursive=True)
@@ -43,7 +43,7 @@ def main(argv):
     logging.info('Downloading Dataset....')
     datasets = load_dataset(FLAGS.dataset, FLAGS.version)
     logging.info('Saving Dataset to %s....', FLAGS.download_path)
-    datasets.save_to_disk('gs://{0}'.format(dst))
+    datasets.save_to_disk(dst)
 
 if __name__ == '__main__':
   logging.set_verbosity(logging.INFO)
