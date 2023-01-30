@@ -15,6 +15,7 @@ COPY --chmod=777 scripts/fasttransformer/convert.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_t5-11b.sh .
 
 RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
+RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELNAME/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
 RUN ./convert.sh $NUMGPU $NUMCOMPUTE $MODELNAME
 
 ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODEL_NAME_ENV/
