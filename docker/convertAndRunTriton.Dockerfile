@@ -3,7 +3,7 @@ FROM chris113113/triton_with_ft:22.07
 ARG NUMGPU=4
 ARG NUMCOMPUTE=80
 ARG MODELNAME="t5-base"
-RUN export WORKSPACE=$(pwd)
+ENV MODEL_NAME_ENV $MODELNAME
 
 # Local file location
 COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELNAME/fastertransformer/
@@ -17,4 +17,4 @@ COPY --chmod=777 scripts/fasttransformer/convert_t5-11b.sh .
 RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
 RUN ./convert.sh $NUMGPU $NUMCOMPUTE $MODELNAME
 
-ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODELNAME/
+ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODEL_NAME_ENV/
