@@ -215,7 +215,7 @@ instance_group [
 parameters {
   key: "tensor_para_size"
   value: {
-    string_value: "4"
+    string_value: "PLACEHOLDERNUMGPU"
   }
 }
 parameters {
