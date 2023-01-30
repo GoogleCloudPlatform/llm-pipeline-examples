@@ -1,3 +1,4 @@
+# Arg0 - numgpus
 # Install dependencies for t5 transformations
 cd FasterTransformer/build
 pip install -r ../examples/pytorch/t5/requirement.txt
@@ -12,7 +13,7 @@ git lfs clone https://huggingface.co/google/t5-v1_1-base
 python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
         -saved_dir t5-v1_1-base/c-models \
         -in_file t5-v1_1-base/ \
-        -inference_tensor_para_size 1 \
+        -inference_tensor_para_size $0 \
         -weight_data_type fp32
 
 # # Test conversion

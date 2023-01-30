@@ -1,3 +1,5 @@
+# Arg0 - DSM
+
 # Needs to be run in below image.
 # nvidia-docker run -ti --shm-size 5g --rm nvcr.io/nvidia/pytorch:22.09-py3 bash
 git clone https://github.com/NVIDIA/FasterTransformer.git
@@ -17,7 +19,7 @@ git submodule init && git submodule update
 # A10	86
 
 # pytorch
-cmake -DSM=80 -DCMAKE_BUILD_TYPE=Release -DBUILD_PYT=ON -DBUILD_MULTI_GPU=ON ..
+cmake -DSM=$0 -DCMAKE_BUILD_TYPE=Release -DBUILD_PYT=ON -DBUILD_MULTI_GPU=ON ..
 # TensorRT
 # cmake -DSM=xx -DCMAKE_BUILD_TYPE=Release -DBUILD_TRT=ON -DBUILD_MULTI_GPU=ON ..
 # Tensorflow2

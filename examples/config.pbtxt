@@ -245,6 +245,6 @@ parameters {
 parameters {
   key: "model_checkpoint_path"
   value: {
-    string_value: "/workspace/all_models/t5/fastertransformer/1/4-gpu"
+    string_value: "/workspace/all_models/PLACEHOLDERMODELNAME/fastertransformer/1/PLACEHOLDERNUMGPU-gpu"
   }
 }

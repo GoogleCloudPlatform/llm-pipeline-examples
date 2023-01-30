@@ -52,7 +52,7 @@ def init_model():
           logging.info("Downloading %s", f)
           gcs.get(f, dst)
  
- def main(argv):
+def main(argv):
   """Main server method.
 
   Args:
