@@ -43,7 +43,7 @@ def main(argv):
     logging.info('Downloading Dataset....')
     datasets = load_dataset(FLAGS.dataset, FLAGS.version)
     logging.info('Saving Dataset....')
-    datasets.save_to_disk(dst, fs=dst_fs)
+    datasets.save_to_disk(dst, storage_options=dst_fs.storage_options)
 
 if __name__ == '__main__':
   logging.set_verbosity(logging.INFO)
