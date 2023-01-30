@@ -1,5 +1,5 @@
-# Arg0 - Num GPUs
-# Arg1 - Num Computes
-# Arg2 - Model Name
-./faster_transformer_install.sh $1
-./convert_t5-11b.sh $0 $2
+# Arg1 - Num GPUs
+# Arg2 - Num Computes
+# Arg3 - Model Name
+./faster_transformer_install.sh $2
+./convert_t5-11b.sh $1 $3
