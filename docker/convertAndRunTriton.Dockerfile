@@ -12,10 +12,11 @@ COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELNAME/fastertransformer/
 COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_t5.sh .
 COPY --chmod=777 scripts/fasttransformer/convert.sh .
-COPY --chmod=777 scripts/fasttransformer/convert_t5-11b.sh .
 
 RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
 RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELNAME/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
-RUN ./convert.sh $NUMGPU $NUMCOMPUTE $MODELNAME
+
+RUN ./faster_transformer_install.sh $NUMCOMPUTE
+RUN ./convert_t5.sh $NUMGPU $MODELNAME
 
 ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODEL_NAME_ENV/
