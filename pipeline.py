@@ -282,13 +282,14 @@ def my_pipeline(
 def _get_endpoint(pipeline_job):
   """Returns the deploy endpoint from a successful pipeline job."""
 
-  print(pipeline_job.task_details)
   for task in pipeline_job.task_details:
     if task.task_name == "deploy":
       endpoint = task.execution.metadata["output:endpoint"]
       logging.info("Endpoint %s found!", endpoint)
       return endpoint
-  logging.error("No deploy task found :(")
+  logging.error("No deploy task found :(. Task = %s",
+    pipeline_job.task_details)
+
   raise RuntimeError("Unexpected deploy result format")
 
 
