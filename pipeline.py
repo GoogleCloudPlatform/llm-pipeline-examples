@@ -289,7 +289,6 @@ def _get_endpoint(pipeline_job):
       return endpoint
   logging.error("No deploy task found :(. Task = %s",
     pipeline_job.task_details)
-
   raise RuntimeError("Unexpected deploy result format")
 
 
