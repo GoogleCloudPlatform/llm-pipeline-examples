@@ -17,30 +17,36 @@ ARG NUMGPU=4
 ARG NUMCOMPUTE=80
 ARG MODELNAME="t5-base"
 
+# Manually provide MODELPATH if the target path needs to differ (i.e. google/t5-v1_1-base -> t5-v1_1-base)
+# Splitting it out as a separate arg due to the re-use of the variable outside of a single script
+# and limitations in setting vars to the output of a command in Docker https://github.com/moby/moby/issues/29110
+ARG MODELPATH=$MODELNAME
+
 # Convert the model from the baked image
 FROM $PARENT
 ARG NUMGPU
 ARG NUMCOMPUTE
 ARG MODELNAME
+ARG MODELPATH
 
 ENV MODEL_NAME_ENV $MODELNAME
 
 # Local file location
-COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELNAME/fastertransformer/
+COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELPATH/fastertransformer/
 
 # For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
 COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_existing_t5.sh .
 
-RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
-RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELNAME/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
+RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELPATH/fastertransformer/config.pbtxt
+RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELPATH/g" $WORKSPACE/all_models/$MODELPATH/fastertransformer/config.pbtxt
 
-RUN ./convert_existing_t5.sh $NUMGPU $MODELNAME
+RUN ./convert_existing_t5.sh $NUMGPU $MODELPATH
 
 # Copy converted model to clean image
 FROM chris113113/triton_with_ft:22.07
-ARG MODELNAME
-ENV MODEL_NAME_ENV $MODELNAME
+ARG MODELPATH
+ENV MODEL_NAME_ENV $MODELPATH
 
 COPY --from=0 $WORKSPACE/all_models/ $WORKSPACE/all_models/
 

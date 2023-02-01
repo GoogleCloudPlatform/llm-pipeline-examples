@@ -25,25 +25,26 @@
 # Arg3 - HuggingFace Storage Link
 
 INTERMEDIATE_IMAGE_NAME=bakedt5image
-TARGET_GPU_NUMBER=1
+TARGET_GPU_NUMBER=4
 TARGET_NUM_COMPUTE=80
-TARGET_MODEL_NAME=t5-base
+TARGET_MODEL_NAME=google/t5-v1_1-base
+TARGET_MODEL_PATH=t5-v1_1-base
 DOCKER_BUILDKIT=1 docker build -f docker/download.Dockerfile \
      --build-arg NUMGPU=$TARGET_GPU_NUMBER \
      --build-arg NUMCOMPUTE=$TARGET_NUM_COMPUTE \
      --build-arg MODELNAME=$TARGET_MODEL_NAME \
-     . -t $INTERMEDIATE_IMAGE_NAME:$TARGET_GPU_NUMBER \
+     --build-arg MODELPATH=$TARGET_MODEL_PATH \
+     . -t $INTERMEDIATE_IMAGE_PATH:$TARGET_GPU_NUMBER \
      --progress=plain
 
 DOCKER_BUILDKIT=1 docker build -f docker/convert.Dockerfile \
      --build-arg NUMGPU=$TARGET_GPU_NUMBER \
      --build-arg NUMCOMPUTE=$TARGET_NUM_COMPUTE \
      --build-arg MODELNAME=$TARGET_MODEL_NAME \
+     --build-arg MODELPATH=$TARGET_MODEL_PATH \
      --build-arg PARENT=$INTERMEDIATE_IMAGE_NAME:$TARGET_GPU_NUMBER
-     . -t converted-$TARGET_MODEL_NAME:$TARGET_GPU_NUMBER \
+     . -t converted-$TARGET_MODEL_PATH:$TARGET_GPU_NUMBER \
      --progress=plain
-docker image tag  converted-$TARGET_MODEL_NAME:$TARGET_GPU_NUMBER us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER
-docker image push us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER
-gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER --display-name=$TARGET_MODEL_NAME-ft
-
-gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/t5-triton:11b-4gpu --display-name=t511b
+docker image tag  converted-$TARGET_MODEL_PATH:$TARGET_GPU_NUMBER us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_PATH-triton:$TARGET_GPU_NUMBER
+docker image push us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_PATH-triton:$TARGET_GPU_NUMBER
+gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_PATH-triton:$TARGET_GPU_NUMBER --display-name=$TARGET_MODEL_PATH-ft
