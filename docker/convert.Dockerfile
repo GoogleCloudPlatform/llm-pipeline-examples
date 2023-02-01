@@ -17,7 +17,11 @@ ARG NUMGPU=4
 ARG NUMCOMPUTE=80
 ARG MODELNAME="t5-base"
 
-FROM PARENT
+# Convert the model from the baked image
+FROM $PARENT
+ARG NUMGPU
+ARG NUMCOMPUTE
+ARG MODELNAME
 
 ENV MODEL_NAME_ENV $MODELNAME
 
@@ -26,11 +30,18 @@ COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELNAME/fastertransformer/
 
 # For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
 COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
-COPY --chmod=777 scripts/fasttransformer/convert_t5.sh .
+COPY --chmod=777 scripts/fasttransformer/convert_existing_t5.sh .
 
 RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
 RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELNAME/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
 
 RUN ./convert_existing_t5.sh $NUMGPU $MODELNAME
+
+# Copy converted model to clean image
+FROM chris113113/triton_with_ft:22.07
+ARG MODELNAME
+ENV MODEL_NAME_ENV $MODELNAME
+
+COPY --from=0 $WORKSPACE/all_models/ $WORKSPACE/all_models/
 
 ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODEL_NAME_ENV/

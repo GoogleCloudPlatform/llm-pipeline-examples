@@ -1,3 +1,4 @@
+#! /bin/bash
 ### TODO
 # 1. Parameterize NumGpu into:
 # * Conversion Dockerfile
@@ -23,11 +24,26 @@
 # Arg1 - Target GPU # Computes https://github.com/NVIDIA/FasterTransformer/blob/main/docs/t5_guide.md#build-the-project
 # Arg3 - HuggingFace Storage Link
 
-DOCKER_BUILDKIT=1 docker build . -f docker/convert.Dockerfile  -t convert
-docker run --runtime=nvidia convert
-docker container ls -lq
-docker cp $(docker container ls -lq):/workspace/FasterTransformer/build/t5-base/c-models/4-gpu c-models/
-docker build -f docker/copyModel.Dockerfile . -t t5triton4gpu
-docker image tag  t5triton4gpu us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/t5-triton:4gpu
-docker image push us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/t5-triton:4gpu
-gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/t5-triton:4gpu --display-name=t5_ft
+INTERMEDIATE_IMAGE_NAME=bakedt5image
+TARGET_GPU_NUMBER=1
+TARGET_NUM_COMPUTE=80
+TARGET_MODEL_NAME=t5-base
+DOCKER_BUILDKIT=1 docker build -f docker/download.Dockerfile \
+     --build-arg NUMGPU=$TARGET_GPU_NUMBER \
+     --build-arg NUMCOMPUTE=$TARGET_NUM_COMPUTE \
+     --build-arg MODELNAME=$TARGET_MODEL_NAME \
+     . -t $INTERMEDIATE_IMAGE_NAME:$TARGET_GPU_NUMBER \
+     --progress=plain
+
+DOCKER_BUILDKIT=1 docker build -f docker/convert.Dockerfile \
+     --build-arg NUMGPU=$TARGET_GPU_NUMBER \
+     --build-arg NUMCOMPUTE=$TARGET_NUM_COMPUTE \
+     --build-arg MODELNAME=$TARGET_MODEL_NAME \
+     --build-arg PARENT=$INTERMEDIATE_IMAGE_NAME:$TARGET_GPU_NUMBER
+     . -t converted-$TARGET_MODEL_NAME:$TARGET_GPU_NUMBER \
+     --progress=plain
+docker image tag  converted-$TARGET_MODEL_NAME:$TARGET_GPU_NUMBER us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER
+docker image push us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER
+gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/$TARGET_MODEL_NAME-triton:$TARGET_GPU_NUMBER --display-name=$TARGET_MODEL_NAME-ft
+
+gcloud ai models upload --container-image-uri=us-central1-docker.pkg.dev/supercomputer-testing/pirillo-gcr/t5-triton:11b-4gpu --display-name=t511b

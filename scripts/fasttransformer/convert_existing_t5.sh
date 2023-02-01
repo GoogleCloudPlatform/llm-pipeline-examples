@@ -4,6 +4,9 @@
 cd FasterTransformer/build
 pip install -r ../examples/pytorch/t5/requirement.txt
 
+echo  "Called with: NumGpus: " $1
+echo  "Called with: ModelName: "$2
+
 # Convert
 python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
         -saved_dir ${WORKSPACE}/all_models/$2/fastertransformer/1/ \
