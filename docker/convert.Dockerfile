@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG PARENT=bakedt511b
+ARG NUMGPU=4
+ARG NUMCOMPUTE=80
+ARG MODELNAME="t5-base"
 
-FROM nvcr.io/nvidia/pytorch:22.09-py3
+FROM PARENT
 
-ENV TZ=America/Los_Angeles
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV MODEL_NAME_ENV $MODELNAME
 
-RUN apt-get update
-RUN apt-get install cmake git -y
+# Local file location
+COPY examples/config.pbtxt $WORKSPACE/all_models/$MODELNAME/fastertransformer/
 
 # For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
 COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_t5.sh .
 
-RUN ./faster_transformer_install.sh
-RUN ./convert_t5.sh
+RUN sed -i "s/PLACEHOLDERNUMGPU/$NUMGPU/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
+RUN sed -i "s/PLACEHOLDERMODELNAME/$MODELNAME/g" $WORKSPACE/all_models/$MODELNAME/fastertransformer/config.pbtxt
+
+RUN ./convert_existing_t5.sh $NUMGPU $MODELNAME
+
+ENTRYPOINT /opt/tritonserver/bin/tritonserver --model-repository=/workspace/all_models/$MODEL_NAME_ENV/
