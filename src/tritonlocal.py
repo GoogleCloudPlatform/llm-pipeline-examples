@@ -10,20 +10,29 @@ import json
 import struct
 
 class T5TritonProcessor:
-    def __init__(self, local_triton=False):
+    def __init__(self, hf_model_path="t5-base", host="localhost", port=8000):
         # Initialize client
         self.client = httpclient.InferenceServerClient(
-            "localhost:8000",verbose=True
+            f'{host}:{port}',
+            verbose=True
         )
 
         # Initialize tokenizers from HuggingFace to do pre and post processings 
         # (convert text into tokens and backward) at the client side
-        self.tokenizer = T5Tokenizer.from_pretrained("google/t5-v1_1-base")
+        self.tokenizer = T5Tokenizer.from_pretrained(hf_model_path)
+
+    def infer(self, task="summarize", text=None):
+        # Run translation task with T5
+        if text is None:
+            text = "Sandwiched between a second-hand bookstore and record shop in Cape Town's charmingly grungy suburb of Observatory is a blackboard reading 'Tapi Tapi -- Handcrafted, authentic African ice cream.' The parlor has become one of Cape Town's most talked about food establishments since opening in October 2020. And in its tiny kitchen, Jeff is creating ice cream flavors like no one else. Handwritten in black marker on the shiny kitchen counter are today's options: Salty kapenta dried fish (blitzed), toffee and scotch bonnet chile Sun-dried blackjack greens and caramel, Malted millet ,Hibiscus, cloves and anise. Using only flavors indigenous to the African continent, Guzha's ice cream has become the tool through which he is reframing the narrative around African food. 'This (is) ice cream for my identity, for other people's sake,' Jeff tells CNN. 'I think the (global) food story doesn't have much space for Africa ... unless we're looking at the generic idea of African food,' he adds. 'I'm not trying to appeal to the global universe -- I'm trying to help Black identities enjoy their culture on a more regular basis.'"
+        inputs = self._preprocess(f'{task}: {text}')
+        result = self.client.infer("fastertransformer", inputs)
+        return self._postprocess(result)
 
     # Implement the function that takes text converts it into the tokens using 
     # HFtokenizer and prepares tensorts for sending to Triton
-    def preprocess(self, t5_task_input):
-        input_token = self.tokenizer(t5_task_input, return_tensors="pt", padding=True,truncation=True)
+    def _preprocess(self, string_input):
+        input_token = self.tokenizer(string_input, return_tensors="pt", padding=True,truncation=True)
         input_ids = input_token.input_ids.numpy().astype(np.uint32)
 
         mem_seq_len = (
@@ -65,7 +74,7 @@ class T5TritonProcessor:
 
     # Implement function that takes tokens from Triton's response and converts 
     # them into text
-    def postprocess(self, result):
+    def _postprocess(self, result):
         ft_decoding_outputs = result.as_numpy("output_ids")
         ft_decoding_seq_lens = result.as_numpy("sequence_length")
         # print(type(ft_decoding_outputs), type(ft_decoding_seq_lens))
@@ -74,10 +83,10 @@ class T5TritonProcessor:
             ft_decoding_outputs[0][0][: ft_decoding_seq_lens[0][0]],
             skip_special_tokens=True,
         )
-        print(tokens)
+        # print(tokens)
         return tokens
 
-    def get_payload(self,
+    def _get_payload(self,
                     text,
                     outputs=None,
                     request_id="",
@@ -90,7 +99,7 @@ class T5TritonProcessor:
                     query_params=None,
                     request_compression_algorithm=None,
                     response_compression_algorithm=None):
-        inputs = self.preprocess(text)
+        inputs = self._preprocess(text)
         request_body, json_size = self.client._get_inference_request(
             inputs=inputs,
             request_id=request_id,
@@ -116,13 +125,6 @@ class T5TritonProcessor:
             headers["Inference-Header-Content-Length"] = str(json_size)
 
         return request_body, headers
-
-    def test_local(self):
-        # Run translation task with T5
-        text = "Sandwiched between a second-hand bookstore and record shop in Cape Town's charmingly grungy suburb of Observatory is a blackboard reading 'Tapi Tapi -- Handcrafted, authentic African ice cream.' The parlor has become one of Cape Town's most talked about food establishments since opening in October 2020. And in its tiny kitchen, Jeff is creating ice cream flavors like no one else. Handwritten in black marker on the shiny kitchen counter are today's options: Salty kapenta dried fish (blitzed), toffee and scotch bonnet chile Sun-dried blackjack greens and caramel, Malted millet ,Hibiscus, cloves and anise. Using only flavors indigenous to the African continent, Guzha's ice cream has become the tool through which he is reframing the narrative around African food. 'This (is) ice cream for my identity, for other people's sake,' Jeff tells CNN. 'I think the (global) food story doesn't have much space for Africa ... unless we're looking at the generic idea of African food,' he adds. 'I'm not trying to appeal to the global universe -- I'm trying to help Black identities enjoy their culture on a more regular basis.'"
-        inputs = self.preprocess(text)
-        result = self.client.infer("fastertransformer", inputs)
-        self.postprocess(result)
 
     
     def _get_inference_request(self, inputs, request_id, outputs, sequence_id,
