@@ -57,11 +57,9 @@ def init_model():
         gcs.get(f, dst)
     model_path = dst
 
-  app.client = T5TritonProcessor(FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port)
+  app.model_directory = model_path
 
-  tokenizer = AutoTokenizer.from_pretrained(model_path)
-  logging.info("Model ready to serve")
-  app.tokenizer = tokenizer
+  app.client = T5TritonProcessor(FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port)
 
 
 @app.route("/health")
