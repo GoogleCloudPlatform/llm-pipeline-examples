@@ -51,10 +51,7 @@ def init_model():
     app.model_directory = dst
     gcs = gcsfs.GCSFileSystem()
     logging.info("Downloading model from %s", model_path)
-    for f in gcs.ls(src):
-      if gcs.isfile(f):
-        logging.info("Downloading %s", f)
-        gcs.get(f, dst)
+    gcs.get(src, dst, recursive=True)
     model_path = dst
 
   app.model_directory = model_path
@@ -104,7 +101,7 @@ def main(argv):
   app.port = int(os.environ.get("AIP_HTTP_PORT", str(FLAGS.port)))
 
   init_model()
-  subprocess.Popen(["/opt/tritonserver", f'--model-repository={app.model_directory}'])
+  subprocess.Popen(["/opt/tritonserver/bin/tritonserver", f'--model-repository={app.model_directory}'])
   app.run(app.host, app.port, debug=False)
 
 
