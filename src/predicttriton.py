@@ -67,12 +67,6 @@ def health():
 @app.route("/summarize", methods=["POST"])
 def summarize():
   """Process a summarization request."""
-  logging.info("Received request")
-  inputs = app.tokenizer(
-      
-      return_tensors="pt",
-      padding=True,
-      truncation=True).to(device=app.local_rank)
   text_out = app.client.infer(task="summarize", text=request.json["instances"]) 
   return {"predictions": list(text_out)}
 
