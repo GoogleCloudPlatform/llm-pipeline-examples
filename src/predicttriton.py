@@ -67,8 +67,13 @@ def health():
 @app.route("/summarize", methods=["POST"])
 def summarize():
   """Process a summarization request."""
-  text_out = app.client.infer(task="summarize", text=request.json["instances"]) 
-  return {"predictions": list(text_out)}
+  logging.info("Request received.")
+  logging.info("Passing %s to Triton", request.json["instances"])
+  return_payload = []
+  for req in request.json["instances"]:
+    text_out = app.client.infer(task="summarize", text=request.json["instances"])
+    return_payload.append(text_out)
+  return {"predictions": return_payload}
 
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
