@@ -97,7 +97,7 @@ def main(argv):
     argv: unused.
   """
   del argv
-  app.host = os.environ.get("SERVER_HOST", "localhost")
+  app.host = os.environ.get("SERVER_HOST", "0.0.0.0")
   app.port = int(os.environ.get("AIP_HTTP_PORT", str(FLAGS.port)))
 
   init_model()
