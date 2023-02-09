@@ -101,7 +101,7 @@ def main(argv):
 
   init_model()
   subprocess.Popen(["/opt/tritonserver/bin/tritonserver", f'--model-repository={app.model_directory}'])
-  app.run(app.host, app.port, debug=False)
+  app.run(app.host, app.port, debug=True)
 
 
 if __name__ == "__main__":
