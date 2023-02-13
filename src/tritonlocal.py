@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from transformers import (
+        AutoTokenizer,
         T5Tokenizer,
         T5TokenizerFast
     ) 
@@ -19,7 +20,7 @@ class T5TritonProcessor:
 
         # Initialize tokenizers from HuggingFace to do pre and post processings 
         # (convert text into tokens and backward) at the client side
-        self.tokenizer = T5Tokenizer.from_pretrained(hf_model_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_path)
 
     def infer(self, task="summarize", text=None):
         # Run translation task with T5
