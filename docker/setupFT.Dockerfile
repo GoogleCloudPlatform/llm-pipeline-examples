@@ -5,8 +5,8 @@ RUN git clone https://github.com/NVIDIA/FasterTransformer.git
 RUN mkdir -p FasterTransformer/build
 RUN cd FasterTransformer/build && git submodule init && git submodule update
 
-ARG NUMGPU=4
-# ARG NUMCOMPUTE=80
+# ARG NUMGPU=4
+ARG NUMCOMPUTE=70
 # ARG MODELNAME="t5-base"
 # ENV MODEL_NAME_ENV $MODELNAME
 
@@ -15,7 +15,7 @@ COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fasttransformer/download_t5.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_existing_t5.sh .
 
-# RUN ./faster_transformer_install.sh $NUMCOMPUTE
+RUN ./faster_transformer_install.sh $NUMCOMPUTE
 # RUN ./download_t5.sh $NUMGPU $MODELNAME
 
 ENTRYPOINT /bin/bash

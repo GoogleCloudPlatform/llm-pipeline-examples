@@ -33,20 +33,19 @@ from transformers import AutoTokenizer
 app = Flask(__name__)
 FLAGS = flags.FLAGS
 
+flags.DEFINE_string("model_path", "t5-base", "path to the FT converted model on GCS or local filesystem. For example '/all_models/t5-v1_1-base'")
 flags.DEFINE_integer("port", 5000, "port to expose this server on. Default is '5000'.")
 flags.DEFINE_integer("triton_port", 8000, "local triton server port to proxy requests to. Default is '8000'.")
 flags.DEFINE_string("triton_host", "localhost", "Optional. Separate host to route triton requests to. Default is 'localhost'.")
 flags.DEFINE_string("hf_model_path", "t5-base", "path to the source model on HuggingFace. For example 'google/t5-v1_1-base'.")
-flags.DEFINE_string("model_path", "t5-base", "path to the FT converted model on GCS or local filesystem. For example '/all_models/t5-v1_1-base'")
 
-def init_model():
-  """Initializes the model using Triton."""
+def download_model(model_path):
+  """Downloads the model to the expected Triton directory."""
   os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-  model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path)
   logging.info("Model path: %s", model_path)
   if model_path.startswith("gs://"):
-    src = model_path.replace("gs://", "")
+    src = model_path.removeprefix("gs://")
     dst = "/workspace/all_models/" + src.split("/")[-1] + "/"
     app.model_directory = dst
     gcs = gcsfs.GCSFileSystem()
@@ -54,10 +53,7 @@ def init_model():
     gcs.get(src, dst, recursive=True)
     model_path = dst
 
-  app.model_directory = model_path
-
-  app.client = T5TritonProcessor(FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port)
-
+  return model_path
 
 @app.route("/health")
 def health():
@@ -99,9 +95,13 @@ def main(argv):
   app.host = os.environ.get("SERVER_HOST", "0.0.0.0")
   app.port = int(os.environ.get("AIP_HTTP_PORT", str(FLAGS.port)))
 
-  init_model()
-  subprocess.Popen(["/opt/tritonserver/bin/tritonserver", f'--model-repository={app.model_directory}'])
-  app.run(app.host, app.port, debug=True)
+  model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path).rstrip("/")
+  model_dir = download_model(model_path)
+
+  subprocess.Popen(["/opt/tritonserver/bin/tritonserver", f'--model-repository={model_dir}'])
+  
+  app.client = T5TritonProcessor(FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port)
+  app.run(app.host, app.port, debug=False)
 
 
 if __name__ == "__main__":
