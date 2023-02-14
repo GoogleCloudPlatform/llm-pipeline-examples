@@ -71,6 +71,17 @@ def summarize():
     return_payload.append(text_out)
   return {"predictions": return_payload}
 
+@app.route("/infer", methods=["POST"])
+def infer():
+  """Process a generic inference request. The task should be provided as the first chunk of text."""
+  logging.info("Request received.")
+  logging.info("Passing %s to Triton", request.json["instances"])
+  return_payload = []
+  for req in request.json["instances"]:
+    text_out = app.client.infer(task=None, text=request.json["instances"])
+    return_payload.append(text_out)
+  return {"predictions": return_payload}
+
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.
