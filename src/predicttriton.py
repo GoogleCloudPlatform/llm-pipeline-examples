@@ -45,7 +45,7 @@ def download_model(model_path):
 
   logging.info("Model path: %s", model_path)
   if model_path.startswith("gs://"):
-    src = model_path.removeprefix("gs://")
+    src = model_path.replace("gs://", "")
     dst = "/workspace/all_models/" + src.split("/")[-1] + "/"
     app.model_directory = dst
     gcs = gcsfs.GCSFileSystem()
