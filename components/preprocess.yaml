@@ -16,7 +16,7 @@ name: Preprocess
 description: Tokenizes a datasets and saves output to GCS
 
 inputs:
-- {name: Model Checkpoint, type: String, default: 't5-small', description: 'T5 pretrained model checkpoint.'}
+- {name: Model Checkpoint, type: String, default: 't5-small', description: 'Pretrained model checkpoint.'}
 - {name: Document Column, type: String, description: 'Name of document column in the dataset.'}
 - {name: Summary Column, type: String, description: 'Name of summary column in the dataset.'}
 - {name: raw_dataset, type: Dataset, description: 'Path to raw dataset.'}
