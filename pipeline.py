@@ -242,7 +242,7 @@ def my_pipeline(
       model_checkpoint=model_checkpoint,
       document_column=document_column,
       summary_column=summary_column,
-      raw_dataset=download_op.outputs["download_path"],
+      raw_dataset=download_op.outputs["dataset_path"],
   )
 
   train_op = trainer_component(
@@ -258,7 +258,8 @@ def my_pipeline(
       gpu_type=gpu_type,
       zone=zone,
       id=str(int(time.time())),
-      image_tag=FLAGS.image_tag
+      image_tag=FLAGS.image_tag,
+      workspace_dir=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(

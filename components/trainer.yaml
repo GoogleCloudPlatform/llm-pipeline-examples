@@ -21,7 +21,7 @@ inputs:
 - {name: Machine Type, type: String, default: 'a2-highgpu-1g', description: 'GCE machine type.'}
 - {name: GPU Type, type: String, description: 'Type of GPU used in cluster VMs.'}
 - {name: GPU Count, type: Integer, default: '1', description: 'Number of VMs in the cluster.'}
-- {name: Model Checkpoint, type: String, description: 'T5 pretrained model checkpoint.'}
+- {name: Model Checkpoint, type: String, description: 'Pretrained model checkpoint.'}
 - {name: Data, type: Dataset, description: 'Preprocessed Data records to train the model on.'}
 - {name: Zone, type: String, description: 'Compute zone to create the cluster VMs in'}
 - {name: Project, type: String, description: 'Project ID where training should run'}
@@ -29,6 +29,7 @@ inputs:
 - {name: Epochs, type: Integer, description: 'Training Epochs'}
 - {name: ID, type: String, description: 'Identifier for the training job'}
 - {name: IMAGE_TAG, type: String, description: 'Trainer image tag'}
+- {name: Workspace Path, type: GCSPath, description: 'Path for workspace data.'}
 
 outputs:
 - {name: Model, type: Model, description: 'Path to output model and checkpoints.'}
@@ -56,4 +57,6 @@ implementation:
       {inputValue: Epochs},
       {inputValue: ID},
       {inputValue: IMAGE_TAG},
+      {inputValue: Workspace Path},
+
     ]
