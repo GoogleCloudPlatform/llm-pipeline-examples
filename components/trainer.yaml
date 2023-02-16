@@ -57,6 +57,6 @@ implementation:
       {inputValue: Epochs},
       {inputValue: ID},
       {inputValue: IMAGE_TAG},
-      {inputValue: Workspace Path},
+      {inputPath: Workspace Path},
 
     ]

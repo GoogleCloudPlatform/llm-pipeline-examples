@@ -18,7 +18,7 @@ description: Downloads dataset to GCS
 inputs:
 - {name: Dataset, type: String, description: 'Name of input dataset.'}
 - {name: Subset, type: String, description: 'Subset of input dataset.'}
-- {name: Model Checkpoint, type: String, default: 't5-small', description: 'Pretrained model checkpoint.'}
+- {name: Model Checkpoint, type: String, description: 'Pretrained model checkpoint.'}
 
 outputs:
 - {name: dataset_path, type: Dataset, description: 'Path to downloaded dataset.'}
