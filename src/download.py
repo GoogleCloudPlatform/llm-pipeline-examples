@@ -50,7 +50,14 @@ def download_workspace():
   fs.put('./nltk_data', os.path.join(dst, 'nltk_data'), recursive=True)
 
   logging.info('Saving huggingface data....')
-  fs.put('.cache/huggingface', dst, recursive=True)
+  dirs_to_upload = ['evaluate', 'hub', 'modules']
+  dst = os.path.join(dst,'huggingface')
+  for dir in dirs_to_upload:
+    logging.info('Saving huggingface/%s ....', dir)
+    fs.put(
+      os.path.join('.cache/huggingface', dir),
+      os.path.join(dst,dir),
+      recursive=True)
 
 def download_dataset():
   src, src_fs = gcs_path(FLAGS.dataset)
