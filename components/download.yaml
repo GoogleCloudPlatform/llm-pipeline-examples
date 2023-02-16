@@ -33,7 +33,7 @@ implementation:
       --dataset,
       {inputValue: Dataset},
       --subset,
-      {inputValue: subset},
+      {inputValue: Subset},
       --dataset_path,
       {outputPath: dataset_path},
       --workspace_path,
