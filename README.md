@@ -209,7 +209,7 @@ configurations. Here is the details of preparing a configuration JSON:
 ```json
 {
  "dataset": "cnn_dailymail",
- "dataset_version": "3.0.0",
+ "dataset_subset": "3.0.0",
  "document_column": "article",
  "summary_column": "highlights",
  "cluster_prefix" : "t5node",
@@ -232,8 +232,9 @@ Here is a description of what each configuration parameter does:
 
 *   **dataset**: Title of the dataset from huggingface.co. To use a custom
     dataset, this can be set to a GCS path.
-*   **dataset_name**: If the dataset has multiple subsets, this should be the
-    dataset subset name.
+*   **dataset_subset**: If the dataset has multiple subsets, this should be the
+    dataset subset name. For datasets with no subsets, this should be set to 
+    "default".
 *   **document_column**: The name of the document column from the dataset.
 *   **summary_column**: The name of the summary column from the dataset.
 *   **cluster_prefix**: A prefix to name VMs and Instance groups created by the
@@ -267,7 +268,7 @@ how to process larger datasets using DataFlow. The full training scripts can be
 found [here](src/download.py).
 
 We package this as a pipeline component that produces the dataset on GCP. The
-component takes the dataset and version as input. These correspond to the ‘path’
+component takes the dataset and subset as input. These correspond to the ‘path’
 and ‘name’ parameters passed directly to datasets.load_dataset. You can learn
 more about loading datasets here:
 
