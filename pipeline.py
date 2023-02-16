@@ -236,7 +236,10 @@ def my_pipeline(
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
-  download_op = download_component(dataset=dataset, subset=dataset_subset)
+  download_op = download_component(
+    dataset=dataset,
+    subset=dataset_subset,
+    model_checkpoint=model_checkpoint)
 
   preprocess_op = preprocess_component(
       model_checkpoint=model_checkpoint,
@@ -259,7 +262,7 @@ def my_pipeline(
       zone=zone,
       id=str(int(time.time())),
       image_tag=FLAGS.image_tag,
-      workspace_dir=download_op.outputs["workspace_path"]
+      workspace_path=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(
