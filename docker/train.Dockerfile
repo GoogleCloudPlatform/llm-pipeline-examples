@@ -33,6 +33,8 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 WORKDIR /home/jupyter
 USER jupyter
 
+RUN apt-get install git-lfs
+
 COPY scripts/train/setup_head.sh .
 COPY scripts/train/train.sh .
 COPY scripts/train/update_env.sh .

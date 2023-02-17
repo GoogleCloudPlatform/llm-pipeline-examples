@@ -59,7 +59,7 @@ if [[ "$HEAD" == "$HOSTNAME" ]]; then
   fi
   echo started > progress.txt
   gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
-  deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=${MODEL_CHECKPOINT} --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT} &> /home/jupyter/deepspeed_output.log && echo succeeded > progress.txt || echo failed > progress.txt &
+  deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=./model --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT} &> /home/jupyter/deepspeed_output.log && echo succeeded > progress.txt || echo failed > progress.txt &
   tail --pid=$! -f /home/jupyter/deepspeed_output.log
   export RESULT=$(cat progress.txt)
   if [[ "${RESULT}" == "succeeded" ]]; then
