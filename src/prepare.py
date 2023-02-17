@@ -17,25 +17,26 @@ Initializes global libraries that are not multiprocess friendly.
 """
 from absl import app
 from absl import flags
-import evaluate
-import nltk
-from transformers import AutoModelForSeq2SeqLM
-from transformers import AutoTokenizer
-from transformers import utils as transformer_utils
+from absl import logging
+from utils import gcs_path
 
+import os
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string('model_checkpoint', 't5-small', 'Model checkpoint name')
+flags.DEFINE_string('workspace_path', None, 'Path to download workspace data from.')
 
 
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-  evaluate.load('rouge')
-  nltk.download('punkt')
-  AutoTokenizer.from_pretrained(FLAGS.model_checkpoint)
-  AutoModelForSeq2SeqLM.from_pretrained(FLAGS.model_checkpoint)
 
+  src, fs = gcs_path(FLAGS.workspace_path)
+
+  logging.info('Downloading nltk_data....')
+  fs.get(os.path.join(src, 'nltk_data'), 'nltk_data', recursive=True)
+
+  logging.info('Downloading huggingface data....')
+  fs.get(os.path.join(src, 'huggingface'), '.cache/huggingface', recursive=True)
+  
 if __name__ == '__main__':
-  transformer_utils.logging.disable_progress_bar()
   app.run(main)

@@ -21,31 +21,71 @@ from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
 
+import threading
 from datasets import load_dataset
 from utils import gcs_path
+import evaluate
+import nltk
+import os
+from transformers import AutoModelForSeq2SeqLM
+from transformers import AutoTokenizer
+from transformers import utils as transformer_utils
 
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string('dataset', None, 'Name of dataset to download.')
-flags.DEFINE_string('version', None, 'Version of dataset.')
-flags.DEFINE_string('download_path', None, 'Path to download dataset to.')
+flags.DEFINE_string('subset', None, 'subset of dataset.')
+flags.DEFINE_string('dataset_path', None, 'Path to download dataset to.')
+flags.DEFINE_string('model_checkpoint', 't5-small', 'Model checkpoint name')
+flags.DEFINE_string('workspace_path', None, 'Path to download workspace data to.')
 
+def download_workspace():
+  nltk.download('punkt')
+  evaluate.load('rouge')
+  AutoTokenizer.from_pretrained(FLAGS.model_checkpoint)
+  AutoModelForSeq2SeqLM.from_pretrained(FLAGS.model_checkpoint)
+  dst, fs = gcs_path(FLAGS.workspace_path)
 
-def main(argv):
-  del argv
+  logging.info('Saving nltk_data....')
+  fs.put('./nltk_data', os.path.join(dst, 'nltk_data'), recursive=True)
 
+  logging.info('Saving huggingface data....')
+  dirs_to_upload = ['evaluate', 'hub', 'modules']
+  dst = os.path.join(dst,'huggingface')
+  for dir in dirs_to_upload:
+    logging.info('Saving huggingface/%s ....', dir)
+    fs.put(
+      os.path.join('.cache/huggingface', dir),
+      os.path.join(dst,dir),
+      recursive=True)
+
+def download_dataset():
   src, src_fs = gcs_path(FLAGS.dataset)
-  dst, _ = gcs_path(path=FLAGS.download_path, gcs_prefix='gs://')
+  dst, _ = gcs_path(path=FLAGS.dataset_path, gcs_prefix='gs://')
   if src_fs:
     logging.info('Copying Dataset....')
     src_fs.cp(src, dst, recursive=True)
   else:
     logging.info('Downloading Dataset....')
-    datasets = load_dataset(FLAGS.dataset, FLAGS.version)
-    logging.info('Saving Dataset to %s....', FLAGS.download_path)
+    datasets = load_dataset(FLAGS.dataset, FLAGS.subset)
+    logging.info('Saving Dataset to %s....', FLAGS.dataset_path)
     datasets.save_to_disk(dst)
 
+def main(argv):
+  del argv
+
+  t1 = threading.Thread(target=download_workspace)
+  t2 = threading.Thread(target=download_dataset)
+
+  t1.start()
+  t2.start()
+
+  t1.join()
+  t2.join()
+  
+
 if __name__ == '__main__':
+  transformer_utils.logging.disable_progress_bar()
   logging.set_verbosity(logging.INFO)
   parser = argparse_flags.ArgumentParser(allow_abbrev=False)
   app.run(main, flags_parser=parser.parse_known_args)

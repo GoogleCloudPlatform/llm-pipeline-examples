@@ -17,10 +17,12 @@ description: Downloads dataset to GCS
 
 inputs:
 - {name: Dataset, type: String, description: 'Name of input dataset.'}
-- {name: Version, type: String, description: 'Version of input dataset.'}
+- {name: Subset, type: String, description: 'Subset of input dataset.'}
+- {name: Model Checkpoint, type: String, description: 'Pretrained model checkpoint.'}
 
 outputs:
-- {name: download_path, type: Dataset, description: 'Path to downloaded dataset.'}
+- {name: dataset_path, type: Dataset, description: 'Path to downloaded dataset.'}
+- {name: workspace_path, type: GCSPath, description: 'Path to downloaded workspace data.'}
 
 implementation:
   container:
@@ -30,8 +32,12 @@ implementation:
       download.py,
       --dataset,
       {inputValue: Dataset},
-      --version,
-      {inputValue: Version},
-      --download_path,
-      {outputPath: download_path},
+      --subset,
+      {inputValue: Subset},
+      --dataset_path,
+      {outputPath: dataset_path},
+      --workspace_path,
+      {outputPath: workspace_path},
+      --model_checkpoint,
+      {inputValue: Model Checkpoint},
     ]

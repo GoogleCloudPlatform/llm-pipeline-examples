@@ -22,6 +22,7 @@ export ZONE=$4
 export BATCH_SIZE=$5
 export EPOCHS=$6
 export GPU_COUNT=$7
+export WORKSPACE_PATH=$8
 
 export HOSTNAME=$(hostname)
 shopt -s extglob

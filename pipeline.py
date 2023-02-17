@@ -217,7 +217,7 @@ def deploy(
 @kfp.dsl.pipeline(name="llm-pipeline")
 def my_pipeline(
     dataset: str,
-    dataset_version: str,
+    dataset_subset: str,
     document_column: str,
     summary_column: str,
     cluster_prefix: str,
@@ -236,13 +236,16 @@ def my_pipeline(
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
-  download_op = download_component(dataset=dataset, version=dataset_version)
+  download_op = download_component(
+    dataset=dataset,
+    subset=dataset_subset,
+    model_checkpoint=model_checkpoint)
 
   preprocess_op = preprocess_component(
       model_checkpoint=model_checkpoint,
       document_column=document_column,
       summary_column=summary_column,
-      raw_dataset=download_op.outputs["download_path"],
+      raw_dataset=download_op.outputs["dataset_path"],
   )
 
   train_op = trainer_component(
@@ -258,7 +261,8 @@ def my_pipeline(
       gpu_type=gpu_type,
       zone=zone,
       id=str(int(time.time())),
-      image_tag=FLAGS.image_tag
+      image_tag=FLAGS.image_tag,
+      workspace_path=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(
