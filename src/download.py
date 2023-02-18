@@ -20,15 +20,14 @@ from absl import app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
-
 import threading
+
 from datasets import load_dataset
 from utils import gcs_path
+from huggingface_hub import snapshot_download
 import evaluate
 import nltk
 import os
-from transformers import AutoModelForSeq2SeqLM
-from transformers import AutoTokenizer
 from transformers import utils as transformer_utils
 
 FLAGS = flags.FLAGS
@@ -40,23 +39,31 @@ flags.DEFINE_string('model_checkpoint', 't5-small', 'Model checkpoint name')
 flags.DEFINE_string('workspace_path', None, 'Path to download workspace data to.')
 
 def download_workspace():
+  ws, ws_fs = gcs_path(FLAGS.workspace_path)
+
   nltk.download('punkt')
-  evaluate.load('rouge')
-  AutoTokenizer.from_pretrained(FLAGS.model_checkpoint)
-  AutoModelForSeq2SeqLM.from_pretrained(FLAGS.model_checkpoint)
-  dst, fs = gcs_path(FLAGS.workspace_path)
-
   logging.info('Saving nltk_data....')
-  fs.put('./nltk_data', os.path.join(dst, 'nltk_data'), recursive=True)
+  ws_fs.put('./nltk_data', os.path.join(ws, 'nltk_data'), recursive=True)
 
+
+  model_path, model_fs = gcs_path(FLAGS.model_checkpoint)
+  if model_fs:
+    logging.info('Copying Model....')
+    model_name = model_path.split('/')[-1]
+    model_fs.cp(model_path, os.path.join(ws, 'model', model_name), recursive=True)
+  else:
+    logging.info('Downloading Model....')
+    snapshot_download(repo_id=FLAGS.model_checkpoint, ignore_patterns=["*.h5", "*.ot", "*.msgpack"])
+    
+  evaluate.load('rouge')
   logging.info('Saving huggingface data....')
-  dirs_to_upload = ['evaluate', 'hub', 'modules']
-  dst = os.path.join(dst,'huggingface')
+  dirs_to_upload = ['evaluate', 'modules', 'hub']
+  ws = os.path.join(ws,'huggingface')
   for dir in dirs_to_upload:
     logging.info('Saving huggingface/%s ....', dir)
-    fs.put(
+    ws_fs.put(
       os.path.join('.cache/huggingface', dir),
-      os.path.join(dst,dir),
+      os.path.join(ws,dir),
       recursive=True)
 
 def download_dataset():

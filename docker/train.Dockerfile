@@ -18,6 +18,7 @@ RUN apt install -yq openssh-server openssh-client
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
 
+
 RUN wget https://dl.google.com/cloudagents/add-logging-agent-repo.sh
 RUN bash add-logging-agent-repo.sh --also-install
 RUN touch /tmp/deepspeed_output.log
