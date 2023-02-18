@@ -17,6 +17,8 @@ RUN apt-get update
 RUN apt install -yq openssh-server openssh-client
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
+RUN apt-get install git-lfs
+
 
 RUN wget https://dl.google.com/cloudagents/add-logging-agent-repo.sh
 RUN bash add-logging-agent-repo.sh --also-install
@@ -32,8 +34,6 @@ RUN adduser jupyter sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 WORKDIR /home/jupyter
 USER jupyter
-
-RUN apt-get install git-lfs
 
 COPY scripts/train/setup_head.sh .
 COPY scripts/train/train.sh .
