@@ -24,7 +24,7 @@ import threading
 
 from datasets import load_dataset
 from utils import gcs_path
-from huggingface_hub import Repository
+from huggingface_hub import snapshot_download
 import evaluate
 import nltk
 import os
@@ -49,13 +49,12 @@ def download_workspace():
   model_path, model_fs = gcs_path(FLAGS.model_checkpoint)
   if model_fs:
     logging.info('Copying Model....')
-    model_fs.cp(model_path, ws, recursive=True)
+    model_name = model_path.split('/')[-1]
+    model_fs.cp(model_path, os.path.join(ws, 'model', model_name), recursive=True)
   else:
     logging.info('Downloading Model....')
-    Repository(local_dir="./model", clone_from=FLAGS.model_checkpoint)
-    logging.info('Saving model....')
-    ws_fs.put('./model', os.path.join(ws, 'model'), recursive=True)
-
+    snapshot_download(repo_id=FLAGS.model_checkpoint, ignore_patterns=["*.h5", "*.ot", "*.msgpack"])
+    
   evaluate.load('rouge')
   logging.info('Saving huggingface data....')
   dirs_to_upload = ['evaluate', 'modules', 'hub']

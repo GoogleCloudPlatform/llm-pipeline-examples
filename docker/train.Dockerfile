@@ -28,8 +28,6 @@ COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN ./install.sh
 
-RUN apt-get install -yq git-lfs
-
 
 RUN adduser jupyter sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
