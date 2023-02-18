@@ -35,8 +35,9 @@ def main(argv):
   logging.info('Downloading nltk_data....')
   fs.get(os.path.join(src, 'nltk_data'), 'nltk_data', recursive=True)
 
-  logging.info('Downloading model....')
-  fs.get(os.path.join(src, 'model'), 'model', recursive=True)
+  if fs.exists(os.path.join(src, 'model')):
+    logging.info('Downloading model....')
+    fs.get(os.path.join(src, 'model'), 'model', recursive=True)
 
 
   logging.info('Downloading huggingface data....')
