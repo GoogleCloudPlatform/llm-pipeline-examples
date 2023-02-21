@@ -122,9 +122,9 @@ def health():
   return {"health": "ok"}
 
 
-@app.route("/summarize", methods=["POST"])
-def summarize():
-  """Process a summarization request."""
+@app.route("/infer", methods=["POST"])
+def infer():
+  """Process an inferencing request."""
   logging.info("Received request")
   inputs = app.tokenizer(
       request.json["instances"],
