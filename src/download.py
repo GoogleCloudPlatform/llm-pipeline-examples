@@ -57,7 +57,7 @@ def download_workspace():
   ws = os.path.join(ws,'huggingface')
   for dir in dirs_to_upload:
     logging.info('Saving huggingface/%s ....', dir)
-    src = os.path.join('.cache/huggingface', dir),
+    src = os.path.join('.cache/huggingface', dir)
     if os.path.exists(src):
       ws_fs.put(src, os.path.join(ws,dir), recursive=True)
 
