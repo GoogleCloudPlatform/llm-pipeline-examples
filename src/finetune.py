@@ -93,9 +93,11 @@ def train(argv):
   tokenized_datasets = load_from_disk(path)
 
   model_name = FLAGS.model_checkpoint.split('/')[-1]
-  _, model_fs = utils.gcs_path(FLAGS.model_checkpoint)
-  if model_fs:
-    model_checkpoint = os.join('model', model_name)
+  path, fs = utils.gcs_path(FLAGS.model_checkpoint)
+  if fs:
+    logging.info('Downloading model....')
+    fs.get(path, 'model', recursive=True)
+    model_checkpoint = './model'
   else:
     model_checkpoint = FLAGS.model_checkpoint
 

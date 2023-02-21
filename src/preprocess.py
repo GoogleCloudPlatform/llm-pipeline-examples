@@ -84,12 +84,11 @@ def main(argv):
   path, _ = utils.gcs_path(path=FLAGS.dataset_path, gcs_prefix='gs://')
   raw_datasets = load_from_disk(path)
 
-  path, fs = utils.gcs_path(path=FLAGS.model_checkpoint, gcs_prefix='gs://')
-    
-  if fs.exists(os.path.join(path, 'model')):
+  path, fs = utils.gcs_path(path=FLAGS.model_checkpoint)
+  if fs:
     logging.info('Downloading model....')
-    fs.get(os.path.join(path, 'model'), 'model', recursive=True)
-    model_checkpoint = os.join('model', model_name)
+    fs.get(path, 'model', recursive=True)
+    model_checkpoint = './model'
   else:
     model_checkpoint = FLAGS.model_checkpoint
 
