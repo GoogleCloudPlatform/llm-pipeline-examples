@@ -16,6 +16,7 @@
 Tokenizes datasets in preparation for training/tuning.
 """
 
+import os
 from absl import app
 from absl import flags
 from absl import logging
@@ -83,9 +84,17 @@ def main(argv):
   path, _ = utils.gcs_path(path=FLAGS.dataset_path, gcs_prefix='gs://')
   raw_datasets = load_from_disk(path)
 
+  path, fs = utils.gcs_path(path=FLAGS.model_checkpoint)
+  if fs:
+    logging.info('Downloading model....')
+    fs.get(path, 'model', recursive=True)
+    model_checkpoint = './model'
+  else:
+    model_checkpoint = FLAGS.model_checkpoint
+
   logging.info('Preprocessing Dataset....')
   tokenizer = AutoTokenizer.from_pretrained(
-      FLAGS.model_checkpoint, model_max_length=FLAGS.max_input_length
+      model_checkpoint, model_max_length=FLAGS.max_input_length
   )
   model_name = FLAGS.model_checkpoint.split('/')[-1]
   tokenized_datasets = DatasetDict()

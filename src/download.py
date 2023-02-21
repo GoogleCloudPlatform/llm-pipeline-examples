@@ -46,12 +46,8 @@ def download_workspace():
   ws_fs.put('./nltk_data', os.path.join(ws, 'nltk_data'), recursive=True)
 
 
-  model_path, model_fs = gcs_path(FLAGS.model_checkpoint)
-  if model_fs:
-    logging.info('Copying Model....')
-    model_name = model_path.split('/')[-1]
-    model_fs.cp(model_path, os.path.join(ws, 'model', model_name), recursive=True)
-  else:
+  _, model_fs = gcs_path(FLAGS.model_checkpoint)
+  if not model_fs:
     logging.info('Downloading Model....')
     snapshot_download(repo_id=FLAGS.model_checkpoint, ignore_patterns=["*.h5", "*.ot", "*.msgpack"])
     
@@ -61,10 +57,9 @@ def download_workspace():
   ws = os.path.join(ws,'huggingface')
   for dir in dirs_to_upload:
     logging.info('Saving huggingface/%s ....', dir)
-    ws_fs.put(
-      os.path.join('.cache/huggingface', dir),
-      os.path.join(ws,dir),
-      recursive=True)
+    src = os.path.join('.cache/huggingface', dir)
+    if os.path.exists(src):
+      ws_fs.put(src, os.path.join(ws,dir), recursive=True)
 
 def download_dataset():
   src, src_fs = gcs_path(FLAGS.dataset)
