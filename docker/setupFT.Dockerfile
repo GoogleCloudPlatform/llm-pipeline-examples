@@ -18,4 +18,7 @@ COPY --chmod=777 scripts/fasttransformer/convert_existing_t5.sh .
 RUN ./faster_transformer_install.sh $NUMCOMPUTE
 # RUN ./download_t5.sh $NUMGPU $MODELNAME
 
+RUN curl -sSL https://sdk.cloud.google.com | bash
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
+
 ENTRYPOINT /bin/bash
