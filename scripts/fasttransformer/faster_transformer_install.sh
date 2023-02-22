@@ -2,7 +2,7 @@
 
 # Needs to be run in below image.
 # nvidia-docker run -ti --shm-size 5g --rm nvcr.io/nvidia/pytorch:22.09-py3 bash
-git clone https://github.com/NVIDIA/FasterTransformer.git
+git clone --depth 1 --branch release/v5.3_tag https://github.com/NVIDIA/FasterTransformer.git
 mkdir -p FasterTransformer/build
 cd FasterTransformer/build
 git submodule init && git submodule update

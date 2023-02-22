@@ -49,6 +49,8 @@ flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to p
 flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
+flags.DEFINE_bool("use_faster_transformer", False,
+                  "Experimental flag to use FasterTransformer to convert the provided model into an optimized format. Currently only supported for the T5 model family.")
 flags.mark_flag_as_required("project")
 flags.mark_flag_as_required("pipeline_root")
 flags.mark_flag_as_required("config")
@@ -57,6 +59,7 @@ download_component = comp.load_component_from_file("components/download.yaml")
 preprocess_component = comp.load_component_from_file(
     "components/preprocess.yaml")
 trainer_component = comp.load_component_from_file("components/trainer.yaml")
+convert_component = comp.load_component_from_file("components/convert.yaml")
 
 
 @component(base_image="gcr.io/llm-containers/deploy")
@@ -272,7 +275,26 @@ def my_pipeline(
       override_deploy=FLAGS.override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    deploy_op = deploy(
+    if FLAGS.use_faster_transformer:
+      convert_op = convert_component(
+        model_checkpoint=train_op.outputs["model"],
+        gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
+        gpu_number=deploy_gpu_number
+      )
+      
+      deploy_op = deploy(
+        project=FLAGS.project,
+        model_display_name=model_display_name,
+        serving_container_image_uri=(
+            f"gcr.io/llm-containers/predicttriton:{FLAGS.image_tag}"
+        ),
+        model=convert_op.outputs["model"],
+        machine_type=deploy_machine_type,
+        gpu_type=deploy_gpu_type,
+        gpu_count=deploy_gpu_count)
+
+    else:
+      deploy_op = deploy(
         project=FLAGS.project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
@@ -295,6 +317,22 @@ def _get_endpoint(pipeline_job):
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
 
+def _gpu_to_dsm(gpu_type):
+  if gpu_type.lower() == "NVIDIA-TESLA-P4".lower():
+    return 61
+  elif gpu_type.lower() == "NVIDIA-TESLA-P100".lower():
+    return 61
+  elif gpu_type.lower() == "NVIDIA-TESLA-V100".lower():
+    return 70
+  elif gpu_type.lower() == "NVIDIA-TESLA-T4".lower():
+    return 75
+  elif gpu_type.lower() == "NVIDIA-TESLA-A100".lower():
+    return 80
+  elif gpu_type.lower() == "NVIDIA-A100-80GB".lower():
+    return 80
+  else:
+    logging.warning("Saw unrecognized gpu_type %s . Compiling for all architectures.", gpu_type)
+    return "70,75,80,86"
 
 def main(argv: Sequence[str]) -> None:
   if len(argv) > 1:

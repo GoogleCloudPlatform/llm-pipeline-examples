@@ -1,5 +1,7 @@
 # Arg1 - NumGpus
 # Arg2 - Model Path on HuggingFace
+# Arg3 - DSM for GPU
+./faster_transformer_install.sh $3
 ./download_t5.sh $2
 
 IFS="/"

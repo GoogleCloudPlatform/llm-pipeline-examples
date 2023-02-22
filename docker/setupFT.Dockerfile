@@ -11,10 +11,7 @@ RUN cd FasterTransformer/build && git submodule init && git submodule update
 COPY --chmod=777 scripts/fasttransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fasttransformer/download_t5.sh .
 COPY --chmod=777 scripts/fasttransformer/convert_existing_t5.sh .
-COPY --chmod=777 scripts/fasttransformer/download_and_convert_t5.sh .
+COPY --chmod=777 scripts/fasttransformer/all_in_one.sh .
 
-RUN ./faster_transformer_install.sh $NUMCOMPUTE
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin:/root/google-cloud-sdk/bin
-
-ENTRYPOINT /bin/bash
