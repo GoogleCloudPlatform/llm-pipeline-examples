@@ -27,7 +27,7 @@ from absl.flags import argparse_flags
 from flask import Flask
 from flask import request
 import gcsfs
-from tritonlocal import T5TritonProcessor 
+from tritonprocessor import T5TritonProcessor 
 from transformers import AutoTokenizer
 
 app = Flask(__name__)
