@@ -24,4 +24,4 @@ sudo groupmod -n ${OS_LOGIN_USER} jupyter
 echo 'export PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}";conda activate base 2> /dev/null' >> .profile
 
 echo "Preloading model and config..."
-python3 -m prepare --model_checkpoint=${MODEL_CHECKPOINT}
+python3 -m prepare --workspace_path=${WORKSPACE_PATH}

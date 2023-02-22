@@ -11,19 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
+FROM python:slim
 
-WORKDIR /home/jupyter
+RUN pip install kfp absl-py google-cloud-aiplatform
 
-COPY scripts/clean_up_torch_xla.sh .
-COPY scripts/install.sh .
-RUN ./install.sh
+COPY configs/small1vm1gpu.json .
+COPY pipeline.py .
+COPY predict_payload.json .
+COPY predict_result.json .
+COPY components/* components/
 
-COPY src/predict.py .
-
-ENV FLASK_APP=predict
-ENV SERVER_HOST=0.0.0.0
-
-RUN pip install Flask
-
-ENTRYPOINT [ "deepspeed", "predict.py"]
+ENTRYPOINT ["python3",  "pipeline.py", "--config=small1vm1gpu.json", "--verify",  "--override_deploy"]

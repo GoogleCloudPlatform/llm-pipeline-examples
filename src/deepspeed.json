@@ -30,8 +30,8 @@
             "pin_memory": true
         },
         "offload_param": {
-            "device": "cpu",
-            "pin_memory": true
+          "device": "cpu",
+          "pin_memory": true
         },
         "overlap_comm": true,
         "contiguous_gradients": true,
@@ -46,5 +46,13 @@
   "amp": {
     "enabled": "auto",
     "opt_level": "auto"
+  },
+  "flops_profiler": {
+      "enabled": true,
+      "profile_step": 20,
+      "module_depth": -1,
+      "top_modules": 1,
+      "detailed": false,
+      "output_file": null
   }
 }

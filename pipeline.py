@@ -21,10 +21,13 @@ import json
 from os import path
 import time
 from typing import NamedTuple
+from typing import List
 
 from absl import app
 from absl import flags
+from absl import logging
 from google.cloud.aiplatform import PipelineJob
+from google.cloud.aiplatform import Endpoint
 import kfp
 import kfp.components as comp
 from kfp.v2 import compiler
@@ -40,6 +43,10 @@ flags.DEFINE_string("project", None, "Project ID to run pipeline.")
 flags.DEFINE_string("pipeline_root", None, "GCS location for pipeline files.")
 flags.DEFINE_string("config", None, "Pipeline configuration.")
 flags.DEFINE_bool("enable_caching", True, "Whether to cache successful stages.")
+flags.DEFINE_bool("override_deploy", False, "Overrides deployed endpoint model even if model metrics are worse than deployed model.")
+flags.DEFINE_bool("verify", False, "Wait till success and do prediction.")
+flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to prediction endpoint for verification.")
+flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
 flags.mark_flag_as_required("project")
@@ -57,6 +64,7 @@ def should_deploy(
     project: str,
     model_display_name: str,
     model: Input[Model],
+    override_deploy: bool, 
 ) -> str:
   """Deploys the model to Vertex AI Predictin."""
 # pylint: disable=g-import-not-at-top, reimported, redefined-outer-name
@@ -118,6 +126,8 @@ def should_deploy(
       if not are_better_metrics(
           new_metrics, existing_metrics) and endpoint_active:
         print("New model doesn't have better metrics.")
+        if override_deploy:
+          return "deploy"
         return "abort"
   return "deploy"
 
@@ -152,6 +162,7 @@ def deploy(
 
   if existing_endpoints:
     endpoint = existing_endpoints[0]
+    endpoint.undeploy_all()
   else:
     endpoint = aip.Endpoint.create(
         project=project,
@@ -206,7 +217,7 @@ def deploy(
 @kfp.dsl.pipeline(name="llm-pipeline")
 def my_pipeline(
     dataset: str,
-    dataset_version: str,
+    dataset_subset: str,
     document_column: str,
     summary_column: str,
     cluster_prefix: str,
@@ -225,13 +236,16 @@ def my_pipeline(
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
-  download_op = download_component(dataset=dataset, version=dataset_version)
+  download_op = download_component(
+    dataset=dataset,
+    subset=dataset_subset,
+    model_checkpoint=model_checkpoint)
 
   preprocess_op = preprocess_component(
       model_checkpoint=model_checkpoint,
       document_column=document_column,
       summary_column=summary_column,
-      raw_dataset=download_op.outputs["download_path"],
+      raw_dataset=download_op.outputs["dataset_path"],
   )
 
   train_op = trainer_component(
@@ -247,13 +261,15 @@ def my_pipeline(
       gpu_type=gpu_type,
       zone=zone,
       id=str(int(time.time())),
-      image_tag=FLAGS.image_tag
+      image_tag=FLAGS.image_tag,
+      workspace_path=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(
       project=FLAGS.project,
       model_display_name=model_display_name,
-      model=train_op.outputs["model"])
+      model=train_op.outputs["model"],
+      override_deploy=FLAGS.override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     deploy_op = deploy(
@@ -266,6 +282,18 @@ def my_pipeline(
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
         gpu_count=deploy_gpu_count)
+
+def _get_endpoint(pipeline_job):
+  """Returns the deploy endpoint from a successful pipeline job."""
+
+  for task in pipeline_job.task_details:
+    if task.task_name == "deploy":
+      endpoint = task.execution.metadata["output:endpoint"]
+      logging.info("Endpoint %s found!", endpoint)
+      return endpoint
+  logging.error("No deploy task found :(. Task = %s",
+    pipeline_job.task_details)
+  raise RuntimeError("Unexpected deploy result format")
 
 
 def main(argv: Sequence[str]) -> None:
@@ -301,6 +329,33 @@ def main(argv: Sequence[str]) -> None:
 
   job.submit()
 
+  if FLAGS.verify:
+    job.wait()
+
+    endpoint_name=_get_endpoint(job)
+    zone = config["zone"]
+    region = zone[:zone.rfind("-")]
+    logging.info("Region is %s", region)
+    endpoint  = Endpoint(endpoint_name,project=FLAGS.project,location=region)
+
+    with open(FLAGS.verify_payload, "r") as f:
+      payload = json.load(f)
+    
+    logging.info("Sending inference request...")
+    result = endpoint.predict(list(payload["instances"]))
+
+    if len(result.predictions) < 1:
+      logging.error("No infrences returned")
+      raise RuntimeError("Unexpected verification results")
+    
+    with open(FLAGS.verify_result) as f:
+      expected_results = json.load(f)["predictions"][0]
+
+    if result.predictions[0] != expected_results:
+      logging.error("Unexpected inference reuslts= [%s] expected= [%s]", result.predictions[0], expected_results)
+      raise RuntimeError("Unexpected verifification results")
+    
+    logging.info("Inference verified successfully!")
 
 if __name__ == "__main__":
   app.run(main)

@@ -16,6 +16,7 @@
 Tokenizes datasets in preparation for training/tuning.
 """
 
+import os
 from absl import app
 from absl import flags
 from absl import logging
@@ -80,12 +81,20 @@ def process(examples, tokenizer):
 def main(argv):
   del argv
 
-  path, fs = utils.gcs_path(FLAGS.dataset_path)
-  raw_datasets = load_from_disk(path, fs=fs)
+  path, _ = utils.gcs_path(path=FLAGS.dataset_path, gcs_prefix='gs://')
+  raw_datasets = load_from_disk(path)
+
+  path, fs = utils.gcs_path(path=FLAGS.model_checkpoint)
+  if fs:
+    logging.info('Downloading model....')
+    fs.get(path, 'model', recursive=True)
+    model_checkpoint = './model'
+  else:
+    model_checkpoint = FLAGS.model_checkpoint
 
   logging.info('Preprocessing Dataset....')
   tokenizer = AutoTokenizer.from_pretrained(
-      FLAGS.model_checkpoint, model_max_length=FLAGS.max_input_length
+      model_checkpoint, model_max_length=FLAGS.max_input_length
   )
   model_name = FLAGS.model_checkpoint.split('/')[-1]
   tokenized_datasets = DatasetDict()
@@ -103,8 +112,8 @@ def main(argv):
       raw_datasets['train'].column_names)
 
   logging.info('Saving preprocessed Dataset....')
-  path, fs = utils.gcs_path(FLAGS.tokenized_dataset_path)
-  tokenized_datasets.save_to_disk(path, fs=fs)
+  path, _ = utils.gcs_path(path=FLAGS.tokenized_dataset_path, gcs_prefix='gs://')
+  tokenized_datasets.save_to_disk(path)
 
 if __name__ == '__main__':
   logging.set_verbosity(logging.INFO)

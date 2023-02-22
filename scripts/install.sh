@@ -18,7 +18,7 @@
 
 if [[ -z "$(pip list | grep deepspeed)" ]]; then
   ./clean_up_torch_xla.sh
-  pip install datasets evaluate transformers
+  pip install 'datasets>=2.9.0' evaluate transformers
   pip install nltk
   pip install rouge_score
   pip install ipywidgets

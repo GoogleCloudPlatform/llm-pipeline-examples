@@ -1,6 +1,6 @@
 {
   "dataset": "cnn_dailymail",
-  "dataset_version": "3.0.0",
+  "dataset_subset": "3.0.0",
   "document_column": "article",
   "summary_column": "highlights",
   "cluster_prefix" : "bartnode",

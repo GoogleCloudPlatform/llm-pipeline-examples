@@ -89,13 +89,22 @@ def train(argv):
   del argv
 
   logging.info('Loading Dataset....')
-  path, gcs = utils.gcs_path(FLAGS.tokenized_dataset_path)
-  tokenized_datasets = load_from_disk(path, fs=gcs)
-  tokenizer = AutoTokenizer.from_pretrained(
-      FLAGS.model_checkpoint, model_max_length=FLAGS.max_input_length
-  )
-  model_name = FLAGS.model_checkpoint.split('/')[-1]
+  path, _ = utils.gcs_path(path=FLAGS.tokenized_dataset_path, gcs_prefix='gs://')
+  tokenized_datasets = load_from_disk(path)
 
+  model_name = FLAGS.model_checkpoint.split('/')[-1]
+  path, fs = utils.gcs_path(FLAGS.model_checkpoint)
+  if fs:
+    logging.info('Downloading model....')
+    fs.get(path, 'model', recursive=True)
+    model_checkpoint = './model'
+  else:
+    model_checkpoint = FLAGS.model_checkpoint
+
+  tokenizer = AutoTokenizer.from_pretrained(
+      model_checkpoint, model_max_length=FLAGS.max_input_length
+  )
+  
   rouge_score = evaluate.load('rouge')
   nltk.download('punkt')
 
@@ -103,7 +112,7 @@ def train(argv):
   if FLAGS.fp16:
     logging.info('Using float16....')
   model = AutoModelForSeq2SeqLM.from_pretrained(
-      FLAGS.model_checkpoint, torch_dtype=float32)
+      model_checkpoint, torch_dtype=float32)
   # Show the training loss with every epoch
   logging_steps = len(tokenized_datasets['train']) // FLAGS.batch_size
 

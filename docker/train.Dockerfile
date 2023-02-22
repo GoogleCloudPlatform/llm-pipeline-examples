@@ -11,14 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
 
-
+RUN apt-get update
 RUN apt install -yq openssh-server openssh-client
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
+
 
 RUN wget https://dl.google.com/cloudagents/add-logging-agent-repo.sh
 RUN bash add-logging-agent-repo.sh --also-install

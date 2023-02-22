@@ -5,14 +5,15 @@ have been shown to achieve high scores in benchmarks on different NLP tasks.
 There is a tendency of noticeable improvements which have been recorded as the
 model size grows. For example, the T5 model comes in various sizes:
 
-T5 small : 60 million parameters
-T5 base: 220 million parameters
-T5 large: 770 million parameters
-T5 XL: 3 billion parameters
-T5 XXL: 11 billions parameters
+* T5 small : 60 million parameters
+* T5 base: 220 million parameters
+* T5 large: 770 million parameters
+* T5 XL: 3 billion parameters
+* T5 XXL: 11 billions parameters
 
 The T5 XXL achieves higher benchmark scores on multiple NLP tasks in comparison
-to smaller T5 models.
+to smaller T5 models. When we fine tune it for summarization, we get better
+output quality as you can see some of our [sample results](#expected-output)
 
 The challenges of training large language models are multiple. To start with, it
 needs a large infrastructure of compute resources. Multiple machines with
@@ -92,7 +93,7 @@ Follow these instructions To run T5 training on a GPU cluster:
 
     ```bash
         export PROJECT_ID=<your project ID>
-        gcloud services enable aiplatform.googleapis.com cloudfunctions compute.googleapis.com iam.googleapis.com --project=${PROJECT_ID}
+        gcloud services enable aiplatform.googleapis.com cloudfunctions compute.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com --project=${PROJECT_ID}
     ```
 
 1.  Create a regional bucket in the same project. Make sure you choose to make
@@ -118,7 +119,7 @@ Follow these instructions To run T5 training on a GPU cluster:
     ```
 
     Replace **\<config>** with one of the precreated configs below or create
-    your own config as described in [here](#Customize your pipeline):
+    your own config as described in [here](#customize-my-pipeline):
 
     *   **small1vm1gpu.json** To create a single VM cluster with 1 A100 GPU and
         finetune T5 small on it.
@@ -171,6 +172,34 @@ Follow these instructions To run T5 training on a GPU cluster:
         -d "@prediction.json"
     ```
 
+### Expected Output
+
+1. If you used a configurtion with the T5 small model (60M parameters), the output would be like:
+```bash
+{
+  "predictions": [
+    "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a",
+  ],
+  "deployedModelId": "8744807401842016256",
+  "model": "projects/649215667094/locations/us-central1/models/6720808805245911040",
+  "modelDisplayName": "t5",
+  "modelVersionId": "12"
+}
+```
+
+2. If you use a configurtion with the T5 XXL (11B parameters), the output would be like:
+```bash
+{
+  "predictions": [
+    "Tapi Tapi is an ice cream parlor in Cape Town, South Africa.",
+  ],
+  "deployedModelId": "8744807401842016256",
+  "model": "projects/649215667094/locations/us-central1/models/6720808805245911040",
+  "modelDisplayName": "t5",
+  "modelVersionId": "12"
+}
+```
+
 ### Customize your pipeline
 
 Aside from those standard configurations. You can configure your pipeline to run
@@ -180,7 +209,7 @@ configurations. Here is the details of preparing a configuration JSON:
 ```json
 {
  "dataset": "cnn_dailymail",
- "dataset_version": "3.0.0",
+ "dataset_subset": "3.0.0",
  "document_column": "article",
  "summary_column": "highlights",
  "cluster_prefix" : "t5node",
@@ -203,8 +232,9 @@ Here is a description of what each configuration parameter does:
 
 *   **dataset**: Title of the dataset from huggingface.co. To use a custom
     dataset, this can be set to a GCS path.
-*   **dataset_name**: If the dataset has multiple subsets, this should be the
-    dataset subset name.
+*   **dataset_subset**: If the dataset has multiple subsets, this should be the
+    dataset subset name. For datasets with no subsets, this should be set to 
+    "default".
 *   **document_column**: The name of the document column from the dataset.
 *   **summary_column**: The name of the summary column from the dataset.
 *   **cluster_prefix**: A prefix to name VMs and Instance groups created by the
@@ -238,7 +268,7 @@ how to process larger datasets using DataFlow. The full training scripts can be
 found [here](src/download.py).
 
 We package this as a pipeline component that produces the dataset on GCP. The
-component takes the dataset and version as input. These correspond to the ‘path’
+component takes the dataset and subset as input. These correspond to the ‘path’
 and ‘name’ parameters passed directly to datasets.load_dataset. You can learn
 more about loading datasets here:
 
