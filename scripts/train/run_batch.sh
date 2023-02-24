@@ -58,7 +58,7 @@ export NAME_PREFIX=${JOB_ID}
 export INSTANCE_COUNT=${NODE_COUNT}
 export VM_TYPE=${MACHINE_TYPE}
 export ACCELERATOR_TYPE=${GPU_TYPE}
-export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
+export IMAGE_NAME=c2-deeplearning-pytorch-1-13-cu113-v20230126-debian-10
 export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
 export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
 export STARTUP_COMMAND=${START}
