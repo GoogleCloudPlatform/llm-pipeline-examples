@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Monitors training clusters. Restarts training cluster if detects training
-stall.
+"""Monitor training clusters.
+
+Restarts training cluster if detects training not progressing.
 """
 import os
 import re
