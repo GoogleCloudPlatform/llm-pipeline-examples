@@ -5,7 +5,7 @@
   "summary_column": "highlights",
   "cluster_prefix" : "t5node",
   "zone" : "us-central1-c",
-  "node_count" : 16,
+  "node_count" : 11,
   "model_checkpoint" : "google/t5-v1_1-xxl",
   "machine_type" : "a2-ultragpu-8g",
   "gpu_type" : "nvidia-a100-80gb",
