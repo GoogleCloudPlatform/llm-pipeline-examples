@@ -1,9 +1,7 @@
 import torch
 import numpy as np
 from transformers import (
-        AutoTokenizer,
-        T5Tokenizer,
-        T5TokenizerFast
+        AutoTokenizer
     ) 
 import tritonclient.http as httpclient
 from tritonclient.utils import np_to_triton_dtype
@@ -11,7 +9,7 @@ import json
 import struct
 
 class TritonProcessorBase:
-    def __init__(self, hf_model_path, host, port, useAutoTokenizer=True):
+    def __init__(self, hf_model_path, host, port):
         self.client = httpclient.InferenceServerClient(
             f'{host}:{port}',
             verbose=True

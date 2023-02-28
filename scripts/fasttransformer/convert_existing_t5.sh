@@ -1,6 +1,6 @@
 # Arg1 - NumGpus
 # Arg2 - ModelName
-# Arg3 - Converted Model Path
+# Arg3 - Output directory
 # Install dependencies for t5 transformations
 cd FasterTransformer/build
 pip install -r ../examples/pytorch/t5/requirement.txt

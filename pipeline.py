@@ -144,6 +144,7 @@ def deploy(
     machine_type: str,
     gpu_type: str,
     gpu_count: int,
+    container_args: List[str] = None
 ) -> NamedTuple(
     "Outputs",
     [
@@ -204,7 +205,8 @@ def deploy(
           k.lower(): str(v).replace(".", "_") for k, v in new_metrics.items()
       },
       serving_container_predict_route="/summarize",
-      serving_container_health_route="/health"
+      serving_container_health_route="/health",
+      serving_container_args=container_args
   )
 
   endpoint.deploy(
@@ -276,22 +278,27 @@ def my_pipeline(
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     if FLAGS.use_faster_transformer:
+      subdirectory = "t5"
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
         gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
-        gpu_number=deploy_gpu_count
+        gpu_number=deploy_gpu_count,
+        subdirectory=subdirectory
       )
+
+      path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
 
       deploy_op = deploy(
         project=FLAGS.project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
-            f"gcr.io/llm-containers/predicttriton:{FLAGS.image_tag}"
+            f"gcr.io/llm-containers/predict-triton:22.09"
         ),
-        model=convert_op.outputs["converted_model"],
+        model=path_to_model,
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        container_args=["--model_path=", path_to_model])
 
     else:
       deploy_op = deploy(

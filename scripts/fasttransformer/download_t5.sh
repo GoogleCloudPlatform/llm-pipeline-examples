@@ -1,7 +1,7 @@
 # Arg1 - Model path on HuggingFace or GCS
 cd FasterTransformer/build
 
-if [[ "$1" == gcs* ]] || [[ "$1" == //gs:* ]] ;
+if [[ "$1" == /gcs* ]] || [[ "$1" == gs://* ]] ;
 then
     export GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}
     gsutil cp -r $GCS_PATH .

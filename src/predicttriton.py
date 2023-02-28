@@ -28,7 +28,6 @@ from flask import Flask
 from flask import request
 import gcsfs
 from tritonprocessor import T5TritonProcessor 
-from transformers import AutoTokenizer
 
 app = Flask(__name__)
 FLAGS = flags.FLAGS
