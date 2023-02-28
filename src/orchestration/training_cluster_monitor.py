@@ -34,7 +34,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('project_id', '', 'GCP project id.')
 flags.DEFINE_string('checkpoint_path', '',
                     'GCS prefix to model checkpoint_file.')
-flags.DEFINE_integer('train_ttl_sec', 2400,
+flags.DEFINE_integer('train_ttl_sec', 10800,
                      'Restarts training cluster if latest checkpoint file is'
                      ' older than train_ttl_sec.')
 flags.DEFINE_integer('polling_sec', 30,
