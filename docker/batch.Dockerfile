@@ -13,6 +13,7 @@
 # limitations under the License.
 FROM gcr.io/llm-containers/cluster-provision-image:release
 
+RUN apt-get update
 RUN apt-get -yq install jq python3-distutils python3-pip
 
 RUN pip3 install yq
