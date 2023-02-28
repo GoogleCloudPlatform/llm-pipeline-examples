@@ -17,18 +17,19 @@ description: Converts an LLM to the FasterTransformer optimized version of that 
 
 inputs:
 - {name: "Model Checkpoint", type: String, description: 'Path to the model. This can either be a HuggingFace repository or a GCS bucket link in the format of "gs://<bucket>/<path>"'}
-- {name: "GPU DSM", type: Integer, description: 'DSM of the GPU this model will be deployed to. Reference: https://github.com/NVIDIA/FasterTransformer/blob/main/docs/t5_guide.md#build-the-project'}
+- {name: "GPU DSM", type: String, description: 'DSM of the GPU this model will be deployed to. Reference: https://github.com/NVIDIA/FasterTransformer/blob/main/docs/t5_guide.md#build-the-project'}
 - {name: "GPU Number", type: Integer, description: 'Number of GPUs this model will be split across when deployed to.'}
 
 outputs:
-- {name: Model, type: GCSPath, description: 'Path to converted model in GCS'}
+- {name: Converted Model, type: GCSPath, description: 'Path to converted model in GCS'}
 
 implementation:
   container:
     image: gcr.io/llm-containers/convert
     command: [
       ./all_in_one.sh,
-      {inputValue: GPU Architecture DSM},
+      {inputValue: GPU DSM},
       {inputValue: Model Checkpoint},
-      {inputValue: Number of GPUs}
+      {inputValue: GPU Number},
+      {outputValue: Converted Model},
     ]
