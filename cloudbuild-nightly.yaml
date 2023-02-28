@@ -20,7 +20,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/deploy:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/deploy:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/deploy:latest'
       - '-f'
@@ -29,7 +29,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - 'gcr.io/llm-containers/deploy:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/deploy:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/docker
     args:
       - pull
@@ -38,7 +38,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/batch:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/batch:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/batch:latest'
       - '-f'
@@ -47,7 +47,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - 'gcr.io/llm-containers/batch:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/batch:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/docker
     args:
       - pull
@@ -56,7 +56,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/train:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/train:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/train:latest'
       - '-f'
@@ -65,7 +65,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - 'gcr.io/llm-containers/train:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/train:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/docker
     args:
       - pull
@@ -74,7 +74,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/predict:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/predict:latest'
       - '-f'
@@ -83,7 +83,7 @@ steps:
   - name: gcr.io/cloud-builders/docker
     args:
       - push
-      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/predict:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/docker
     args:
       - build
@@ -98,7 +98,7 @@ steps:
       - '--network=cloudbuild'
       - test_docker
       - '--enable_caching=0'
-      - '--image_tag=githubpr${_PR_NUMBER}'
+      - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
 timeout: 86400s
