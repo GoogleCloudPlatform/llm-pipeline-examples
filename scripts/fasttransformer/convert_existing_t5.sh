@@ -7,10 +7,10 @@ pip install -r ../examples/pytorch/t5/requirement.txt
 
 echo  "Called with: NumGpus: " $1
 echo  "Called with: ModelName: "$2
-export NUM_GPUS = $1
-export MODEL_NAME = $2
+export NUM_GPUS=$1
+export MODEL_NAME=$2
 
-OUTPUT_PATH=$3/$2/fastertransformer
+OUTPUT_PATH=$3/$MODEL_NAME/fastertransformer
 
 # Convert
 python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
@@ -22,8 +22,5 @@ python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
 cp ../../all_models/t5/config.pbtxt $OUTPUT_PATH/config.pbtxt
 sed -i "s/PLACEHOLDERNUMGPU/$NUM_GPUS/g" $OUTPUT_PATH/config.pbtxt
 sed -i "s/PLACEHOLDERMODELNAME/$MODEL_NAME/g" $OUTPUT_PATH/config.pbtxt
-
-
-rm -r $2
 
 cd ../..
