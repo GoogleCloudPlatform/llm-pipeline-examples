@@ -9,11 +9,10 @@ IFS="/"
 MODEL_NAME=$2
 for x in $2
 do
-    MODEL_NAME = x
+    MODEL_NAME=$x
 done
 
-./convert_existing_t5.sh $1 $MODEL_NAME $(pwd)
+./convert_existing_t5.sh $1 $MODEL_NAME "$(pwd)"
+GCS_PATH=${4/\/gcs\//gs:\/\/}/$MODEL_NAME
 
-GCS_PATH=${$4/\/gcs\//gs:\/\/}
-
-gsutil cp -r ./$2 gs://$GCS_PATH/$2
+gsutil cp -r ./$MODEL_NAME "$GCS_PATH"
