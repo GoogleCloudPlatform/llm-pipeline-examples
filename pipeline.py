@@ -204,9 +204,8 @@ def deploy(
       labels={
           k.lower(): str(v).replace(".", "_") for k, v in new_metrics.items()
       },
-      serving_container_predict_route="/summarize",
-      serving_container_health_route="/health",
-      serving_container_args=container_args
+      serving_container_predict_route="/infer",
+      serving_container_health_route="/health"
   )
 
   endpoint.deploy(

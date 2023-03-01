@@ -391,7 +391,7 @@ class GCSSaveCallback(TrainerCallback):
    return None
 ```
 
-When the model is completely trained we also save the final copy to GCS.
+When the model is completely trained, we save the final copy to GCS.
 
 #### Evaluation and metrics
 
