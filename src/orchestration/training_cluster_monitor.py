@@ -109,6 +109,14 @@ def _restart_training_cluster():
   )
 
 
+def _write_fail_message(bucket_name, model_output_prefix):
+  storage_client = storage.Client()
+  bucket = storage_client.bucket(bucket_name)
+  blob = bucket.blob(os.path.join(model_output_prefix, 'progress.txt'))
+  with blob.open('w') as f:
+    f.write('failed')
+
+
 def main(argv):
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
@@ -150,6 +158,8 @@ def main(argv):
       )
       _restart_training_cluster()
       num_reloads += 1
+      if num_reloads == FLAGS.max_reloads:
+        _write_fail_message(bucket_name, model_output_prefix)
     time.sleep(FLAGS.polling_sec)
 
 
