@@ -15,6 +15,7 @@
 
 Simple Flask prediction for a model.
 """
+
 import argparse
 import os
 import subprocess
@@ -27,16 +28,44 @@ from absl.flags import argparse_flags
 from flask import Flask
 from flask import request
 import gcsfs
-from tritonprocessor import T5TritonProcessor 
+from triton_processor import T5TritonProcessor
 
 app = Flask(__name__)
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("model_path", "t5-base", "path to the FT converted model on GCS or local filesystem. For example '/all_models/t5-v1_1-base'")
-flags.DEFINE_integer("port", 5000, "port to expose this server on. Default is '5000'.")
-flags.DEFINE_integer("triton_port", 8000, "local triton server port to proxy requests to. Default is '8000'.")
-flags.DEFINE_string("triton_host", "localhost", "Optional. Separate host to route triton requests to. Default is 'localhost'.")
-flags.DEFINE_string("hf_model_path", "t5-base", "path to the source model on HuggingFace. For example 'google/t5-v1_1-base'.")
+flags.DEFINE_string(
+    "model_path",
+    "t5-base",
+    (
+        "path to the FT converted model on GCS or local filesystem. For example"
+        " '/all_models/t5-v1_1-base'"
+    ),
+)
+flags.DEFINE_integer(
+    "port", 5000, "port to expose this server on. Default is '5000'."
+)
+flags.DEFINE_integer(
+    "triton_port",
+    8000,
+    "local triton server port to proxy requests to. Default is '8000'.",
+)
+flags.DEFINE_string(
+    "triton_host",
+    "localhost",
+    (
+        "Optional. Separate host to route triton requests to. Default is"
+        " 'localhost'."
+    ),
+)
+flags.DEFINE_string(
+    "hf_model_path",
+    "t5-base",
+    (
+        "path to the source model on HuggingFace. For example"
+        " 'google/t5-v1_1-base'."
+    ),
+)
+
 
 def download_model(model_path):
   """Downloads the model to the expected Triton directory."""
@@ -54,6 +83,7 @@ def download_model(model_path):
 
   return model_path
 
+
 @app.route("/health")
 def health():
   return {"health": "ok"}
@@ -61,23 +91,34 @@ def health():
 
 @app.route("/summarize", methods=["POST"])
 def summarize():
-  """Process a summarization request."""
+  """Process a summarization request.
+
+  Returns:
+    Inferencing result object {'predictions': [..]}
+  """
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
   return_payload = []
   for req in request.json["instances"]:
-    text_out = app.client.infer(task="summarize", text=request.json["instances"])
+    text_out = app.client.infer(task="summarize", text=req)
     return_payload.append(text_out)
   return {"predictions": return_payload}
 
+
 @app.route("/infer", methods=["POST"])
 def infer():
-  """Process a generic inference request. The task should be provided as the first chunk of text."""
+  """Process a generic inference request.
+
+  The task should be provided as the first chunk of text.
+
+  Returns:
+    Inferencing result object {'predictions': [..]}
+  """
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
   return_payload = []
   for req in request.json["instances"]:
-    text_out = app.client.infer(task=None, text=request.json["instances"])
+    text_out = app.client.infer(task=None, text=req)
     return_payload.append(text_out)
   return {"predictions": return_payload}
 
@@ -108,9 +149,13 @@ def main(argv):
   model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path).rstrip("/")
   model_dir = download_model(model_path)
 
-  subprocess.Popen(["/opt/tritonserver/bin/tritonserver", f'--model-repository={model_dir}'])
-  
-  app.client = T5TritonProcessor(FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port)
+  subprocess.Popen(
+      ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}"]
+  )
+
+  app.client = T5TritonProcessor(
+      FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port
+  )
   app.run(app.host, app.port, debug=False)
 
 
