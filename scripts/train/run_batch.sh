@@ -131,7 +131,7 @@ while [[ -z "$EXIT_CODE" ]]; do
 
   if [[ "${RESULT}" == "started" && "$monitoring_started" != true  ]]; then
     echo "Training started, start monitoring."
-    (python3 training_cluster_monitor.py --project_id=${PROJECT} --checkpoint_path=${MODEL_OUTPUT}/${MODEL_CHECKPOINT}_checkpoints) &
+    (python3 training_cluster_monitor.py --project_id=${PROJECT} --model_output=${MODEL_OUTPUT}) &
     monitoring_started=true
   fi
 
