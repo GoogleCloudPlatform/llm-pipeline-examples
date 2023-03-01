@@ -28,7 +28,7 @@ implementation:
   container:
     image: gcr.io/llm-containers/convert
     command: [
-      ./all_in_one.sh,
+      ./convert_t5.sh,
       {inputValue: GPU DSM},
       {inputValue: Model Checkpoint},
       {inputValue: GPU Number},
