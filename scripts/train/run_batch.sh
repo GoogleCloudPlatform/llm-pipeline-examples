@@ -59,14 +59,14 @@ export INSTANCE_COUNT=${NODE_COUNT}
 export VM_TYPE=${MACHINE_TYPE}
 export ACCELERATOR_TYPE=${GPU_TYPE}
 export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
-export GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
+export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
 export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
 export STARTUP_COMMAND=${START}
 export PROJECT_ID=${PROJECT}
 export SHOW_PROXY_URL=no
 export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
 export MINIMIZE_TERRAFORM_LOGGING=true
-export DISK_SIZE_GB=1000
+#export DISK_SIZE_GB=1000
 /usr/entrypoint.sh
 
 echo "Provishioning cluster..."

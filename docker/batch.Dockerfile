@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/llm-containers/cluster-provision-image:release
+FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.3.0
 
 RUN apt-get update
 RUN apt-get -yq install jq python3-distutils python3-pip
