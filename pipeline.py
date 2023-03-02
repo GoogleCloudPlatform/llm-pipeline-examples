@@ -279,13 +279,15 @@ def my_pipeline(
     if FLAGS.use_faster_transformer:
       subdirectory = "t5"
       convert_op = convert_component(
-        model_checkpoint=train_op.outputs["model"],
-        gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
+        model_checkpoint=train_op.outputs["model"], # Need to get the uri from this into the image
+        #gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
+        # This resolves to `None` when read here
+        gpu_dsm="70", #Need to get the value of this from deploy_gpu_type - Might need to parse in image
         gpu_number=deploy_gpu_count,
         subdirectory=subdirectory
       )
 
-      path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
+      #path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
 
       deploy_op = deploy(
         project=FLAGS.project,
@@ -293,11 +295,11 @@ def my_pipeline(
         serving_container_image_uri=(
             f"gcr.io/llm-containers/predict-triton:22.09"
         ),
-        model=path_to_model,
+        model=convert_op.outputs["converted_model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count,
-        container_args=["--model_path=", path_to_model])
+        gpu_count=deploy_gpu_count)
+        #container_args=["--model_path=", path_to_model])
 
     else:
       deploy_op = deploy(
@@ -324,6 +326,7 @@ def _get_endpoint(pipeline_job):
   raise RuntimeError("Unexpected deploy result format")
 
 def _gpu_to_dsm(gpu_type):
+  print(gpu_type)
   if gpu_type.lower() == "NVIDIA-TESLA-P4".lower():
     return 61
   elif gpu_type.lower() == "NVIDIA-TESLA-P100".lower():

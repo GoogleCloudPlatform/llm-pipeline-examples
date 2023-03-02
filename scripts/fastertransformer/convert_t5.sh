@@ -54,6 +54,6 @@ sed -i "s/PLACEHOLDERMODELNAME/$MODEL_NAME/g" $OUTPUT_PATH/config.pbtxt
 cd ../..
 
 # Upload converted model
-GCS_PATH=${GCS_UPLOAD_PATH/\/gcs\//gs:\/\/}/$TARGET_DIRECTORY
+GCS_PATH=${GCS_UPLOAD_PATH/\/gcs\//gs:\/\/} #/$TARGET_DIRECTORY
 
 gsutil cp -r ./$MODEL_NAME "$GCS_PATH"

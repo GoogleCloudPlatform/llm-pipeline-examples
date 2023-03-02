@@ -16,13 +16,13 @@ name: Convert
 description: Converts an LLM to the FasterTransformer optimized version of that model.
 
 inputs:
-- {name: "Model Checkpoint", type: String, description: 'Path to the model. This can either be a HuggingFace repository or a GCS bucket link in the format of "gs://<bucket>/<path>"'}
+- {name: "Model Checkpoint", type: Artifact, description: 'Path to the model. This can either be a HuggingFace repository or a GCS bucket link in the format of "gs://<bucket>/<path>"'}
 - {name: "GPU DSM", type: String, description: 'DSM of the GPU this model will be deployed to. Reference: https://github.com/NVIDIA/FasterTransformer/blob/main/docs/t5_guide.md#build-the-project'}
 - {name: "GPU Number", type: Integer, description: 'Number of GPUs this model will be split across when deployed to.'}
 - {name: "Subdirectory", type: String, description: 'Subdirectory model will be uploaded to (appended to "Converted Model" output)'}
 
 outputs:
-- {name: Converted Model, type: GCSPath, description: 'Path to converted model in GCS'}
+- {name: "converted_model", type: GCSPath, description: 'Path to converted model in GCS'}
 
 implementation:
   container:
@@ -30,8 +30,8 @@ implementation:
     command: [
       ./convert_t5.sh,
       {inputValue: GPU DSM},
-      {inputValue: Model Checkpoint},
+      {inputUri: Model Checkpoint},
       {inputValue: GPU Number},
-      {outputValue: Converted Model},
+      {outputPath: converted_model},
       {inputValue: Subdirectory}
     ]

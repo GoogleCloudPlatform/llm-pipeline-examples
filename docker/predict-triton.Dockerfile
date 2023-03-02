@@ -17,10 +17,10 @@ FROM gcr.io/llm-containers/ft-triton:22.09
 
 RUN pip3 install absl-py flask gcsfs transformers tritonclient[http]
 
-ADD src/predicttriton.py .
-ADD src/tritonprocessor.py .
+ADD src/predict_triton.py .
+ADD src/triton_processor.py .
 
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
-ENTRYPOINT ["/bin/python3", "predicttriton.py"]
+ENTRYPOINT ["/bin/python3", "predict_triton.py"]
