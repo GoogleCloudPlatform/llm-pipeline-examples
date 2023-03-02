@@ -15,6 +15,7 @@ FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-imag
 
 RUN apt-get -yq install jq python3-distutils python3-pip
 
-RUN pip3 install yq
+RUN pip3 install yq google-cloud-storage absl-py
 
 COPY scripts/train/run_batch.sh .
+COPY src/orchestration/training_cluster_monitor.py .
