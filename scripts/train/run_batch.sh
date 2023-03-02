@@ -66,7 +66,7 @@ export PROJECT_ID=${PROJECT}
 export SHOW_PROXY_URL=no
 export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
 export MINIMIZE_TERRAFORM_LOGGING=true
-#export DISK_SIZE_GB=1000
+export DISK_SIZE_GB=1000
 /usr/entrypoint.sh
 
 echo "Provishioning cluster..."
