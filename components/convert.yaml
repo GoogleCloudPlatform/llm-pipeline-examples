@@ -22,7 +22,7 @@ inputs:
 - {name: "Subdirectory", type: String, description: 'Subdirectory model will be uploaded to (appended to "Converted Model" output)'}
 
 outputs:
-- {name: "converted_model", type: GCSPath, description: 'Path to converted model in GCS'}
+- {name: "converted_model", type: Model, description: 'Path to converted model in GCS'}
 
 implementation:
   container:

@@ -1,3 +1,4 @@
+#! /bin/bash
 # Arg1 - NumGpus
 # Arg2 - Model Path on HuggingFace
 # Arg3 - DSM for GPU [See faster_transformer_install.sh for table]

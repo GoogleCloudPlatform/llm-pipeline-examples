@@ -1,3 +1,4 @@
+#! /bin/bash
 # Arg1 - DSM
 
 # Needs to be run in below image.
