@@ -24,7 +24,7 @@ OUTPUT_PATH="$(pwd)/$MODEL_NAME/fastertransformer"
 echo "Converted model will be uploaded to ${OUTPUT_PATH}"
 
 # Build fast_transformer
-./faster_transformer_install.sh $GPU_DSM
+# ./faster_transformer_install.sh $GPU_DSM
 cd FasterTransformer/build
 
 # Download model
