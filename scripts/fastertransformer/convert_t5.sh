@@ -11,14 +11,17 @@ GCS_UPLOAD_PATH=$4
 TARGET_DIRECTORY=$5
 
 # Parse model directory from directory or repo path
+ORIG_IFS=$IFS
 IFS="/"
 MODEL_NAME=$MODEL_PATH
 for x in $MODEL_PATH
 do
     MODEL_NAME=$x
 done
+IFS=$ORIG_IFS
 
-OUTPUT_PATH="$(pwd)"/$MODEL_NAME/fastertransformer
+OUTPUT_PATH="$(pwd)/$MODEL_NAME/fastertransformer"
+echo "Converted model will be uploaded to ${OUTPUT_PATH}"
 
 # Build fast_transformer
 ./faster_transformer_install.sh $GPU_DSM
@@ -28,7 +31,8 @@ cd FasterTransformer/build
 if [[ "$MODEL_PATH" == /gcs* ]] || [[ "$MODEL_PATH" == gs://* ]] ;
 then
     # Download from GCS
-    GCS_DOWNLOAD_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}
+    GCS_DOWNLOAD_PATH=${MODEL_PATH/\/gcs\//gs:\/\/}
+    echo "Downloading model from ${GCS_DOWNLOAD_PATH}"
     gsutil cp -r $GCS_DOWNLOAD_PATH .
 else
     # Download from HuggingFace
@@ -57,4 +61,5 @@ cd ../..
 # Upload converted model
 GCS_PATH=${GCS_UPLOAD_PATH/\/gcs\//gs:\/\/} #/$TARGET_DIRECTORY
 
+echo "Uploading model to ${GCS_PATH}"
 gsutil cp -r ./$MODEL_NAME "$GCS_PATH"

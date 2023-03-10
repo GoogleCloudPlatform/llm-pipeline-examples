@@ -66,7 +66,8 @@ convert_component = comp.load_component_from_file("components/convert.yaml")
 def should_deploy(
     project: str,
     model_display_name: str,
-    model: Input[Model],
+    # model: Input[Model],
+    model: str,
     override_deploy: bool, 
 ) -> str:
   """Deploys the model to Vertex AI Predictin."""
@@ -87,7 +88,8 @@ def should_deploy(
 
   gcs = gcsfs.GCSFileSystem()
   new_metrics = {}
-  metrics_file = os.path.join(model.uri, "metrics.json")
+  # metrics_file = os.path.join(model.uri, "metrics.json")
+  metrics_file = os.path.join(model, "metrics.json")
   eval_metrics = ["eval_rouge1", "eval_rouge2", "eval_rougel"]
   if gcs.exists(metrics_file):
     with gcs.open(metrics_file, "r") as f:
@@ -240,78 +242,82 @@ def my_pipeline(
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
-  download_op = download_component(
-    dataset=dataset,
-    subset=dataset_subset,
-    model_checkpoint=model_checkpoint)
+  # download_op = download_component(
+  #   dataset=dataset,
+  #   subset=dataset_subset,
+  #   model_checkpoint=model_checkpoint)
 
-  preprocess_op = preprocess_component(
-      model_checkpoint=model_checkpoint,
-      document_column=document_column,
-      summary_column=summary_column,
-      raw_dataset=download_op.outputs["dataset_path"],
-  )
+  # preprocess_op = preprocess_component(
+  #     model_checkpoint=model_checkpoint,
+  #     document_column=document_column,
+  #     summary_column=summary_column,
+  #     raw_dataset=download_op.outputs["dataset_path"],
+  # )
 
-  train_op = trainer_component(
-      cluster_prefix=cluster_prefix,
-      node_count=node_count,
-      model_checkpoint=model_checkpoint,
-      machine_type=machine_type,
-      gpu_count=gpu_count,
-      data=preprocess_op.outputs["output_dataset"],
-      project=FLAGS.project,
-      batch_size=batch_size,
-      epochs=epochs,
-      gpu_type=gpu_type,
-      zone=zone,
-      id=str(int(time.time())),
-      image_tag=FLAGS.image_tag,
-      workspace_path=download_op.outputs["workspace_path"]
-  )
+  # train_op = trainer_component(
+  #     cluster_prefix=cluster_prefix,
+  #     node_count=node_count,
+  #     model_checkpoint=model_checkpoint,
+  #     machine_type=machine_type,
+  #     gpu_count=gpu_count,
+  #     data=preprocess_op.outputs["output_dataset"],
+  #     project=FLAGS.project,
+  #     batch_size=batch_size,
+  #     epochs=epochs,
+  #     gpu_type=gpu_type,
+  #     zone=zone,
+  #     id=str(int(time.time())),
+  #     image_tag=FLAGS.image_tag,
+  #     workspace_path=download_op.outputs["workspace_path"]
+  # )
 
-  should_deploy_op = should_deploy(
+  model_output="gs://pirillo-bucket/pipeline_runs/237939871711/llm-pipeline-20230309142736/train_-7588654157683228672/Model"
+
+  # should_deploy_op = should_deploy(
+  #     project=FLAGS.project,
+  #     model_display_name=model_display_name,
+  #     model=model_output,
+  #     # model=train_op.outputs["model"],
+  #     override_deploy=FLAGS.override_deploy)
+
+  # with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
+  if FLAGS.use_faster_transformer:
+    subdirectory = "t5"
+    convert_op = convert_component(
+      model_checkpoint=model_output,
+      #model_checkpoint=train_op.outputs["model"],
+      #gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
+      # This resolves to `None` when read here
+      gpu_dsm="70", #Need to get the value of this from deploy_gpu_type - Might need to parse in image
+      gpu_number=deploy_gpu_count,
+      subdirectory=subdirectory
+    )
+
+    #path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
+
+    deploy_op = deploy(
       project=FLAGS.project,
       model_display_name=model_display_name,
-      model=train_op.outputs["model"],
-      override_deploy=FLAGS.override_deploy)
+      serving_container_image_uri=(
+          f"gcr.io/llm-containers/predict-triton:22.09"
+      ),
+      model=convert_op.outputs["converted_model"],
+      machine_type=deploy_machine_type,
+      gpu_type=deploy_gpu_type,
+      gpu_count=deploy_gpu_count)
+      #container_args=["--model_path=", path_to_model])
 
-  with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    if FLAGS.use_faster_transformer:
-      subdirectory = "t5"
-      convert_op = convert_component(
-        model_checkpoint=train_op.outputs["model"], # Need to get the uri from this into the image
-        #gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
-        # This resolves to `None` when read here
-        gpu_dsm="70", #Need to get the value of this from deploy_gpu_type - Might need to parse in image
-        gpu_number=deploy_gpu_count,
-        subdirectory=subdirectory
-      )
-
-      #path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
-
-      deploy_op = deploy(
-        project=FLAGS.project,
-        model_display_name=model_display_name,
-        serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict-triton:22.09"
-        ),
-        model=convert_op.outputs["converted_model"],
-        machine_type=deploy_machine_type,
-        gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
-        #container_args=["--model_path=", path_to_model])
-
-    else:
-      deploy_op = deploy(
-        project=FLAGS.project,
-        model_display_name=model_display_name,
-        serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
-        ),
-        model=train_op.outputs["model"],
-        machine_type=deploy_machine_type,
-        gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+    # else:
+    #   deploy_op = deploy(
+    #     project=FLAGS.project,
+    #     model_display_name=model_display_name,
+    #     serving_container_image_uri=(
+    #         f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
+    #     ),
+    #     model=train_op.outputs["model"],
+    #     machine_type=deploy_machine_type,
+    #     gpu_type=deploy_gpu_type,
+    #     gpu_count=deploy_gpu_count)
 
 def _get_endpoint(pipeline_job):
   """Returns the deploy endpoint from a successful pipeline job."""
