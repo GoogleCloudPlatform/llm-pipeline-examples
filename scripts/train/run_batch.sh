@@ -95,6 +95,7 @@ export PROJECT_ID=${PROJECT}
 export SHOW_PROXY_URL=no
 export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
 export MINIMIZE_TERRAFORM_LOGGING=true
+export ENABLE_JUPYTER=false
 #export DISK_SIZE_GB=1000
 _invoke_cluster_tool
 
