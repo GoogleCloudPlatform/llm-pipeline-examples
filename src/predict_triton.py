@@ -160,7 +160,7 @@ def main(argv):
   model_dir = download_model(model_path)
 
   subprocess.Popen(
-      ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}"]
+      ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}", "--allow-vertex-ai=false", "--allow-http=true", "--http-port=8000"]
   )
 
   app.client = T5TritonProcessor(
