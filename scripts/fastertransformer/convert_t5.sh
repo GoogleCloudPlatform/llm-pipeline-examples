@@ -1,6 +1,6 @@
 #! /bin/bash
 # Arg1 - NumGpus
-# Arg2 - Model Path on HuggingFace
+# Arg2 - Model Path on HuggingFace or GCS
 # Arg3 - GCS path to upload the model
 # Arg4 - Subdirectory converted model will be uploaded to
 NUM_GPUS=$1

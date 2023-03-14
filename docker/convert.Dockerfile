@@ -24,8 +24,8 @@ ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin:/root/google-cloud-sdk/bin
 
 # For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
 COPY --chmod=777 scripts/fastertransformer/faster_transformer_install.sh .
-
-RUN ./faster_transformer_install.sh 70
-
 COPY --chmod=777 scripts/fastertransformer/convert_t5.sh .
 COPY --chmod=777 examples/triton/t5/config.pbtxt ./all_models/t5/
+
+ARG DSM
+RUN ./faster_transformer_install.sh $DSM

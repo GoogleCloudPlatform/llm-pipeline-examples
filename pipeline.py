@@ -386,15 +386,15 @@ def main(argv: Sequence[str]) -> None:
     result = endpoint.predict(list(payload["instances"]))
 
     if len(result.predictions) < 1:
-      logging.error("No infrences returned")
+      logging.error("No inferences returned")
       raise RuntimeError("Unexpected verification results")
     
     with open(FLAGS.verify_result) as f:
       expected_results = json.load(f)["predictions"][0]
 
     if result.predictions[0] != expected_results:
-      logging.error("Unexpected inference reuslts= [%s] expected= [%s]", result.predictions[0], expected_results)
-      raise RuntimeError("Unexpected verifification results")
+      logging.error("Unexpected inference results= [%s] expected= [%s]", result.predictions[0], expected_results)
+      raise RuntimeError("Unexpected verification results")
     
     logging.info("Inference verified successfully!")
 
