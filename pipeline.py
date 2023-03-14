@@ -61,7 +61,6 @@ preprocess_component = comp.load_component_from_file(
 trainer_component = comp.load_component_from_file("components/trainer.yaml")
 convert_component = comp.load_component_from_file("components/convert.yaml")
 
-
 @component(base_image="gcr.io/llm-containers/deploy")
 def should_deploy(
     project: str,
@@ -143,8 +142,7 @@ def deploy(
     model: Input[Model],
     machine_type: str,
     gpu_type: str,
-    gpu_count: int,
-    container_args: List[str] = None
+    gpu_count: int
 ) -> NamedTuple(
     "Outputs",
     [
@@ -279,15 +277,10 @@ def my_pipeline(
     if FLAGS.use_faster_transformer:
       subdirectory = "t5"
       convert_op = convert_component(
-        model_checkpoint=train_op.outputs["model"], # Need to get the uri from this into the image
-        #gpu_dsm=_gpu_to_dsm(deploy_gpu_type),
-        # This resolves to `None` when read here
-        gpu_dsm="70", #Need to get the value of this from deploy_gpu_type - Might need to parse in image
+        model_checkpoint=train_op.outputs["model"],
         gpu_number=deploy_gpu_count,
         subdirectory=subdirectory
       )
-
-      #path_to_model = f'{convert_op.outputs["converted_model"]}/{subdirectory}'
 
       deploy_op = deploy(
         project=FLAGS.project,
@@ -299,7 +292,6 @@ def my_pipeline(
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
         gpu_count=deploy_gpu_count)
-        #container_args=["--model_path=", path_to_model])
 
     else:
       deploy_op = deploy(
@@ -326,22 +318,21 @@ def _get_endpoint(pipeline_job):
   raise RuntimeError("Unexpected deploy result format")
 
 def _gpu_to_dsm(gpu_type):
-  print(gpu_type)
-  if gpu_type.lower() == "NVIDIA-TESLA-P4".lower():
+  gpu_type = gpu_type.upper()
+  if gpu_type == "NVIDIA_TESLA_P4":
     return 61
-  elif gpu_type.lower() == "NVIDIA-TESLA-P100".lower():
+  elif gpu_type == "NVIDIA_TESLA_P100":
     return 61
-  elif gpu_type.lower() == "NVIDIA-TESLA-V100".lower():
+  elif gpu_type == "NVIDIA_TESLA_V100":
     return 70
-  elif gpu_type.lower() == "NVIDIA-TESLA-T4".lower():
+  elif gpu_type == "NVIDIA_TESLA_T4":
     return 75
-  elif gpu_type.lower() == "NVIDIA-TESLA-A100".lower():
+  elif gpu_type == "NVIDIA_TESLA_A100":
     return 80
-  elif gpu_type.lower() == "NVIDIA-A100-80GB".lower():
+  elif gpu_type == "NVIDIA_A100_80GB":
     return 80
   else:
-    logging.warning("Saw unrecognized gpu_type %s . Compiling for all architectures.", gpu_type)
-    return "70,75,80,86"
+    raise RuntimeError("Saw unrecognized gpu_type %s.", gpu_type)
 
 def main(argv: Sequence[str]) -> None:
   if len(argv) > 1:
@@ -361,8 +352,11 @@ def main(argv: Sequence[str]) -> None:
 
   with open(dest_path, "r") as f:
     js = json.load(f)
-    for _, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
-      v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
+    for k, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
+      if k == "exec-convert":
+        v["container"]["image"] = f"{v['container']['image']}:{_gpu_to_dsm(config['deploy_gpu_type'])}"
+      else:
+        v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
 
   with open(dest_path, "w") as f:
     json.dump(js, f, indent=2)

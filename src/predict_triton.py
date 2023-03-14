@@ -77,9 +77,19 @@ def download_model(model_path):
     dst = "/workspace/all_models/" + src.split("/")[-1] + "/"
     app.model_directory = dst
     gcs = gcsfs.GCSFileSystem()
-    logging.info("Downloading model from %s", model_path)
+    logging.info("Downloading model FROM %s", model_path)
+    logging.info("Downloading model TO %s", dst)
     gcs.get(src, dst, recursive=True)
     model_path = dst
+
+    # Debug print out all files downloaded
+    file_list = []
+    for root, _, filenames in os.walk('/workspace/all_models/'):
+      for filename in filenames:
+        file_list.append(os.path.join(root, filename))
+
+    for x in file_list:
+      print(x)
 
   return model_path
 
@@ -150,7 +160,7 @@ def main(argv):
   model_dir = download_model(model_path)
 
   subprocess.Popen(
-      ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}"]
+      ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}", "--allow-vertex-ai=false", "--allow-http=true", "--http-port=8000"]
   )
 
   app.client = T5TritonProcessor(

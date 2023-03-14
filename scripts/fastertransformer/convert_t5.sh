@@ -1,34 +1,34 @@
 #! /bin/bash
 # Arg1 - NumGpus
 # Arg2 - Model Path on HuggingFace
-# Arg3 - DSM for GPU [See faster_transformer_install.sh for table]
-# Arg4 - GCS path to upload the model
-# Arg5 - Subdirectory converted model will be uploaded to
+# Arg3 - GCS path to upload the model
+# Arg4 - Subdirectory converted model will be uploaded to
 NUM_GPUS=$1
 MODEL_PATH=$2
-GPU_DSM=$3
-GCS_UPLOAD_PATH=$4
-TARGET_DIRECTORY=$5
+GCS_UPLOAD_PATH=$3
+TARGET_DIRECTORY=$4
 
 # Parse model directory from directory or repo path
+ORIG_IFS=$IFS
 IFS="/"
 MODEL_NAME=$MODEL_PATH
 for x in $MODEL_PATH
 do
     MODEL_NAME=$x
 done
+IFS=$ORIG_IFS
 
-OUTPUT_PATH="$(pwd)"/$MODEL_NAME/fastertransformer
+OUTPUT_PATH="$(pwd)/$MODEL_NAME/fastertransformer"
+echo "Converted model will be uploaded to ${OUTPUT_PATH}"
 
-# Build fast_transformer
-./faster_transformer_install.sh $GPU_DSM
 cd FasterTransformer/build
 
 # Download model
 if [[ "$MODEL_PATH" == /gcs* ]] || [[ "$MODEL_PATH" == gs://* ]] ;
 then
     # Download from GCS
-    GCS_DOWNLOAD_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}
+    GCS_DOWNLOAD_PATH=${MODEL_PATH/\/gcs\//gs:\/\/}
+    echo "Downloading model from ${GCS_DOWNLOAD_PATH}"
     gsutil cp -r $GCS_DOWNLOAD_PATH .
 else
     # Download from HuggingFace
@@ -50,11 +50,11 @@ python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
 
 cp ../../all_models/t5/config.pbtxt $OUTPUT_PATH/config.pbtxt
 sed -i "s/PLACEHOLDERNUMGPU/$NUM_GPUS/g" $OUTPUT_PATH/config.pbtxt
-sed -i "s/PLACEHOLDERMODELNAME/$MODEL_NAME/g" $OUTPUT_PATH/config.pbtxt
 
 cd ../..
 
 # Upload converted model
 GCS_PATH=${GCS_UPLOAD_PATH/\/gcs\//gs:\/\/} #/$TARGET_DIRECTORY
 
+echo "Uploading model to ${GCS_PATH}"
 gsutil cp -r ./$MODEL_NAME "$GCS_PATH"

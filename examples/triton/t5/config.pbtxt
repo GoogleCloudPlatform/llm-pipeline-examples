@@ -26,7 +26,7 @@
 
 name: "fastertransformer"
 backend: "fastertransformer"
-default_model_filename: "t5"
+default_model_filename: "PLACEHOLDERNUMGPU-gpu"
 max_batch_size: 1024
 input [
   {
@@ -240,11 +240,5 @@ parameters {
   key: "model_type"
   value: {
     string_value: "T5"
-  }
-}
-parameters {
-  key: "model_checkpoint_path"
-  value: {
-    string_value: "/workspace/all_models/PLACEHOLDERMODELNAME/fastertransformer/1/PLACEHOLDERNUMGPU-gpu"
   }
 }

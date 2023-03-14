@@ -29,9 +29,9 @@ implementation:
     image: gcr.io/llm-containers/convert
     command: [
       ./convert_t5.sh,
-      {inputValue: GPU DSM},
-      {inputUri: Model Checkpoint},
       {inputValue: GPU Number},
+      {inputUri: Model Checkpoint},
+      {inputValue: GPU DSM},
       {outputPath: converted_model},
       {inputValue: Subdirectory}
     ]
