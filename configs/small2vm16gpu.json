@@ -15,5 +15,6 @@
   "model_display_name" : "t5",
   "deploy_machine_type" : "n1-standard-32",
   "deploy_gpu_type" : "NVIDIA_TESLA_V100",
-  "deploy_gpu_count" : 4
+  "deploy_gpu_count" : 4,
+  "pipeline_node_memory_limit": "16G"
 }
