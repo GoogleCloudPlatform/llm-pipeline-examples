@@ -82,37 +82,12 @@ def download_model(model_path):
     gcs.get(src, dst, recursive=True)
     model_path = dst
 
-    # Debug print out all files downloaded
-    file_list = []
-    for root, _, filenames in os.walk('/workspace/all_models/'):
-      for filename in filenames:
-        file_list.append(os.path.join(root, filename))
-
-    for x in file_list:
-      print(x)
-
   return model_path
 
 
 @app.route("/health")
 def health():
   return {"health": "ok"}
-
-
-@app.route("/summarize", methods=["POST"])
-def summarize():
-  """Process a summarization request.
-
-  Returns:
-    Inferencing result object {'predictions': [..]}
-  """
-  logging.info("Request received.")
-  logging.info("Passing %s to Triton", request.json["instances"])
-  return_payload = []
-  for req in request.json["instances"]:
-    text_out = app.client.infer(task="summarize", text=req)
-    return_payload.append(text_out)
-  return {"predictions": return_payload}
 
 
 @app.route("/infer", methods=["POST"])
@@ -163,8 +138,18 @@ def main(argv):
       ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}", "--allow-vertex-ai=false", "--allow-http=true", "--http-port=8000"]
   )
 
+  # Check inside converted model for a config.json for tokenizer dictionary. If not found, use the passed flag.
+  nested_model_dir = model_dir
+  for _ in range(3):
+    nested_model_dir = os.path.join(nested_model_dir, os.listdir(nested_model_dir)[0])
+
+  if os.path.exists(os.path.join(nested_model_dir, "config.json")):
+    tokenizer_model_path = nested_model_dir
+  else:
+    tokenizer_model_path = FLAGS.hf_model_path
+
   app.client = T5TritonProcessor(
-      FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port
+      tokenizer_model_path, FLAGS.triton_host, FLAGS.triton_port
   )
   app.run(app.host, app.port, debug=False)
 
