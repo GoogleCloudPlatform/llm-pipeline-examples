@@ -125,7 +125,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: run-test
-    waitFor: ['push-deploy', 'push-batch' 'push-train', 'push-predict']
+    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict']
     args:
       - run
       - '--network=cloudbuild'
