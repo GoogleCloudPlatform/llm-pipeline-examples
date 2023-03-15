@@ -147,29 +147,8 @@ class T5TritonProcessor(TritonProcessorBase):
   def __init__(self, hf_model_path="t5-base", host="localhost", port=8000):
     super().__init__(hf_model_path, host, port)
 
-  def infer(self, task="summarize", text=None):
+  def infer(self, task="None", text=None):
     """Run inferencing on a series of inputs."""
-    if text is None:
-      text = (
-          "Sandwiched between a second-hand bookstore and record shop in Cape"
-          " Town's charmingly grungy suburb of Observatory is a blackboard"
-          " reading 'Tapi Tapi -- Handcrafted, authentic African ice cream.'"
-          " The parlor has become one of Cape Town's most talked about food"
-          " establishments since opening in October 2020. And in its tiny"
-          " kitchen, Jeff is creating ice cream flavors like no one else."
-          " Handwritten in black marker on the shiny kitchen counter are"
-          " today's options: Salty kapenta dried fish (blitzed), toffee and"
-          " scotch bonnet chile Sun-dried blackjack greens and caramel, Malted"
-          " millet ,Hibiscus, cloves and anise. Using only flavors indigenous"
-          " to the African continent, Guzha's ice cream has become the tool"
-          " through which he is reframing the narrative around African food."
-          " 'This (is) ice cream for my identity, for other people's sake,'"
-          " Jeff tells CNN. 'I think the (global) food story doesn't have much"
-          " space for Africa ... unless we're looking at the generic idea of"
-          " African food,' he adds. 'I'm not trying to appeal to the global"
-          " universe -- I'm trying to help Black identities enjoy their culture"
-          " on a more regular basis.'"
-      )
     if task is not None:
       text = f"{task}: {text}"
     inputs = self._preprocess(text)
@@ -177,7 +156,7 @@ class T5TritonProcessor(TritonProcessorBase):
     return self._postprocess(result)
 
   def _preprocess(self, string_input):
-    """Implement the function that takes text converts it into the tokens using HFtokenizer and prepares tensorts for sending to Triton."""
+    """Implement the function that takes text, converts it into the tokens using HFtokenizer and prepares tensorts for sending to Triton."""
     input_token = self.tokenizer(
         string_input, return_tensors="pt", padding=True, truncation=True
     )
@@ -222,11 +201,8 @@ class T5TritonProcessor(TritonProcessorBase):
   def _postprocess(self, result):
     ft_decoding_outputs = result.as_numpy("output_ids")
     ft_decoding_seq_lens = result.as_numpy("sequence_length")
-    # print(type(ft_decoding_outputs), type(ft_decoding_seq_lens))
-    # print(ft_decoding_outputs, ft_decoding_seq_lens)
     tokens = self.tokenizer.decode(
         ft_decoding_outputs[0][0][: ft_decoding_seq_lens[0][0]],
         skip_special_tokens=True,
     )
-    # print(tokens)
     return tokens

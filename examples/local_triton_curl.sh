@@ -1,1 +1,0 @@
-curl -X POST -H "Content-Type: application/json" -d @vertex_json_request.json localhost:5000/infer

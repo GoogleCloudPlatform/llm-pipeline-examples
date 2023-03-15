@@ -235,6 +235,7 @@ def my_pipeline(
     deploy_gpu_count: int,
     gpu_type: str,
     zone: str,
+    pipeline_node_memory_limit: str,
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -276,17 +277,20 @@ def my_pipeline(
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     if FLAGS.use_faster_transformer:
       subdirectory = "t5"
+      if pipeline_node_memory_limit is None:
+        pipeline_node_memory_limit = "16G"
+
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
         gpu_number=deploy_gpu_count,
         subdirectory=subdirectory
-      )
+      ).set_memory_limit(pipeline_node_memory_limit)
 
       deploy_op = deploy(
         project=FLAGS.project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict-triton:22.09"
+            f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
         ),
         model=convert_op.outputs["converted_model"],
         machine_type=deploy_machine_type,
