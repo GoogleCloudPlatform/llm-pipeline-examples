@@ -99,22 +99,6 @@ def health():
   return {"health": "ok"}
 
 
-@app.route("/summarize", methods=["POST"])
-def summarize():
-  """Process a summarization request.
-
-  Returns:
-    Inferencing result object {'predictions': [..]}
-  """
-  logging.info("Request received.")
-  logging.info("Passing %s to Triton", request.json["instances"])
-  return_payload = []
-  for req in request.json["instances"]:
-    text_out = app.client.infer(task="summarize", text=req)
-    return_payload.append(text_out)
-  return {"predictions": return_payload}
-
-
 @app.route("/infer", methods=["POST"])
 def infer():
   """Process a generic inference request.
@@ -163,8 +147,12 @@ def main(argv):
       ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}", "--allow-vertex-ai=false", "--allow-http=true", "--http-port=8000"]
   )
 
+  # FasterTransformer nests the actual model directory 2 layers deeper, so get that path to get the tokenizer config
+  nested_model_dir = os.path.join(model_dir, os.listdir(model_dir)[0])
+  nested_model_dir = os.path.join(nested_model_dir, os.listdir(model_dir)[0])
+
   app.client = T5TritonProcessor(
-      FLAGS.hf_model_path, FLAGS.triton_host, FLAGS.triton_port
+      nested_model_dir, FLAGS.triton_host, FLAGS.triton_port
   )
   app.run(app.host, app.port, debug=False)
 

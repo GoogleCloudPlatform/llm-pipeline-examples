@@ -62,6 +62,8 @@ python3 ../examples/pytorch/t5/utils/huggingface_t5_ckpt_convert.py \
 cp ../../all_models/t5/config.pbtxt $OUTPUT_PATH/config.pbtxt
 sed -i "s/PLACEHOLDERNUMGPU/$NUM_GPUS/g" $OUTPUT_PATH/config.pbtxt
 
+cp $MODEL_NAME/config.json $OUTPUT_PATH/1/$NUM_GPUS-gpu/config.json
+cp $MODEL_NAME/tokenizer.json $OUTPUT_PATH/1/$NUM_GPUS-gpu/tokenizer.json
 cd ../..
 
 # Upload converted model

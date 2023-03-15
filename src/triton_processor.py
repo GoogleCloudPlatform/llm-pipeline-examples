@@ -28,14 +28,14 @@ from tritonclient.utils import np_to_triton_dtype
 class TritonProcessorBase:
   """Base Processor class for any FasterTransformer Triton Backend model."""
 
-  def __init__(self, hf_model_path, host, port):
+  def __init__(self, model_path, host, port):
     self.client = httpclient.InferenceServerClient(
         f"{host}:{port}", verbose=True
     )
 
     # Initialize tokenizers from HuggingFace to do pre and post processings
     # (convert text into tokens and backward) at the client side
-    self.tokenizer = AutoTokenizer.from_pretrained(hf_model_path)
+    self.tokenizer = AutoTokenizer.from_pretrained(model_path)
 
   def _get_payload(
       self,
