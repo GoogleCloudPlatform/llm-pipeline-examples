@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
+<<<<<<< HEAD
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     script: |
       # https://github.com/kyma-project/test-infra/issues/93#issuecomment-457263589
@@ -19,11 +20,18 @@ steps:
           echo "Removing ssh key"; \
           gcloud compute os-login ssh-keys remove --key $i || true; \
       done
+=======
+  # deploy
+>>>>>>> 1617424 (Add parallelism to Google Cloud Build steps)
   - name: gcr.io/cloud-builders/docker
+    id: pull-deploy
+    waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/deploy:latest'
   - name: gcr.io/cloud-builders/docker
+    id: build-deploy
+    waitFor: ['pull-deploy']
     args:
       - build
       - '-t'
@@ -34,14 +42,21 @@ steps:
       - docker/deploy.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: push-deploy
+    waitFor: build-deploy
     args:
       - push
       - 'gcr.io/llm-containers/deploy:github${SHORT_SHA}'
+  # batch
   - name: gcr.io/cloud-builders/docker
+    id: pull-batch
+    waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/batch:latest'
   - name: gcr.io/cloud-builders/docker
+    id: build-batch
+    waitFor: pull-batch
     args:
       - build
       - '-t'
@@ -52,14 +67,21 @@ steps:
       - docker/batch.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: push-batch
+    waitFor: build-batch
     args:
       - push
       - 'gcr.io/llm-containers/batch:github${SHORT_SHA}'
+  # train
   - name: gcr.io/cloud-builders/docker
+    id: pull-train
+    waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/train:latest'
   - name: gcr.io/cloud-builders/docker
+    id: build-train
+    waitFor: ['pull-train']
     args:
       - build
       - '-t'
@@ -70,14 +92,21 @@ steps:
       - docker/train.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: push-train
+    waitFor: build-train
     args:
       - push
       - 'gcr.io/llm-containers/train:github${SHORT_SHA}'
+  #predict
   - name: gcr.io/cloud-builders/docker
+    id: pull-predict
+    waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/predict:latest'
   - name: gcr.io/cloud-builders/docker
+    id: build-predict
+    waitFor: ['pull-predict']
     args:
       - build
       - '-t'
@@ -88,10 +117,15 @@ steps:
       - docker/predict.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: push-predict
+    waitFor: build-predict
     args:
       - push
       - 'gcr.io/llm-containers/predict:github${SHORT_SHA}'
+  # test
   - name: gcr.io/cloud-builders/docker
+    id: build-test
+    waitFor: ['-']
     args:
       - build
       - '-t'
@@ -100,6 +134,8 @@ steps:
       - docker/test.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: run-test
+    waitFor: ['push-deploy', 'push-batch' 'push-train', 'push-predict']
     args:
       - run
       - '--network=cloudbuild'
