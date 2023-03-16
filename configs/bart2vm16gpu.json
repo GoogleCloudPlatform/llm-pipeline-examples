@@ -15,6 +15,5 @@
   "model_display_name" : "bart",
   "deploy_machine_type" : "n1-standard-32",
   "deploy_gpu_type" : "NVIDIA_TESLA_V100",
-  "deploy_gpu_count" : 2,
-  "pipeline_node_memory_limit": "16G"
+  "deploy_gpu_count" : 2
 }

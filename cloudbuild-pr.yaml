@@ -97,7 +97,7 @@ steps:
       - run
       - '--network=cloudbuild'
       - test_docker
-      - '--enable_caching=1'
+      - '--enable_caching=0'
       - '--image_tag=githubpr${_PR_NUMBER}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'

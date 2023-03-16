@@ -15,10 +15,6 @@
 
 FROM nvcr.io/nvidia/pytorch:22.09-py3
 
-RUN git clone --depth 1 --branch release/v5.3_tag https://github.com/NVIDIA/FasterTransformer.git
-RUN mkdir -p FasterTransformer/build
-RUN cd FasterTransformer/build && git submodule init && git submodule update
-
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin:/root/google-cloud-sdk/bin
 
@@ -27,5 +23,4 @@ COPY --chmod=777 scripts/fastertransformer/faster_transformer_install.sh .
 COPY --chmod=777 scripts/fastertransformer/convert_t5.sh .
 COPY --chmod=777 examples/triton/t5/config.pbtxt ./all_models/t5/
 
-ARG DSM
-RUN ./faster_transformer_install.sh $DSM
+RUN ./faster_transformer_install.sh

@@ -235,7 +235,7 @@ def my_pipeline(
     deploy_gpu_count: int,
     gpu_type: str,
     zone: str,
-    pipeline_node_memory_limit: str,
+    pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -277,8 +277,6 @@ def my_pipeline(
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     if FLAGS.use_faster_transformer:
       subdirectory = "t5"
-      if pipeline_node_memory_limit is None:
-        pipeline_node_memory_limit = "16G"
 
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],

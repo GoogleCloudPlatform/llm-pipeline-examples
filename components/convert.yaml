@@ -19,6 +19,7 @@ inputs:
 - {name: "Model Checkpoint", type: Artifact, description: 'Path to the model. This can either be a HuggingFace repository or a GCS bucket link in the format of "gs://<bucket>/<path>"'}
 - {name: "GPU Number", type: Integer, description: 'Number of GPUs this model will be split across when deployed to.'}
 - {name: "Subdirectory", type: String, description: 'Subdirectory model will be uploaded to (appended to "Converted Model" output)'}
+- {name: "GPU Type", type: String, description: 'SKU for the GPU that the model will be run on. Ex: "NVIDIA_TESLA_A100"'}
 
 outputs:
 - {name: "converted_model", type: Model, description: 'Path to converted model in GCS'}
@@ -31,5 +32,6 @@ implementation:
       {inputValue: GPU Number},
       {inputUri: Model Checkpoint},
       {outputPath: converted_model},
-      {inputValue: Subdirectory}
+      {inputValue: Subdirectory},
+      {inputValue: GPU Type}
     ]
