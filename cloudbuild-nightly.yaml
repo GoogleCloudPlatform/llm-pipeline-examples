@@ -116,4 +116,4 @@ steps:
 timeout: 86400s
 options:
   pool:
-    name: projects/$PROJECT_ID/locations/us-central1/workerPools/nightly-build
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/deepspeed-build
