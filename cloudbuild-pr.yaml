@@ -101,6 +101,7 @@ steps:
       - '--image_tag=githubpr${_PR_NUMBER}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--config=small1vm1gpu.json'
 timeout: 86400s
 options:
   pool:
