@@ -101,16 +101,6 @@ steps:
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
-      - '--config=small1vm1gpu.json'
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - run
-      - '--network=cloudbuild'
-      - test_docker
-      - '--enable_caching=0'
-      - '--image_tag=github${SHORT_SHA}'
-      - '--project=$PROJECT_ID'
-      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--config=xxlnightly.json'
       - '--verify_result=predict_result_xxlnightly.yaml'
 timeout: 86400s
