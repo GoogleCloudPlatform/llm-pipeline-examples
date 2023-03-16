@@ -1,0 +1,19 @@
+{
+    "dataset": "cnn_dailymail",
+    "dataset_subset": "3.0.0",
+    "document_column": "article",
+    "summary_column": "highlights",
+    "cluster_prefix" : "t5node",
+    "zone" : "us-east4-c",
+    "node_count" : 8,
+    "model_checkpoint" : "google/t5-v1_1-xxl",
+    "machine_type" : "a2-ultragpu-8g",
+    "gpu_type" : "nvidia-a100-80gb",
+    "gpu_count" : 8,
+    "batch_size" : 19,
+    "epochs" : 2,
+    "model_display_name" : "t5",
+    "deploy_machine_type" : "a2-highgpu-2g",
+    "deploy_gpu_type" : "NVIDIA_TESLA_A100",
+    "deploy_gpu_count" : 2
+  }
