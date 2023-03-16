@@ -109,11 +109,11 @@ steps:
       - test_docker
       - '--enable_caching=0'
       - '--image_tag=github${SHORT_SHA}'
-      - '--project=bct-staging-supercomputer'
+      - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://pipeline-runs/'
       - '--config=xxlnightly.json'
       - '--verify_result=predict_result_xxlnightly.yaml'
 timeout: 86400s
 options:
   pool:
-    name: projects/bct-staging-supercomputer/locations/us-central1/workerPools/nightly-build
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/nightly-build
