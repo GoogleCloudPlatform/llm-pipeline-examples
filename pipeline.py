@@ -62,6 +62,7 @@ trainer_component = comp.load_component_from_file("components/trainer.yaml")
 @component(base_image="gcr.io/llm-containers/deploy")
 def should_deploy(
     project: str,
+    region: str,
     model_display_name: str,
     model: Input[Model],
     override_deploy: bool, 
@@ -75,6 +76,7 @@ def should_deploy(
 
   existing_endpoints = aip.Endpoint.list(
       project=project,
+      location=region,
       order_by="create_time",
       filter='display_name="{}"'.format(model_display_name))
 
@@ -136,6 +138,7 @@ def should_deploy(
 def deploy(
     project: str,
     model_display_name: str,
+    region: str,
     serving_container_image_uri: str,
     model: Input[Model],
     machine_type: str,
@@ -157,6 +160,7 @@ def deploy(
 
   existing_endpoints = aip.Endpoint.list(
       project=project,
+      location=region,
       order_by="create_time",
       filter='display_name="{}"'.format(model_display_name))
 
@@ -166,6 +170,7 @@ def deploy(
   else:
     endpoint = aip.Endpoint.create(
         project=project,
+        location=region,
         display_name=model_display_name,
     )
 
@@ -235,6 +240,8 @@ def my_pipeline(
     zone: str,
 ):
   """Pipeline defintion function."""
+  region = zone[:zone.rfind("-")]
+
 # pylint: disable=unused-variable
   download_op = download_component(
     dataset=dataset,
@@ -267,6 +274,7 @@ def my_pipeline(
 
   should_deploy_op = should_deploy(
       project=FLAGS.project,
+      region=region,
       model_display_name=model_display_name,
       model=train_op.outputs["model"],
       override_deploy=FLAGS.override_deploy)
@@ -274,6 +282,7 @@ def my_pipeline(
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     deploy_op = deploy(
         project=FLAGS.project,
+        region=region,
         model_display_name=model_display_name,
         serving_container_image_uri=(
             f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
