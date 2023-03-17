@@ -276,13 +276,9 @@ def my_pipeline(
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     if FLAGS.use_faster_transformer:
-      subdirectory = "t5"
-
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
-        gpu_number=deploy_gpu_count,
-        subdirectory=subdirectory,
-        gpu_type=gpu_type
+        gpu_number=deploy_gpu_count
       ).set_memory_limit(pipeline_node_memory_limit)
 
       deploy_op = deploy(
@@ -320,23 +316,6 @@ def _get_endpoint(pipeline_job):
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
 
-def _gpu_to_dsm(gpu_type):
-  gpu_type = gpu_type.upper()
-  if gpu_type == "NVIDIA_TESLA_P4":
-    return 61
-  elif gpu_type == "NVIDIA_TESLA_P100":
-    return 61
-  elif gpu_type == "NVIDIA_TESLA_V100":
-    return 70
-  elif gpu_type == "NVIDIA_TESLA_T4":
-    return 75
-  elif gpu_type == "NVIDIA_TESLA_A100":
-    return 80
-  elif gpu_type == "NVIDIA_A100_80GB":
-    return 80
-  else:
-    raise RuntimeError("Saw unrecognized gpu_type %s.", gpu_type)
-
 def main(argv: Sequence[str]) -> None:
   if len(argv) > 1:
     raise app.UsageError("Too many command-line arguments.")
@@ -355,10 +334,7 @@ def main(argv: Sequence[str]) -> None:
 
   with open(dest_path, "r") as f:
     js = json.load(f)
-    for k, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
-      # if k == "exec-convert":
-      #   v["container"]["image"] = f"{v['container']['image']}:{_gpu_to_dsm(config['deploy_gpu_type'])}"
-      # else:
+    for _, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
       v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
 
   with open(dest_path, "w") as f:
