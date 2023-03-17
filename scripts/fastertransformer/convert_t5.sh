@@ -15,11 +15,9 @@
 # Arg1 - NumGpus
 # Arg2 - Model Path on HuggingFace or GCS
 # Arg3 - GCS path to upload the model
-# Arg4 - GPU SKU to convert to
 NUM_GPUS=$1
 MODEL_PATH=$2
 GCS_UPLOAD_PATH=$3
-GPU_TYPE=$4
 
 # Parse model directory from directory or repo path
 ORIG_IFS=$IFS
@@ -34,26 +32,7 @@ IFS=$ORIG_IFS
 OUTPUT_PATH="$(pwd)/$MODEL_NAME/fastertransformer"
 echo "Converted model will be uploaded to ${OUTPUT_PATH}"
 
-case ${GPU_TYPE^^} in
-    "NVIDIA_TESLA_P4" | "NVIDIA_TESLA_P100"))
-        DSM = 61
-        ;;
-    "NVIDIA_TESLA_V100")
-        DSM = 70
-        ;;
-    "NVIDIA_TESLA_T4")
-        DSM = 75
-        ;;
-    "NVIDIA_TESLA_A100" | "NVIDIA_A100_80GB")
-        DSM = 80
-        ;;
-    *)
-        echo "Unexpected GPU SKU: $GPU_TYPE"
-        exit 1
-        ;;
-esac
-
-cd FasterTransformer/build-$DSM
+cd FasterTransformer/build
 
 # Download model
 if [[ "$MODEL_PATH" == /gcs* ]] || [[ "$MODEL_PATH" == gs://* ]] ;

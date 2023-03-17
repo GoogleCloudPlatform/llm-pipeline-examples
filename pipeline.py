@@ -281,7 +281,8 @@ def my_pipeline(
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
         gpu_number=deploy_gpu_count,
-        subdirectory=subdirectory
+        subdirectory=subdirectory,
+        gpu_type=gpu_type
       ).set_memory_limit(pipeline_node_memory_limit)
 
       deploy_op = deploy(
@@ -355,10 +356,10 @@ def main(argv: Sequence[str]) -> None:
   with open(dest_path, "r") as f:
     js = json.load(f)
     for k, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
-      if k == "exec-convert":
-        v["container"]["image"] = f"{v['container']['image']}:{_gpu_to_dsm(config['deploy_gpu_type'])}"
-      else:
-        v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
+      # if k == "exec-convert":
+      #   v["container"]["image"] = f"{v['container']['image']}:{_gpu_to_dsm(config['deploy_gpu_type'])}"
+      # else:
+      v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
 
   with open(dest_path, "w") as f:
     json.dump(js, f, indent=2)
