@@ -240,7 +240,7 @@ def my_pipeline(
     zone: str,
 ):
   """Pipeline defintion function."""
-  region = zone[:zone.rfind("-")]
+  region = zone.value[:zone.value.rfind("-")]
 
 # pylint: disable=unused-variable
   download_op = download_component(
