@@ -14,17 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-export ZONE=$(gcloud compute instances list | grep $(hostname) | sed 's/\S\+ \+\(\S\+\) .*/\1/')
+export ZONE=$1
 echo Zone is ${ZONE}
 export USER=$(whoami)
 echo User is ${USER}
+
+if [[ ! -e machines.txt ]]; then
+  echo "No machines.txt file found!"
+  exit 1
+fi
 
 export slots=$2
 if [[ "$slots" == "16" ]]; then
   export slots=15
 fi
-for machine in $(gcloud compute instances list | grep $1 | sed 's/\(^\S\+\) .*/\1/');
+while read -r machine ip;
 do
   echo ${machine}
   while true; do
@@ -34,11 +38,10 @@ do
     echo "Waiting for ssh..."
     sleep 10
   done
-  export IP=$(gcloud compute instances list | grep "${machine} " | sed 's/.* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1/')
-  echo ${machine} address is ${IP} . Setting up user ${USER}
+  echo ${machine} address is ${ip} . Setting up user ${USER}
   if [[ ! -e .ssh/config || -z "$(cat .ssh/config | grep ${machine})" ]]; then
     echo "Host ${machine}
-  Hostname ${IP}
+  Hostname ${ip}
   User ${USER}
   Port 1022
   IdentityFile ~/.ssh/google_compute_engine
@@ -50,4 +53,4 @@ do
   if [[ ! -e deepspeed_hostfile || -z "$(cat deepspeed_hostfile | grep ${machine})" ]]; then
     echo "${machine} slots=$slots" >> deepspeed_hostfile
   fi
-done
+done < machines.txt

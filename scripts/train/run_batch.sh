@@ -102,6 +102,8 @@ echo "Provishioning cluster..."
 
 (sleep 2400;echo check > check.txt) &
 
+gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
+gsutil cp machines.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/
 
 monitoring_started=false
 export EXIT_CODE=

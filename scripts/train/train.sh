@@ -26,11 +26,11 @@ export WORKSPACE_PATH=$8
 
 export HOSTNAME=$(hostname)
 shopt -s extglob
-export CLUSTER_PREFIX=${HOSTNAME/%-+([a-z0-9])/-}
 
-echo "Node ${HOSTNAME} model ${MODEL_CHECKPOINT} cluster ${CLUSTER_PREFIX}..."
+echo "Node ${HOSTNAME} model ${MODEL_CHECKPOINT}..."
 
-export HEAD=$(gcloud compute instances list | grep ${CLUSTER_PREFIX} | sed 's/\(^\S\+\) .*/\1/' | sort | head -n 1)
+gsutil cp ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/machines.txt .
+read -r HEAD HEAD_IP < machines.txt
 echo "Head node found as ${HEAD}"
 
 if [[ "$HEAD" == "$HOSTNAME" ]]; then
@@ -44,7 +44,7 @@ if [[ "$HEAD" == "$HOSTNAME" ]]; then
   then mkdir .ssh;
   fi
   echo "Configuring head node ..." >> /home/jupyter/deepspeed_output.log
-  ./setup_head.sh ${CLUSTER_PREFIX} ${GPU_COUNT}
+  ./setup_head.sh ${ZONE} ${GPU_COUNT}
   export result=$?
   if [[ "$result" != "0" ]]; then 
     echo "Head setup failed"
