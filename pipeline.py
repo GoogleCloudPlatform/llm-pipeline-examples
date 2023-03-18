@@ -49,6 +49,8 @@ flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to p
 flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
+flags.DEFINE_bool("use_faster_transformer", False,
+                  "Experimental flag to use FasterTransformer to convert the provided model into an optimized format. Currently only supported for the T5 model family.")
 flags.mark_flag_as_required("project")
 flags.mark_flag_as_required("pipeline_root")
 flags.mark_flag_as_required("config")
@@ -57,7 +59,7 @@ download_component = comp.load_component_from_file("components/download.yaml")
 preprocess_component = comp.load_component_from_file(
     "components/preprocess.yaml")
 trainer_component = comp.load_component_from_file("components/trainer.yaml")
-
+convert_component = comp.load_component_from_file("components/convert.yaml")
 
 @component(base_image="gcr.io/llm-containers/deploy")
 def should_deploy(
@@ -140,7 +142,7 @@ def deploy(
     model: Input[Model],
     machine_type: str,
     gpu_type: str,
-    gpu_count: int,
+    gpu_count: int
 ) -> NamedTuple(
     "Outputs",
     [
@@ -233,6 +235,7 @@ def my_pipeline(
     deploy_gpu_count: int,
     gpu_type: str,
     zone: str,
+    pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -272,7 +275,25 @@ def my_pipeline(
       override_deploy=FLAGS.override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    deploy_op = deploy(
+    if FLAGS.use_faster_transformer:
+      convert_op = convert_component(
+        model_checkpoint=train_op.outputs["model"],
+        gpu_number=deploy_gpu_count
+      ).set_memory_limit(pipeline_node_memory_limit)
+
+      deploy_op = deploy(
+        project=FLAGS.project,
+        model_display_name=model_display_name,
+        serving_container_image_uri=(
+            f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
+        ),
+        model=convert_op.outputs["converted_model"],
+        machine_type=deploy_machine_type,
+        gpu_type=deploy_gpu_type,
+        gpu_count=deploy_gpu_count)
+
+    else:
+      deploy_op = deploy(
         project=FLAGS.project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
@@ -294,7 +315,6 @@ def _get_endpoint(pipeline_job):
   logging.error("No deploy task found :(. Task = %s",
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
-
 
 def main(argv: Sequence[str]) -> None:
   if len(argv) > 1:
@@ -345,15 +365,15 @@ def main(argv: Sequence[str]) -> None:
     result = endpoint.predict(list(payload["instances"]))
 
     if len(result.predictions) < 1:
-      logging.error("No infrences returned")
+      logging.error("No inferences returned")
       raise RuntimeError("Unexpected verification results")
     
     with open(FLAGS.verify_result) as f:
       expected_results = json.load(f)["predictions"][0]
 
     if result.predictions[0] != expected_results:
-      logging.error("Unexpected inference reuslts= [%s] expected= [%s]", result.predictions[0], expected_results)
-      raise RuntimeError("Unexpected verifification results")
+      logging.error("Unexpected inference results= [%s] expected= [%s]", result.predictions[0], expected_results)
+      raise RuntimeError("Unexpected verification results")
     
     logging.info("Inference verified successfully!")
 
