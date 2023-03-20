@@ -89,6 +89,8 @@ steps:
       - build
       - '-t'
       - test_docker
+      - '--build-arg'
+      - 'MODEL_NAME_APPEND=${_PR_NUMBER}'
       - '-f'
       - docker/test.Dockerfile
       - .
