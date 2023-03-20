@@ -22,6 +22,6 @@ COPY predict_result.json .
 COPY components/* components/
 
 ARG MODEL_NAME_APPEND=""
-RUN sed 's/"model_display_name" : "t5",/"model_display_name" : "t5$MODEL_NAME_APPEND",/g' small1vm1gpu.json
+RUN sed -i "s/\"model_display_name\" : \"t5\",/\"model_display_name\" : \"t5$MODEL_NAME_APPEND\",/" small1vm1gpu.json
 
 ENTRYPOINT ["python3",  "pipeline.py", "--config=small1vm1gpu.json", "--verify",  "--override_deploy"]
