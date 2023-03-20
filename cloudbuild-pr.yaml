@@ -101,6 +101,16 @@ steps:
       - '--image_tag=githubpr${_PR_NUMBER}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - '--network=cloudbuild'
+      - test_docker
+      - '--enable_caching=1'
+      - '--image_tag=githubpr${_PR_NUMBER}'
+      - '--project=$PROJECT_ID'
+      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--use_faster_transformer'
 timeout: 86400s
 options:
   pool:
