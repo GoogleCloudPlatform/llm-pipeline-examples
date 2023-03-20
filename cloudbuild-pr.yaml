@@ -113,6 +113,7 @@ steps:
       - '--image_tag=githubpr${_PR_NUMBER}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--verify_result=predict_result_triton.json'
       - '--use_faster_transformer'
       - '--cleanup_endpoint'
 timeout: 86400s
