@@ -112,6 +112,17 @@ steps:
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--cleanup_endpoint'
       - '--endpoint_name=t5-githubpr${_PR_NUMBER}'
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - '--network=cloudbuild'
+      - test_docker
+      - '--enable_caching=1'
+      - '--image_tag=githubpr${_PR_NUMBER}'
+      - '--project=$PROJECT_ID'
+      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--use_faster_transformer'
+      - '--cleanup_endpoint'
 timeout: 86400s
 options:
   pool:
