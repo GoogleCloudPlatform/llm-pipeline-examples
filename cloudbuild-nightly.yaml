@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
-<<<<<<< HEAD
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     script: |
       # https://github.com/kyma-project/test-infra/issues/93#issuecomment-457263589
@@ -20,9 +19,7 @@ steps:
           echo "Removing ssh key"; \
           gcloud compute os-login ssh-keys remove --key $i || true; \
       done
-=======
   # deploy
->>>>>>> 1617424 (Add parallelism to Google Cloud Build steps)
   - name: gcr.io/cloud-builders/docker
     id: pull-deploy
     waitFor: ['-']
