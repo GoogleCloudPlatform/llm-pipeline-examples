@@ -33,7 +33,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-deploy
-    waitFor: build-deploy
+    waitFor: ['build-deploy']
     args:
       - push
       - 'gcr.io/llm-containers/deploy:githubpr${_PR_NUMBER}'
@@ -46,7 +46,7 @@ steps:
       - 'gcr.io/llm-containers/batch:latest'
   - name: gcr.io/cloud-builders/docker
     id: build-batch
-    waitFor: pull-batch
+    waitFor: ['pull-batch']
     args:
       - build
       - '-t'
@@ -58,7 +58,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-batch
-    waitFor: build-batch
+    waitFor: ['build-batch']
     args:
       - push
       - 'gcr.io/llm-containers/batch:githubpr${_PR_NUMBER}'
@@ -83,7 +83,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-train
-    waitFor: build-train
+    waitFor: ['build-train']
     args:
       - push
       - 'gcr.io/llm-containers/train:githubpr${_PR_NUMBER}'
@@ -108,7 +108,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-predict
-    waitFor: build-predict
+    waitFor: ['build-predict']
     args:
       - push
       - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
