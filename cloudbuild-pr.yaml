@@ -119,14 +119,17 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
-  # test
+  # convert
   - name: gcr.io/cloud-builders/docker
-    id: build-test
+    id: pull-convert
     waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/convert:latest'
+  # convert
   - name: gcr.io/cloud-builders/docker
+    id: build-convert
+    waitFor: ['pull-convert']
     args:
       - build
       - '-t'
@@ -139,14 +142,21 @@ steps:
     env:
       - "DOCKER_BUILDKIT=1"
   - name: gcr.io/cloud-builders/docker
+    id: push-convert
+    waitFor: ['build-convert']
     args:
       - push
       - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
+  # predict-triton
   - name: gcr.io/cloud-builders/docker
+    id: pull-triton
+    waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/predict-triton:latest'
   - name: gcr.io/cloud-builders/docker
+    id: build-triton
+    waitFor: ['pull-triton']
     args:
       - build
       - '-t'
@@ -157,10 +167,15 @@ steps:
       - docker/predict.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
+    id: push-triton
+    waitFor: ['build-triton']
     args:
       - push
       - 'gcr.io/llm-containers/predict-triton:githubpr${_PR_NUMBER}'
+  # test
   - name: gcr.io/cloud-builders/docker
+    id: build-test
+    waitFor: ['-']
     args:
       - build
       - '-t'
@@ -184,6 +199,8 @@ steps:
       - '--cleanup_endpoint'
       - '--endpoint_name=t5-githubpr${_PR_NUMBER}'
   - name: gcr.io/cloud-builders/docker
+    id: run-triton-test
+    waitFor: ['run-test', 'push-triton']
     args:
       - run
       - '--network=cloudbuild'
