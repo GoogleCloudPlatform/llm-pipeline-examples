@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
-  # deploy
   - name: gcr.io/cloud-builders/docker
     id: pull-deploy
     waitFor: ['-']
@@ -37,7 +36,6 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/deploy:githubpr${_PR_NUMBER}'
-  # batch
   - name: gcr.io/cloud-builders/docker
     id: pull-batch
     waitFor: ['-']
@@ -62,7 +60,6 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/batch:githubpr${_PR_NUMBER}'
-  # train
   - name: gcr.io/cloud-builders/docker
     id: pull-train
     waitFor: ['-']
@@ -87,7 +84,6 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/train:githubpr${_PR_NUMBER}'
-  #predict
   - name: gcr.io/cloud-builders/docker
     id: pull-predict
     waitFor: ['-']
@@ -112,14 +108,12 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
-  # convert
   - name: gcr.io/cloud-builders/docker
     id: pull-convert
     waitFor: ['-']
     args:
       - pull
       - 'gcr.io/llm-containers/convert:latest'
-  # convert
   - name: gcr.io/cloud-builders/docker
     id: build-convert
     waitFor: ['pull-convert']
@@ -140,7 +134,6 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
-  # predict-triton
   - name: gcr.io/cloud-builders/docker
     id: pull-triton
     waitFor: ['-']
