@@ -180,7 +180,11 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: run-test
-    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict']
+    waitFor:
+      - 'push-deploy'
+      - 'push-batch'
+      - 'push-train'
+      - 'push-predict'
     args:
       - run
       - '--network=cloudbuild'
@@ -192,7 +196,9 @@ steps:
       - '--cleanup_endpoint'
   - name: gcr.io/cloud-builders/docker
     id: run-triton-test
-    waitFor: ['run-test', 'push-triton']
+    waitFor: 
+      - 'run-test'
+      - 'push-triton'
     args:
       - run
       - '--network=cloudbuild'
