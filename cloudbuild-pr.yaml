@@ -93,6 +93,44 @@ steps:
       - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
   - name: gcr.io/cloud-builders/docker
     args:
+      - pull
+      - 'gcr.io/llm-containers/convert:latest'
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
+      - '--cache-from'
+      - 'gcr.io/llm-containers/convert:latest'
+      - '-f'
+      - docker/convert.Dockerfile
+      - .
+    env:
+      - "DOCKER_BUILDKIT=1"
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - pull
+      - 'gcr.io/llm-containers/predict-triton:latest'
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+      - '--cache-from'
+      - 'gcr.io/llm-containers/predict-triton:latest'
+      - '-f'
+      - docker/predict.Dockerfile
+      - .
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'gcr.io/llm-containers/predict-triton:githubpr${_PR_NUMBER}'
+  - name: gcr.io/cloud-builders/docker
+    args:
       - build
       - '-t'
       - test_docker
