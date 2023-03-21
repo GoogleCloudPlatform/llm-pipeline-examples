@@ -164,7 +164,7 @@ steps:
       - '--cache-from'
       - 'gcr.io/llm-containers/predict-triton:latest'
       - '-f'
-      - docker/predict.Dockerfile
+      - docker/predict-triton.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-triton
