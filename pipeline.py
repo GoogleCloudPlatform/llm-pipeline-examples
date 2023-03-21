@@ -178,6 +178,7 @@ def deploy(
 
   existing_models = aip.Model.list(
       project=project,
+      location=region,
       order_by="create_time",
       filter='display_name="{}"'.format(model_display_name))
 
@@ -200,6 +201,7 @@ def deploy(
 
   deployable_model = aip.Model.upload(
       project=project,
+      location=region,
       display_name=model_display_name,
       artifact_uri=model.uri,
       serving_container_image_uri=serving_container_image_uri,
