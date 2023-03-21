@@ -104,6 +104,7 @@ steps:
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--cleanup_endpoint'
+      - '--endpoint_name=t5-githubpr${_PR_NUMBER}'
 timeout: 86400s
 options:
   pool:
