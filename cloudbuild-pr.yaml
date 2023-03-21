@@ -160,7 +160,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+      - 'gcr.io/llm-containers/predict-triton:githubpr${_PR_NUMBER}'
       - '--cache-from'
       - 'gcr.io/llm-containers/predict-triton:latest'
       - '-f'
