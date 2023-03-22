@@ -132,7 +132,7 @@ steps:
     args:
       - build
       - '-t'
-      - 'gcr.io/llm-containers/convert:github${SHORT_SHA}''
+      - 'gcr.io/llm-containers/convert:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/convert:latest'
       - '-f'
