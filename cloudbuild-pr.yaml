@@ -112,59 +112,6 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
-  # convert
-  - name: gcr.io/cloud-builders/docker
-    id: pull-convert
-    waitFor: ['-']
-    args:
-      - pull
-      - 'gcr.io/llm-containers/convert:latest'
-  # convert
-  - name: gcr.io/cloud-builders/docker
-    id: build-convert
-    waitFor: ['pull-convert']
-    args:
-      - build
-      - '-t'
-      - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
-      - '--cache-from'
-      - 'gcr.io/llm-containers/convert:latest'
-      - '-f'
-      - docker/convert.Dockerfile
-      - .
-    env:
-      - "DOCKER_BUILDKIT=1"
-  - name: gcr.io/cloud-builders/docker
-    id: push-convert
-    waitFor: ['build-convert']
-    args:
-      - push
-      - 'gcr.io/llm-containers/convert:githubpr${_PR_NUMBER}'
-  # predict-triton
-  - name: gcr.io/cloud-builders/docker
-    id: pull-triton
-    waitFor: ['-']
-    args:
-      - pull
-      - 'gcr.io/llm-containers/predict-triton:latest'
-  - name: gcr.io/cloud-builders/docker
-    id: build-triton
-    waitFor: ['pull-triton']
-    args:
-      - build
-      - '-t'
-      - 'gcr.io/llm-containers/predict-triton:githubpr${_PR_NUMBER}'
-      - '--cache-from'
-      - 'gcr.io/llm-containers/predict-triton:latest'
-      - '-f'
-      - docker/predict-triton.Dockerfile
-      - .
-  - name: gcr.io/cloud-builders/docker
-    id: push-triton
-    waitFor: ['build-triton']
-    args:
-      - push
-      - 'gcr.io/llm-containers/predict-triton:githubpr${_PR_NUMBER}'
   # test
   - name: gcr.io/cloud-builders/docker
     id: build-test
@@ -180,11 +127,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: run-test
-    waitFor:
-      - 'push-deploy'
-      - 'push-batch'
-      - 'push-train'
-      - 'push-predict'
+    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict', 'build-test']
     args:
       - run
       - '--network=cloudbuild'
@@ -193,22 +136,6 @@ steps:
       - '--image_tag=githubpr${_PR_NUMBER}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
-      - '--cleanup_endpoint'
-  - name: gcr.io/cloud-builders/docker
-    id: run-triton-test
-    waitFor: 
-      - 'run-test'
-      - 'push-triton'
-    args:
-      - run
-      - '--network=cloudbuild'
-      - test_docker
-      - '--enable_caching=1'
-      - '--image_tag=githubpr${_PR_NUMBER}'
-      - '--project=$PROJECT_ID'
-      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
-      - '--verify_result=predict_result_triton.json'
-      - '--use_faster_transformer'
       - '--cleanup_endpoint'
 timeout: 86400s
 options:
