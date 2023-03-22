@@ -45,10 +45,14 @@ flags.DEFINE_string("config", None, "Pipeline configuration.")
 flags.DEFINE_bool("enable_caching", True, "Whether to cache successful stages.")
 flags.DEFINE_bool("override_deploy", False, "Overrides deployed endpoint model even if model metrics are worse than deployed model.")
 flags.DEFINE_bool("verify", False, "Wait till success and do prediction.")
+flags.DEFINE_bool("cleanup_endpoint", False, "Delete the endpoint after verifying the deployment - can be useful for test scenarios.")
 flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to prediction endpoint for verification.")
 flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
+flags.DEFINE_string("endpoint_name", None, "Name of the endpoint to deploy trained model to. Defaults to config.model_display_name.")
+flags.DEFINE_bool("use_faster_transformer", False,
+                  "Experimental flag to use FasterTransformer to convert the provided model into an optimized format. Currently only supported for the T5 model family.")
 flags.mark_flag_as_required("project")
 flags.mark_flag_as_required("pipeline_root")
 flags.mark_flag_as_required("config")
@@ -57,7 +61,7 @@ download_component = comp.load_component_from_file("components/download.yaml")
 preprocess_component = comp.load_component_from_file(
     "components/preprocess.yaml")
 trainer_component = comp.load_component_from_file("components/trainer.yaml")
-
+convert_component = comp.load_component_from_file("components/convert.yaml")
 
 @component(base_image="gcr.io/llm-containers/deploy")
 def should_deploy(
@@ -67,7 +71,7 @@ def should_deploy(
     model: Input[Model],
     override_deploy: bool, 
 ) -> str:
-  """Deploys the model to Vertex AI Predictin."""
+  """Deploys the model to Vertex AI Prediction."""
 # pylint: disable=g-import-not-at-top, reimported, redefined-outer-name
   import google.cloud.aiplatform as aip
   import gcsfs
@@ -145,6 +149,7 @@ def deploy(
     machine_type: str,
     gpu_type: str,
     gpu_count: int,
+    endpoint_name: str,
 ) -> NamedTuple(
     "Outputs",
     [
@@ -160,11 +165,14 @@ def deploy(
   import os
 
   region = zone[:zone.rfind("-")] 
+  if not endpoint_name:
+    endpoint_name = model_display_name
+
   existing_endpoints = aip.Endpoint.list(
       project=project,
       location=region,
       order_by="create_time",
-      filter='display_name="{}"'.format(model_display_name))
+      filter='display_name="{}"'.format(endpoint_name))
 
   if existing_endpoints:
     endpoint = existing_endpoints[0]
@@ -173,7 +181,7 @@ def deploy(
     endpoint = aip.Endpoint.create(
         project=project,
         location=region,
-        display_name=model_display_name,
+        display_name=endpoint_name,
     )
 
   existing_models = aip.Model.list(
@@ -242,6 +250,7 @@ def my_pipeline(
     deploy_gpu_count: int,
     gpu_type: str,
     zone: str,
+    pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -282,7 +291,26 @@ def my_pipeline(
       override_deploy=FLAGS.override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    deploy_op = deploy(
+    if FLAGS.use_faster_transformer:
+      convert_op = convert_component(
+        model_checkpoint=train_op.outputs["model"],
+        gpu_number=deploy_gpu_count
+      ).set_memory_limit(pipeline_node_memory_limit)
+
+      deploy_op = deploy(
+        project=FLAGS.project,
+        model_display_name=model_display_name,
+        serving_container_image_uri=(
+            f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
+        ),
+        model=convert_op.outputs["converted_model"],
+        machine_type=deploy_machine_type,
+        gpu_type=deploy_gpu_type,
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
+
+    else:
+      deploy_op = deploy(
         project=FLAGS.project,
         zone=zone,
         model_display_name=model_display_name,
@@ -292,10 +320,11 @@ def my_pipeline(
         model=train_op.outputs["model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
 
-def _get_endpoint(pipeline_job):
-  """Returns the deploy endpoint from a successful pipeline job."""
+def _get_endpoint_id(pipeline_job):
+  """Returns the deploy endpoint name from a successful pipeline job."""
 
   for task in pipeline_job.task_details:
     if task.task_name == "deploy":
@@ -306,6 +335,12 @@ def _get_endpoint(pipeline_job):
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
 
+def _get_endpoint(pipeline_job, zone):
+  """Returns the Endpoint object from a successful pipeline job."""
+  endpoint_name=_get_endpoint_id(pipeline_job)
+  region = zone[:zone.rfind("-")]
+  logging.info("Region is %s", region)
+  return Endpoint(endpoint_name, project=FLAGS.project, location=region)
 
 def main(argv: Sequence[str]) -> None:
   if len(argv) > 1:
@@ -343,11 +378,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.verify:
     job.wait()
 
-    endpoint_name=_get_endpoint(job)
-    zone = config["zone"]
-    region = zone[:zone.rfind("-")]
-    logging.info("Region is %s", region)
-    endpoint  = Endpoint(endpoint_name,project=FLAGS.project,location=region)
+    endpoint = _get_endpoint(job, config["zone"])
 
     with open(FLAGS.verify_payload, "r") as f:
       payload = json.load(f)
@@ -356,17 +387,27 @@ def main(argv: Sequence[str]) -> None:
     result = endpoint.predict(list(payload["instances"]))
 
     if len(result.predictions) < 1:
-      logging.error("No infrences returned")
+      logging.error("No inferences returned")
       raise RuntimeError("Unexpected verification results")
     
     with open(FLAGS.verify_result) as f:
       expected_results = json.load(f)["predictions"][0]
 
     if result.predictions[0] != expected_results:
-      logging.error("Unexpected inference reuslts= [%s] expected= [%s]", result.predictions[0], expected_results)
-      raise RuntimeError("Unexpected verifification results")
+      logging.error("Unexpected inference results= [%s] expected= [%s]", result.predictions[0], expected_results)
+      raise RuntimeError("Unexpected verification results")
     
     logging.info("Inference verified successfully!")
+
+  if FLAGS.cleanup_endpoint:
+    job.wait()
+    
+    endpoint = _get_endpoint(job, config["zone"])
+
+    logging.info(f"Deleting endpoint {endpoint.name}...")
+    endpoint.delete(force=True)
+    logging.info("Endpoint deleted.")
+
 
 if __name__ == "__main__":
   app.run(main)

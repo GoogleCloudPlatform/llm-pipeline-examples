@@ -11,11 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.4.1
 
-RUN apt-get -yq install jq python3-distutils python3-pip
 
-RUN pip3 install yq google-cloud-storage absl-py
+FROM gcr.io/llm-containers/ft-triton:22.09
 
-COPY scripts/train/run_batch.sh .
-COPY src/orchestration/training_cluster_monitor.py .
+RUN pip3 install absl-py flask gcsfs transformers tritonclient[http]
+
+ADD src/predict_triton.py .
+ADD src/triton_processor.py .
+
+ENV FLASK_APP=predict
+ENV SERVER_HOST=0.0.0.0
+
+ENTRYPOINT ["/bin/python3", "predict_triton.py"]

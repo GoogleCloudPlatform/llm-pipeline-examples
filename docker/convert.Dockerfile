@@ -1,3 +1,4 @@
+# DOCKER_BUILDKIT=1 docker build -f docker/convert.Dockerfile -t convert:latest
 # Copyright 2022 Google LLC
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,11 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.4.1
 
-RUN apt-get -yq install jq python3-distutils python3-pip
+FROM nvcr.io/nvidia/pytorch:22.09-py3
 
-RUN pip3 install yq google-cloud-storage absl-py
+RUN curl -sSL https://sdk.cloud.google.com | bash
+ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin:/root/google-cloud-sdk/bin
 
-COPY scripts/train/run_batch.sh .
-COPY src/orchestration/training_cluster_monitor.py .
+# For --chmod to work the docker build must be run with `DOCKER_BUILDKIT=1 docker build`
+COPY --chmod=777 scripts/fastertransformer/faster_transformer_install.sh .
+COPY --chmod=777 scripts/fastertransformer/convert_t5.sh .
+COPY --chmod=777 examples/triton/t5/config.pbtxt ./all_models/t5/
+
+RUN ./faster_transformer_install.sh

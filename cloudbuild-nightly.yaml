@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    script: |
+      # https://github.com/kyma-project/test-infra/issues/93#issuecomment-457263589
+      for i in $(gcloud compute os-login ssh-keys list | grep -v FINGERPRINT); do \
+          echo "Removing ssh key"; \
+          gcloud compute os-login ssh-keys remove --key $i || true; \
+      done
   - name: gcr.io/cloud-builders/docker
     args:
       - pull
@@ -103,6 +110,8 @@ steps:
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--config=xxlnightly.json'
       - '--verify_result=predict_result_xxlnightly.yaml'
+      - '--endpoint_name=t5-nightly'
+      - '--cleanup_endpoint'
 timeout: 86400s
 options:
   pool:
