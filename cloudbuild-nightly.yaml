@@ -108,6 +108,8 @@ steps:
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--endpoint_name=t5-nightly'
+      - '--cleanup_endpoint'
 timeout: 86400s
 options:
   pool:
