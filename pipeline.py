@@ -50,6 +50,7 @@ flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to p
 flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
+flags.DEFINE_string("endpoint_name", None, "Name of the endpoint to deploy trained model to. Defaults to config.model_display_name.")
 flags.DEFINE_bool("use_faster_transformer", False,
                   "Experimental flag to use FasterTransformer to convert the provided model into an optimized format. Currently only supported for the T5 model family.")
 flags.mark_flag_as_required("project")
@@ -143,7 +144,8 @@ def deploy(
     model: Input[Model],
     machine_type: str,
     gpu_type: str,
-    gpu_count: int
+    gpu_count: int,
+    endpoint_name: str,
 ) -> NamedTuple(
     "Outputs",
     [
@@ -158,10 +160,13 @@ def deploy(
   import json
   import os
 
+  if not endpoint_name:
+    endpoint_name = model_display_name
+
   existing_endpoints = aip.Endpoint.list(
       project=project,
       order_by="create_time",
-      filter='display_name="{}"'.format(model_display_name))
+      filter='display_name="{}"'.format(endpoint_name))
 
   if existing_endpoints:
     endpoint = existing_endpoints[0]
@@ -169,7 +174,7 @@ def deploy(
   else:
     endpoint = aip.Endpoint.create(
         project=project,
-        display_name=model_display_name,
+        display_name=endpoint_name,
     )
 
   existing_models = aip.Model.list(
@@ -291,7 +296,8 @@ def my_pipeline(
         model=convert_op.outputs["converted_model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
 
     else:
       deploy_op = deploy(
@@ -303,7 +309,8 @@ def my_pipeline(
         model=train_op.outputs["model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
