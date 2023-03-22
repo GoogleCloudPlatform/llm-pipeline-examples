@@ -192,6 +192,7 @@ steps:
       - '--network=cloudbuild'
       - test_docker
       - '--enable_caching=0'
+      - '--config=small1vm1gpu.json'
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
@@ -205,6 +206,7 @@ steps:
       - '--network=cloudbuild'
       - test_docker
       - '--enable_caching=0'
+      - '--config=small1vm1gpu.json'
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
