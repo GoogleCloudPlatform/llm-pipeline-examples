@@ -144,7 +144,8 @@ def deploy(
     model: Input[Model],
     machine_type: str,
     gpu_type: str,
-    gpu_count: int
+    gpu_count: int,
+    endpoint_name: str,
 ) -> NamedTuple(
     "Outputs",
     [
@@ -159,7 +160,6 @@ def deploy(
   import json
   import os
 
-  endpoint_name = FLAGS.endpoint_name
   if not endpoint_name:
     endpoint_name = model_display_name
 
@@ -296,7 +296,8 @@ def my_pipeline(
         model=convert_op.outputs["converted_model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
 
     else:
       deploy_op = deploy(
@@ -308,7 +309,8 @@ def my_pipeline(
         model=train_op.outputs["model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count)
+        gpu_count=deploy_gpu_count,
+        endpoint_name=FLAGS.endpoint_name)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
