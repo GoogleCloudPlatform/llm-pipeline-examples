@@ -40,7 +40,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-deploy
-    waitFor: build-deploy
+    waitFor: ['build-deploy']
     args:
       - push
       - 'gcr.io/llm-containers/deploy:github${SHORT_SHA}'
@@ -65,7 +65,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-batch
-    waitFor: build-batch
+    waitFor: ['build-batch']
     args:
       - push
       - 'gcr.io/llm-containers/batch:github${SHORT_SHA}'
@@ -90,7 +90,7 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-train
-    waitFor: build-train
+    waitFor: ['build-train']
     args:
       - push
       - 'gcr.io/llm-containers/train:github${SHORT_SHA}'
@@ -115,10 +115,62 @@ steps:
       - .
   - name: gcr.io/cloud-builders/docker
     id: push-predict
-    waitFor: build-predict
+    waitFor: ['build-predict']
     args:
       - push
       - 'gcr.io/llm-containers/predict:github${SHORT_SHA}'
+  # convert
+  - name: gcr.io/cloud-builders/docker
+    id: pull-convert
+    waitFor: ['-']
+    args:
+      - pull
+      - 'gcr.io/llm-containers/convert:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: build-convert
+    waitFor: ['pull-convert']
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/llm-containers/convert:github${SHORT_SHA}''
+      - '--cache-from'
+      - 'gcr.io/llm-containers/convert:latest'
+      - '-f'
+      - docker/convert.Dockerfile
+      - .
+    env:
+      - "DOCKER_BUILDKIT=1"
+  - name: gcr.io/cloud-builders/docker
+    id: push-convert
+    waitFor: ['build-convert']
+    args:
+      - push
+      - 'gcr.io/llm-containers/convert:github${SHORT_SHA}'
+  # predict-triton
+  - name: gcr.io/cloud-builders/docker
+    id: pull-triton
+    waitFor: ['-']
+    args:
+      - pull
+      - 'gcr.io/llm-containers/predict-triton:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: build-triton
+    waitFor: ['pull-triton']
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/llm-containers/predict-triton:github${SHORT_SHA}'
+      - '--cache-from'
+      - 'gcr.io/llm-containers/predict-triton:latest'
+      - '-f'
+      - docker/predict-triton.Dockerfile
+      - .
+  - name: gcr.io/cloud-builders/docker
+    id: push-triton
+    waitFor: ['build-triton']
+    args:
+      - push
+      - 'gcr.io/llm-containers/predict-triton:github${SHORT_SHA}'
   # test
   - name: gcr.io/cloud-builders/docker
     id: build-test
@@ -127,12 +179,14 @@ steps:
       - build
       - '-t'
       - test_docker
+      - '--build-arg'
+      - 'MODEL_NAME_APPEND=${SHORT_SHA}'
       - '-f'
       - docker/test.Dockerfile
       - .
   - name: gcr.io/cloud-builders/docker
     id: run-test
-    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict']
+    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict', 'build-test']
     args:
       - run
       - '--network=cloudbuild'
@@ -142,6 +196,20 @@ steps:
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--endpoint_name=t5-nightly'
+      - '--cleanup_endpoint'
+  - name: gcr.io/cloud-builders/docker
+    id: run-triton-test
+    waitFor: ['push-deploy', 'push-batch', 'push-train', 'push-predict', 'push-convert', 'push-triton', 'build-test']
+    args:
+      - run
+      - '--network=cloudbuild'
+      - test_docker
+      - '--enable_caching=0'
+      - '--image_tag=github${SHORT_SHA}'
+      - '--project=$PROJECT_ID'
+      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--verify_result=predict_result_triton.json'
+      - '--use_faster_transformer'
       - '--cleanup_endpoint'
 timeout: 86400s
 options:
