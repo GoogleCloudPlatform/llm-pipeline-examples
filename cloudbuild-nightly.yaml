@@ -107,7 +107,7 @@ steps:
       - '--enable_caching=0'
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
-      - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--pipeline_root=gs://pipeline-runs-us-east4/'
       - '--config=xxlnightly.json'
       - '--verify_result=predict_result_xxlnightly.yaml'
       - '--endpoint_name=t5-nightly'
