@@ -19,6 +19,7 @@ RUN pip3 install absl-py flask gcsfs transformers tritonclient[http]
 
 ADD src/predict_triton.py .
 ADD src/triton_processor.py .
+ADD src/utils.py .
 
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
