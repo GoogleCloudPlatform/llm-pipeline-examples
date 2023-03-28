@@ -31,7 +31,7 @@ class TritonProcessorBase:
 
   def __init__(self, model_path, host, port):
     self.client = httpclient.InferenceServerClient(
-        f"{host}:{port}", verbose=True
+        f"{host}:{port}", verbose=True,
     )
 
     # Initialize tokenizers from HuggingFace to do pre and post processings
@@ -149,7 +149,7 @@ class T5TritonProcessor(TritonProcessorBase):
     super().__init__(hf_model_path, host, port)
 
   @timer
-  def infer(self, task="None", text=None):
+  def infer(self, task=None, text=None):
     """Run inferencing on a series of inputs."""
     if task is not None:
       text = f"{task}: {text}"
