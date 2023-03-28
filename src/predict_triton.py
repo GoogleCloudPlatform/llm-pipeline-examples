@@ -142,7 +142,12 @@ def main(argv):
   nested_model_dir = model_dir
   for _ in range(3):
     filepaths = os.listdir(nested_model_dir)
-    filepaths.remove("config.pbtxt")
+    
+    try:
+      filepaths.remove("config.pbtxt")
+    except ValueError:
+      pass
+    
     nested_model_dir = os.path.join(nested_model_dir, filepaths[0])
 
   if os.path.exists(os.path.join(nested_model_dir, "config.json")):
