@@ -104,9 +104,11 @@ def infer():
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
   return_payload = []
+  client = _get_triton_client()
   for req in request.json["instances"]:
-    text_out = app.client.infer(task=None, text=req)
+    text_out = app.client.infer(text=req)
     return_payload.append(text_out)
+  client.client.close()
   return {"predictions": return_payload}
 
 
@@ -153,15 +155,16 @@ def main(argv):
     nested_model_dir = os.path.join(nested_model_dir, filepaths[0])
 
   if os.path.exists(os.path.join(nested_model_dir, "config.json")):
-    tokenizer_model_path = nested_model_dir
+    app.tokenizer_model_path = nested_model_dir
   else:
-    tokenizer_model_path = FLAGS.hf_model_path
+    app.tokenizer_model_path = FLAGS.hf_model_path
 
-  app.client = T5TritonProcessor(
-      tokenizer_model_path, FLAGS.triton_host, FLAGS.triton_port
-  )
   app.run(app.host, app.port, debug=False)
 
+def _get_triton_client():
+  return T5TritonProcessor(
+      app.tokenizer_model_path, FLAGS.triton_host, FLAGS.triton_port
+  )
 
 if __name__ == "__main__":
   absl_app.run(main, flags_parser=parse_flags)
