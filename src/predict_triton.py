@@ -27,6 +27,7 @@ from absl import logging
 from absl.flags import argparse_flags
 from flask import Flask
 from flask import request
+from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 
@@ -91,6 +92,7 @@ def health():
 
 
 @app.route("/infer", methods=["POST"])
+@timer
 def infer():
   """Process a generic inference request.
 
