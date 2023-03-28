@@ -143,7 +143,14 @@ def main(argv):
   # Check inside converted model for a config.json for tokenizer dictionary. If not found, use the passed flag.
   nested_model_dir = model_dir
   for _ in range(3):
-    nested_model_dir = os.path.join(nested_model_dir, os.listdir(nested_model_dir)[0])
+    filepaths = os.listdir(nested_model_dir)
+    
+    try:
+      filepaths.remove("config.pbtxt")
+    except ValueError:
+      pass
+    
+    nested_model_dir = os.path.join(nested_model_dir, filepaths[0])
 
   if os.path.exists(os.path.join(nested_model_dir, "config.json")):
     tokenizer_model_path = nested_model_dir
