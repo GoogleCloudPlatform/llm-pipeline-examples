@@ -31,7 +31,7 @@ class TritonProcessorBase:
 
   def __init__(self, model_path, host, port):
     self.client = httpclient.InferenceServerClient(
-        f"{host}:{port}", verbose=True,
+        f"{host}:{port}", verbose=True
     )
 
     # Initialize tokenizers from HuggingFace to do pre and post processings

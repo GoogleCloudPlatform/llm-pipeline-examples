@@ -106,7 +106,7 @@ def infer():
   return_payload = []
   client = _get_triton_client()
   for req in request.json["instances"]:
-    text_out = app.client.infer(text=req)
+    text_out = client.infer(text=req)
     return_payload.append(text_out)
   client.client.close()
   return {"predictions": return_payload}
