@@ -251,7 +251,10 @@ def my_pipeline(
     gpu_type: str,
     zone: str,
     pipeline_node_memory_limit: str = "16G",
+    deploy_zone: str = None,
 ):
+  if deploy_zone == None:
+    deploy_zone = zone
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
   download_op = download_component(
@@ -285,7 +288,7 @@ def my_pipeline(
 
   should_deploy_op = should_deploy(
       project=FLAGS.project,
-      zone=zone,
+      zone=deploy_zone,
       model_display_name=model_display_name,
       model=train_op.outputs["model"],
       override_deploy=FLAGS.override_deploy)
@@ -299,6 +302,7 @@ def my_pipeline(
 
       deploy_op = deploy(
         project=FLAGS.project,
+        zone=deploy_zone,
         model_display_name=model_display_name,
         serving_container_image_uri=(
             f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
@@ -312,7 +316,7 @@ def my_pipeline(
     else:
       deploy_op = deploy(
         project=FLAGS.project,
-        zone=zone,
+        zone=deploy_zone,
         model_display_name=model_display_name,
         serving_container_image_uri=(
             f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"

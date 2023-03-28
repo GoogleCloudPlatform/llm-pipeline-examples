@@ -15,5 +15,6 @@
     "model_display_name" : "t5",
     "deploy_machine_type" : "a2-highgpu-2g",
     "deploy_gpu_type" : "NVIDIA_TESLA_A100",
-    "deploy_gpu_count" : 2
+    "deploy_gpu_count" : 2,
+    "deploy_zone": "us-central1-f"
   }
