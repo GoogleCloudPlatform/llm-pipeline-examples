@@ -354,8 +354,8 @@ def main(argv: Sequence[str]) -> None:
   with open(FLAGS.config, "r") as f:
     config = json.load(f)
 
-  if not config["deploy_zone"]:
-    config["deploy_zone"] = config["zone"]
+  if not config.get("deploy_zone"):
+    config.update({"deploy_zone": config["zone"]})
   
   dest_path = "/tmp/pipeline.json"
   compiler.Compiler().compile(
