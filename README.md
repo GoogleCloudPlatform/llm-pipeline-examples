@@ -77,10 +77,10 @@ project. Here is a summary of task and tooling we are going to use:
     gcloud auth application-default login
     ```
 
-1.  Install kfp and abseil packages
+1.  Set up the python environment using poetry.
 
     ```bash
-    pip install kfp absl-py google-cloud-aiplatform
+    poetry install
     ```
 
 ### Instructions
