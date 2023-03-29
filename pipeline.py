@@ -50,7 +50,7 @@ flags.DEFINE_string("verify_payload", "predict_payload.json", "Payload sent to p
 flags.DEFINE_string("verify_result", "predict_result.json", "Expected result from verification.")
 flags.DEFINE_string("image_tag", "release",
                     "Image tag for components base images")
-flags.DEFINE_string("endpoint_name", None, "Name of the endpoint to deploy trained model to. Defaults to config.model_display_name.")
+flags.DEFINE_string("endpoint_name", "", "Name of the endpoint to deploy trained model to. Defaults to config.model_display_name.")
 flags.DEFINE_bool("use_faster_transformer", False,
                   "Experimental flag to use FasterTransformer to convert the provided model into an optimized format. Currently only supported for the T5 model family.")
 flags.mark_flag_as_required("project")
@@ -250,11 +250,9 @@ def my_pipeline(
     deploy_gpu_count: int,
     gpu_type: str,
     zone: str,
+    deploy_zone: str,
     pipeline_node_memory_limit: str = "16G",
-    deploy_zone: str = None,
 ):
-  if deploy_zone == None:
-    deploy_zone = zone
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
   download_op = download_component(
@@ -356,6 +354,9 @@ def main(argv: Sequence[str]) -> None:
   with open(FLAGS.config, "r") as f:
     config = json.load(f)
 
+  if not config["deploy_zone"]:
+    config["deploy_zone"] = config["zone"]
+  
   dest_path = "/tmp/pipeline.json"
   compiler.Compiler().compile(
       pipeline_func=my_pipeline,
