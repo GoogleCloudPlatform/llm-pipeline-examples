@@ -24,6 +24,7 @@ from transformers import AutoTokenizer
 import tritonclient.http as httpclient
 from tritonclient.utils import np_to_triton_dtype
 
+from utils import timer
 
 class TritonProcessorBase:
   """Base Processor class for any FasterTransformer Triton Backend model."""
@@ -147,7 +148,8 @@ class T5TritonProcessor(TritonProcessorBase):
   def __init__(self, hf_model_path="t5-base", host="localhost", port=8000):
     super().__init__(hf_model_path, host, port)
 
-  def infer(self, task="None", text=None):
+  @timer
+  def infer(self, task=None, text=None):
     """Run inferencing on a series of inputs."""
     if task is not None:
       text = f"{task}: {text}"
@@ -155,6 +157,7 @@ class T5TritonProcessor(TritonProcessorBase):
     result = self.client.infer("fastertransformer", inputs)
     return self._postprocess(result)
 
+  @timer
   def _preprocess(self, string_input):
     """Implement the function that takes text, converts it into the tokens using HFtokenizer and prepares tensorts for sending to Triton."""
     input_token = self.tokenizer(
@@ -198,6 +201,7 @@ class T5TritonProcessor(TritonProcessorBase):
 
   # Implement function that takes tokens from Triton's response and converts
   # them into text
+  @timer
   def _postprocess(self, result):
     ft_decoding_outputs = result.as_numpy("output_ids")
     ft_decoding_seq_lens = result.as_numpy("sequence_length")

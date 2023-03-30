@@ -27,6 +27,7 @@ from absl import logging
 from absl.flags import argparse_flags
 from flask import Flask
 from flask import request
+from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 
@@ -91,6 +92,7 @@ def health():
 
 
 @app.route("/infer", methods=["POST"])
+@timer
 def infer():
   """Process a generic inference request.
 
@@ -102,9 +104,11 @@ def infer():
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
   return_payload = []
+  client = _get_triton_client()
   for req in request.json["instances"]:
-    text_out = app.client.infer(task=None, text=req)
+    text_out = client.infer(text=req)
     return_payload.append(text_out)
+  client.client.close()
   return {"predictions": return_payload}
 
 
@@ -141,18 +145,26 @@ def main(argv):
   # Check inside converted model for a config.json for tokenizer dictionary. If not found, use the passed flag.
   nested_model_dir = model_dir
   for _ in range(3):
-    nested_model_dir = os.path.join(nested_model_dir, os.listdir(nested_model_dir)[0])
+    filepaths = os.listdir(nested_model_dir)
+    
+    try:
+      filepaths.remove("config.pbtxt")
+    except ValueError:
+      pass
+    
+    nested_model_dir = os.path.join(nested_model_dir, filepaths[0])
 
   if os.path.exists(os.path.join(nested_model_dir, "config.json")):
-    tokenizer_model_path = nested_model_dir
+    app.tokenizer_model_path = nested_model_dir
   else:
-    tokenizer_model_path = FLAGS.hf_model_path
+    app.tokenizer_model_path = FLAGS.hf_model_path
 
-  app.client = T5TritonProcessor(
-      tokenizer_model_path, FLAGS.triton_host, FLAGS.triton_port
-  )
   app.run(app.host, app.port, debug=False)
 
+def _get_triton_client():
+  return T5TritonProcessor(
+      app.tokenizer_model_path, FLAGS.triton_host, FLAGS.triton_port
+  )
 
 if __name__ == "__main__":
   absl_app.run(main, flags_parser=parse_flags)
