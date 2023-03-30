@@ -104,7 +104,7 @@ steps:
       - run
       - '--network=cloudbuild'
       - test_docker
-      - '--enable_caching=0'
+      - '--enable_caching=1'
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://pipeline-runs-us-east4/'
