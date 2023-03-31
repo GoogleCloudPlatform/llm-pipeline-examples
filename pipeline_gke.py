@@ -65,7 +65,7 @@ trainer_component = comp.load_component_from_file("components/trainer.yaml")
 convert_component = comp.load_component_from_file("components/convert.yaml")
 
 
-@component(base_image="gcr.io/llm-containers/deploy-triton")
+@component(base_image="gcr.io/llm-containers/deploy-gke")
 def deploy_to_gke(
     project: str,
     model_display_name: str,

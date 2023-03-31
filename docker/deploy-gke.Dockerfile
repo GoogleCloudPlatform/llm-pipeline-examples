@@ -15,7 +15,7 @@
 
 FROM python:slim
 
-RUN pip install google-cloud-aiplatform
+RUN pip install google-cloud-aiplatform google-cloud-container
 RUN pip install gcsfs
 RUN pip install kubernetes
 
