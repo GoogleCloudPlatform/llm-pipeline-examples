@@ -1,0 +1,39 @@
+#!/bin/bash -ev
+
+
+# Copyright 2022 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+if [[ -z %2 ]]; then
+    wget https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
+    wikiextractor --json enwiki-latest-pages-articles.xml.bz2
+    for file in ./*/*; do cat $file >> wikidata.txt; done
+else
+    gsutil cp %1 .
+fi
+
+wget https://huggingface.co/gpt2/raw/main/vocab.json
+wget https://huggingface.co/gpt2/raw/main/merges.txt
+python3 ../Megatron-DeepSpeed/tools/preprocess_data.py \
+    --input wikidata.json \
+    --output-prefix wiki_data \
+    --vocab vocab.json \
+    --dataset-impl mmap \
+    --tokenizer-type GPT2BPETokenizer \
+    --merge-file merges.txt \
+    --workers 35
+    --append-eod 
+
+gsutil cp wiki_data_text_document.bin %2
+gsutil cp wiki_data_text_document.idx %2
