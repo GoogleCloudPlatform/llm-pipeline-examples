@@ -74,8 +74,8 @@ def create_deployment_object(model_display_name: str, gpu_type: str, gpu_count: 
     image = image,
     ports=[client.V1ContainerPort(container_port=5000)],
     resources=client.V1ResourceRequirements(
-      requests={"cpu": "100m", "memory": "200Mi", "nvidia.com/gpu": f"{gpu_count}"},
-      limits={"cpu": "4", "memory": "8Gi"}
+      requests={"cpu": "100m", "memory": "200Mi"},
+      limits={"cpu": "4", "memory": "8Gi", "nvidia.com/gpu": f"{gpu_count}"}
     ),
     env=[client.V1EnvVar("AIP_STORAGE_URI", model_location)],
     liveness_probe= client.V1Probe(

@@ -94,52 +94,14 @@ def deploy_to_gke(
   from utils import create_deployment_object, create_service_object, get_k8s_client
   from kubernetes import client
 
-  if not endpoint_name:
-    endpoint_name = model_display_name
-
-  existing_models = aip.Model.list(
-      project=project,
-      order_by="create_time",
-      filter='display_name="{}"'.format(model_display_name))
-
-  if existing_models:
-    parent_model = existing_models[0]
-    parent_model_resource_name = parent_model.resource_name
-  else:
-    parent_model_resource_name = None
-
-  gcs = gcsfs.GCSFileSystem()
-  new_metrics = None
-  metrics_file = os.path.join(model, "metrics.json")
-  if gcs.exists(metrics_file):
-    with gcs.open(metrics_file, "r") as f:
-      new_metrics = json.load(f)
-      print(f"New metrics: {new_metrics}")
-  else:
-    new_metrics = {}
-    print("Warning! Model doesn't have metrics.")
-
-  deployable_model = aip.Model.upload(
-      project=project,
-      display_name=model_display_name,
-      artifact_uri=model,
-      serving_container_image_uri=serving_container_image_uri,
-      parent_model=parent_model_resource_name,
-      labels={
-          k.lower(): str(v).replace(".", "_") for k, v in new_metrics.items()
-      },
-      serving_container_predict_route="/infer",
-      serving_container_health_route="/health"
-  )
-
   k8s_client = get_k8s_client(project, location, cluster_id)
-  api_client = client.AppsV1Api()
+  api_client = client.AppsV1Api(k8s_client.api_client)
   dep = create_deployment_object(model_display_name, gpu_type, gpu_count, serving_container_image_uri, model)
   srv = create_service_object(model_display_name, 5000)
-  deployment = api_client.create_namespaced_deployment(body=dep)
-  service = k8s_client.create_namespaced_service(body=srv)
+  deployment = api_client.create_namespaced_deployment("default", dep)
+  service = k8s_client.create_namespaced_service("default", srv)
 
-  return (deployable_model.name, service.cluster_ip)
+  return (model_display_name, service.cluster_ip)
 
 
 @kfp.dsl.pipeline(name="llm-pipeline")
@@ -211,7 +173,7 @@ def my_pipeline(
     gpu_type=deploy_gpu_type,
     gpu_count=deploy_gpu_count,
     endpoint_name=FLAGS.endpoint_name,
-    location="us-central-1",
+    location="us-central1-c",
     cluster_id="v100testcluster")
 
   # else:
