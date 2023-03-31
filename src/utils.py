@@ -114,7 +114,7 @@ def create_service_object(model_display_name: str, target_port: int) -> client.V
     metadata=client.V1ObjectMeta(name=model_display_name),
     spec=client.V1ServiceSpec(
       type="ClusterIP",
-      selector={"matchLabels": {"app": model_display_name}},
+      selector={"app": model_display_name},
       ports=[client.V1ServicePort(
         protocol="TCP",
         port=80,
