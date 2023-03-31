@@ -43,6 +43,7 @@ def timer(func):
 ### GKE Demo
 import google.auth
 import google.auth.transport.requests
+import google.cloud.container
 from kubernetes import client
 from tempfile import NamedTemporaryFile
 import base64
