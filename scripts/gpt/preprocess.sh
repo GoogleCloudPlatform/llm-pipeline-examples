@@ -15,6 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if [[ -z $1 ]]; then
+    echo "Usage:"
+    echo "Option 1: ./preprocess.sh <GCS destination>"
+    echo "          This will download wikipedia dataset, preprocess it and uplaod it to <GCS destination>"
+    echo "Option 2: ./preprocess.sh <GCS source> <GCS destination>"
+    echo "          This will preprocess data from <GCS source> and uplaod it to <GCS destination>"
+fi
+
 if [[ -z $2 ]]; then
     wget https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
     wikiextractor --json enwiki-latest-pages-articles.xml.bz2
