@@ -13,7 +13,7 @@
 # limitations under the License.
 FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
 
-RUN pip install wikiextractor
+RUN pip install wikiextractor deepspeed regex nltk
 RUN git clone https://github.com/microsoft/Megatron-DeepSpeed.git
 
 COPY scripts/gpt/preprocess.sh .

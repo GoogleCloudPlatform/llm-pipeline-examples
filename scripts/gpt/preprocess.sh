@@ -15,25 +15,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ -z %2 ]]; then
+if [[ -z $2 ]]; then
     wget https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
     wikiextractor --json enwiki-latest-pages-articles.xml.bz2
-    for file in ./*/*; do cat $file >> wikidata.txt; done
+    for file in ./text/*/*; do cat $file >> wikidata.txt; done
+    data_file=wikidata.txt
+    destination=$1
 else
-    gsutil cp %1 .
+    gsutil cp $1 .
+    data_file=$(basename $1)
+    destination=$2
 fi
 
 wget https://huggingface.co/gpt2/raw/main/vocab.json
 wget https://huggingface.co/gpt2/raw/main/merges.txt
 python3 ../Megatron-DeepSpeed/tools/preprocess_data.py \
-    --input wikidata.json \
+    --input $data_file \
     --output-prefix wiki_data \
     --vocab vocab.json \
     --dataset-impl mmap \
     --tokenizer-type GPT2BPETokenizer \
     --merge-file merges.txt \
-    --workers 35
+    --workers 35 \
     --append-eod 
 
-gsutil cp wiki_data_text_document.bin %2
-gsutil cp wiki_data_text_document.idx %2
+gsutil cp wiki_data_text_document.bin $destination
+gsutil cp wiki_data_text_document.idx $destination
