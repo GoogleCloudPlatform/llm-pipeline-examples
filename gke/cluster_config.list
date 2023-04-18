@@ -1,0 +1,6 @@
+PROJECT_ID=supercomputer-testing
+NAME_PREFIX=t5-node
+ZONE=us-central1-a
+ORCHESTRATOR_TYPE=gke
+NETWORK_CONFIG=default_network
+CUSTOM_NODE_POOL=[{"name"="sp-test-pool-1","zone"="us-central1-a","node_count"=3,"machine_type"="n1-standard-32","guest_accelerator_count"=4,"guest_accelerator_type"="nvidia-tesla-v100"}]
