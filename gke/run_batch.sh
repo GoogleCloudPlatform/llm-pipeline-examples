@@ -73,13 +73,14 @@ if [[ -z $CLUSTER_ID ]]; then
 fi
 
 # Get kubeconfig for cluster
-gcloud container clusters get-credentials $CLUSTER_ID --region $ZONE --project $PROJECT_ID
+REGION=${ZONE%-*}
+gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
 
 #export GPU_NUMBER=4
 #export MODEL_SOURCE_PATH="gs://<idksomething>"
 #export MODEL_UPLOAD_PATH="gs://<idksomethingelse"
 
-envsubst < convert.yaml | kubectl apply -f -
+envsubst < specs/convert.yaml | kubectl apply -f -
 
 # Run convert image on cluster
 

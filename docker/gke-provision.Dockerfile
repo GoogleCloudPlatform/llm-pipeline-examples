@@ -19,4 +19,5 @@ RUN pip3 install yq google-cloud-storage absl-py
 
 WORKDIR /usr
 COPY gke/run_batch.sh .
+COPY gke/specs specs/
 ENTRYPOINT ./run_batch.sh
