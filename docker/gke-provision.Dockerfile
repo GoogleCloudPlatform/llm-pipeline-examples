@@ -17,5 +17,6 @@ RUN apt-get -yq install jq python3-distutils python3-pip
 
 RUN pip3 install yq google-cloud-storage absl-py
 
+WORKDIR /usr
 COPY gke/run_batch.sh .
-ENTRYPOINT run_batch.sh
+ENTRYPOINT ./run_batch.sh

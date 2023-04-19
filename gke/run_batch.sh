@@ -58,15 +58,9 @@ echo User is ${OS_LOGIN_USER}
 #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
 
 export ACTION=CREATE
-export NAME_PREFIX=${JOB_ID}
-export INSTANCE_COUNT=${NODE_COUNT}
-export VM_TYPE=${MACHINE_TYPE}
-export ACCELERATOR_TYPE=${GPU_TYPE}
 #export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
 #export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
 export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
-export STARTUP_COMMAND=${START}
-export PROJECT_ID=${PROJECT}
 export SHOW_PROXY_URL=no
 export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
 export MINIMIZE_TERRAFORM_LOGGING=true
