@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM us-central1-docker.pkg.dev/supercomputer-testing/cluster-provision-repo/cluster-provision-image:latest
+FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.5.0
 
 RUN apt-get -yq install jq python3-distutils python3-pip
 
