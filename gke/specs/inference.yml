@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: t5flan-deployment
+  labels:
+    app: t5flan
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t5flan
+  template:
+    metadata:
+      labels:
+        app: t5flan
+    spec:
+      nodeSelector:
+        ###cloud.google.com/gke-accelerator: "nvidia-tesla-v100"
+      containers:
+      - name: triton
+        ###image: gcr.io/llm-containers/predict-triton:test
+        imagePullPolicy: Always
+        env:
+        - name: AIP_STORAGE_URI
+          ###value: gs://pirillo-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/convert_-1136749062951796736/converted_model
+        ports:
+        - containerPort: 5000
+        resources:
+          limits:
+            cpu: 4
+            memory: 16Gi
+            ###nvidia.com/gpu: 4
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 3
+          failureThreshold: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: t5flan
+spec:
+  selector:
+    app: t5flan
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: ClusterIP

@@ -13,7 +13,7 @@
 # limitations under the License.
 FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.5.0
 
-RUN apt-get -yq install jq python3-distutils python3-pip
+RUN apt-get -yq install jq python3-distutils python3-pip gettext-base
 
 RUN pip3 install yq google-cloud-storage absl-py
 

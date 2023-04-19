@@ -44,35 +44,47 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
-export REGION=${ZONE/%-+([a-z0-9])/}
+if [[ -z $CLUSTER_ID ]]; then
 
-export SERVICE_ACCOUNT=$(gcloud config get account)
-export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} | grep uniqueId | sed -e "s/.* '\(.*\)'/sa_\1/")
+  export SERVICE_ACCOUNT=$(gcloud config get account)
+  export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} | grep uniqueId | sed -e "s/.* '\(.*\)'/sa_\1/")
 
-echo User is ${OS_LOGIN_USER}
+  echo User is ${OS_LOGIN_USER}
 
-#export TRAIN_CMD="./train.sh ${MODEL_CHECKPOINT} ${DATA} ${MODEL_OUTPUT} ${ZONE} ${BATCH_SIZE} ${EPOCHS} ${GPU_COUNT} ${WORKSPACE_PATH}"
-#export START="docker pull gcr.io/llm-containers/train:${IMAGE_TAG}; nvidia-persistenced; docker run --ipc host --network host --hostname \$(hostname) --gpus all -v /etc/ssh:/etc/ssh gcr.io/llm-containers/train:${IMAGE_TAG} ${TRAIN_CMD}"
-#gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
-#gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
-#gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
+  #export TRAIN_CMD="./train.sh ${MODEL_CHECKPOINT} ${DATA} ${MODEL_OUTPUT} ${ZONE} ${BATCH_SIZE} ${EPOCHS} ${GPU_COUNT} ${WORKSPACE_PATH}"
+  #export START="docker pull gcr.io/llm-containers/train:${IMAGE_TAG}; nvidia-persistenced; docker run --ipc host --network host --hostname \$(hostname) --gpus all -v /etc/ssh:/etc/ssh gcr.io/llm-containers/train:${IMAGE_TAG} ${TRAIN_CMD}"
+  #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
+  #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
+  #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
 
-export ACTION=CREATE
-#export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
-#export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
-export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
-export SHOW_PROXY_URL=no
-export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
-export MINIMIZE_TERRAFORM_LOGGING=true
-#export DISK_SIZE_GB=1000
-_invoke_cluster_tool
+  export ACTION=CREATE
+  #export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
+  #export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
+  export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
+  export SHOW_PROXY_URL=no
+  export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
+  export MINIMIZE_TERRAFORM_LOGGING=true
+  #export DISK_SIZE_GB=1000
+  _invoke_cluster_tool
 
-echo "Provisioning cluster..."
+  echo "Provisioning cluster..."
 
-#(sleep 2400;echo check > check.txt) &
+  export CLUSTER_ID=${NODE_PREFIX}-gke
+fi
 
-gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort #> machines.txt
-#gsutil cp machines.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/
+# Get kubeconfig for cluster
+gcloud container clusters get-credentials $CLUSTER_ID --region $ZONE --project $PROJECT_ID
+
+#export GPU_NUMBER=4
+#export MODEL_SOURCE_PATH="gs://<idksomething>"
+#export MODEL_UPLOAD_PATH="gs://<idksomethingelse"
+
+envsubst < convert.yaml | kubectl apply -f -
+
+# Run convert image on cluster
+
+
+# Run deploy-gke image on cluster
 
 exit 0
 
