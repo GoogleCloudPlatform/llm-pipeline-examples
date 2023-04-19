@@ -1,6 +1,9 @@
 PROJECT_ID=supercomputer-testing
-NAME_PREFIX=t5-node
+NAME_PREFIX=pirillo
 ZONE=us-central1-a
+ACCELERATOR_TYPE=nvidia-tesla-v100
 ORCHESTRATOR_TYPE=gke
 NETWORK_CONFIG=default_network
-CUSTOM_NODE_POOL=[{"name"="sp-test-pool-1","zone"="us-central1-a","node_count"=3,"machine_type"="n1-standard-32","guest_accelerator_count"=4,"guest_accelerator_type"="nvidia-tesla-v100"}]
+GPU_COUNT=4
+GKE_NODE_POOL_COUNT=1
+GKE_NODE_COUNT_PER_NODE_POOL=3
