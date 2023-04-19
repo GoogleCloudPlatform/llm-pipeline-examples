@@ -80,7 +80,7 @@ gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project
 #export MODEL_SOURCE_PATH="gs://<idksomething>"
 #export MODEL_UPLOAD_PATH="gs://<idksomethingelse"
 
-envsubst < specs/convert.yaml | kubectl apply -f -
+envsubst < specs/convert.yml | kubectl apply -f -
 
 # Run convert image on cluster
 

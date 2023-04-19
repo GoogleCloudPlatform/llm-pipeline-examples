@@ -10,7 +10,7 @@ spec:
         image: gcr.io/llm-containers/convert
         entrypoint: ["./convert.sh"]
         args:
-        - $GPU_NUMBER
-        - $MODEL_SOURCE_PATH
-        - $MODEL_UPLOAD_PATH
+        - "$GPU_NUMBER"
+        - "$MODEL_SOURCE_PATH"
+        - "$MODEL_UPLOAD_PATH"
       restartPolicy: Never
