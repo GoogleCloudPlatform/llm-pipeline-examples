@@ -196,6 +196,7 @@ steps:
       - '--image_tag=github${SHORT_SHA}'
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
+      - '--endpoint_name=t5-nightly'
       - '--cleanup_endpoint'
   - name: gcr.io/cloud-builders/docker
     id: run-triton-test
@@ -210,6 +211,7 @@ steps:
       - '--project=$PROJECT_ID'
       - '--pipeline_root=gs://t5-shared/pipeline_runs/'
       - '--verify_result=predict_result_triton.json'
+      - '--endpoint_name=t5-nightly-ft'
       - '--use_faster_transformer'
       - '--cleanup_endpoint'
 timeout: 86400s
