@@ -8,7 +8,7 @@ spec:
       containers:
       - name: convert
         image: gcr.io/llm-containers/convert
-        entrypoint: ["./convert.sh"]
+        command: ["./convert_t5.sh"]
         args:
         - "$GPU_NUMBER"
         - "$MODEL_SOURCE_PATH"
