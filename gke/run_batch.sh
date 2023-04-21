@@ -51,12 +51,6 @@ if [[ -z $CLUSTER_ID ]]; then
 
   echo User is ${OS_LOGIN_USER}
 
-  #export TRAIN_CMD="./train.sh ${MODEL_CHECKPOINT} ${DATA} ${MODEL_OUTPUT} ${ZONE} ${BATCH_SIZE} ${EPOCHS} ${GPU_COUNT} ${WORKSPACE_PATH}"
-  #export START="docker pull gcr.io/llm-containers/train:${IMAGE_TAG}; nvidia-persistenced; docker run --ipc host --network host --hostname \$(hostname) --gpus all -v /etc/ssh:/etc/ssh gcr.io/llm-containers/train:${IMAGE_TAG} ${TRAIN_CMD}"
-  #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
-  #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
-  #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
-
   export ACTION=CREATE
   #export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
   #export TERRAFORM_GCS_PATH=${MODEL_OUTPUT/\/gcs\//gs:\/\/}/deployment
@@ -69,7 +63,7 @@ if [[ -z $CLUSTER_ID ]]; then
 
   echo "Provisioning cluster..."
 
-  export CLUSTER_ID=${NODE_PREFIX}-gke
+  export CLUSTER_ID=${NAME_PREFIX}-gke
 fi
 
 # Get kubeconfig for cluster
@@ -80,13 +74,13 @@ gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project
 #export MODEL_SOURCE_PATH="gs://<idksomething>"
 #export MODEL_UPLOAD_PATH="gs://<idksomethingelse"
 
-envsubst < specs/convert.yml | kubectl apply -f -
-
 # Run convert image on cluster
-
+export CONVERT_JOB_ID=convert-$RANDOM
+envsubst < specs/convert.yml | kubectl apply -f -
+kubectl wait --for=condition=complete --timeout=10m job/$CONVERT_JOB_ID
 
 # Run deploy-gke image on cluster
-
+envsubst < specs/inference.yml | kubectl apply -f -
 exit 0
 
 

@@ -1,10 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: convert
+  name: "$CONVERT_JOB_ID"
 spec:
   template:
     spec:
+      serviceAccountName: $KSA_NAME
       containers:
       - name: convert
         image: gcr.io/llm-containers/convert
