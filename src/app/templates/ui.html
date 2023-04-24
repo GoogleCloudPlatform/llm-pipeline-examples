@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FlaskApp</title>
+</head>
+<body>
+    <p>Prompt <input id="prompt" type = "textarea" name = "prompt"/></p>
+    <button id="submit" type="submit" value = "submit">Submit</button>
+
+    <h3>Response</h3>
+    <p id="response"></p>
+</body>
+
+<script>
+    var btn = document.getElementById("submit");
+
+    btn.addEventListener('click', function(event) {
+        event.preventDefault();
+        const input = document.getElementById("prompt").nodeValue;
+        const wrappedInput = {"instances":[input]}
+        fetch('/infer', {
+            method: 'POST',
+            body: JSON.stringify(wrappedInput),
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cache: "no-cache",
+        }).then(function(response) {
+            text = response.json()
+            console.log(text);
+
+            document.getElementById("response").innerText = text;
+        });
+    });
+</script>
