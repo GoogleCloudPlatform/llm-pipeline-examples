@@ -16,7 +16,7 @@
 FROM python:slim
 
 RUN pip install google-cloud-aiplatform google-cloud-container
-RUN pip install gcsfs
+RUN pip install gcsfs==2023.1.0
 RUN pip install kubernetes
 
 ADD src/utils.py .
