@@ -31,8 +31,12 @@ fi
 while read -r machine ip;
 do
   echo ${machine}
+  for i in $(gcloud compute os-login ssh-keys list | grep -v FINGERPRINT); do \
+    echo "Removing ssh key"; \
+    gcloud compute os-login ssh-keys remove --key $i || true; \
+  done
   while true; do
-    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --strict-host-key-checking=no -- -p 1022; then
+    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --ssh-key-expire-after=2m --strict-host-key-checking=no -- -p 1022; then
       break;
     fi
     echo "Waiting for ssh..."
