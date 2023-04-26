@@ -113,7 +113,7 @@ def infer():
 
 @app.route("/ui", methods=["GET"])
 def ui():
-  return send_from_directory("app", "templates/ui.html")
+  return send_from_directory("templates", "ui.html")
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.
