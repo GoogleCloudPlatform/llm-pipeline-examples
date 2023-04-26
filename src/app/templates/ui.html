@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FlaskApp</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>LLM Prompt Engineering Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <style>
         textarea.textarea-autosize {
             height: 2.25rem;
@@ -31,50 +32,30 @@
         <div class="row my-4">
             <div class="col">
                 <div class="jumbotron">
-                    <div class="floating-label">
-                        <label for="prompt">Enter prompt here.</label>
-                        <textarea class="form-control textarea-autosize" id="prompt" rows="1"></textarea>
+                    <div class="form-floating mb-3">
+                        <textarea type="textarea" class="form-control js-auto-size" id="prompt" placeholder="Prompt"></textarea>
+                        <label for="floatingInput">Prompt</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="rawInputCheckbox" class="form-check-input">
+                        <label for="rawInputCheckbox" class="form-check-label" data-toggle="tooltip" data-placement="bottom" title="If this box is checked then the exact payload will be sent to the model server. If this box is un-checked then the input will be wrapped in Vertex AI's request format.">Send raw input</label>
                     </div>
                     <button  class="btn btn-primary" id="submit" type="submit" value = "submit">Submit</button>
+                    <br><br><br>
+                    <div class="form-floating">
+                        <textarea class="form-control js-auto-size" id="response" placeholder="Inferencing response"></textarea>
+                        <label for="response">Inferencing response</label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <h3>Response</h3>
-    <p id="response"></p>
 </body>
 
-<script>
-    var btn = document.getElementById("submit");
+<script src="js/infer.js"></script>
 
-    btn.addEventListener('click', function(event) {
-        event.preventDefault();
-        const input = document.getElementById("prompt").value;
-        const wrappedInput = {"instances":[input]}
-        fetch('/infer', {
-            method: 'POST',
-            body: JSON.stringify(wrappedInput),
-            headers: {
-                "Content-Type": "application/json",
-            },
-            cache: "no-cache",
-        })
-        .then((response) => response.json())
-        .then(function(json) {
-            console.log(json);
-            document.getElementById("response").innerText = JSON.stringify(json);
-        });
-    });
-</script>
-
-<script>
-/*!
- * jQuery Textarea AutoSize plugin : https://github.com/javierjulio/textarea-autosize
- * Author: Javier Julio
- * Licensed under the MIT license
- */
-!function(t,e,i,n){function s(e,i){this.element=e,this.$element=t(e),this.init()}var h="textareaAutoSize",o="plugin_"+h,r=function(t){return t.replace(/\s/g,"").length>0};s.prototype={init:function(){var i=parseInt(this.$element.css("paddingBottom"))+parseInt(this.$element.css("paddingTop"))+parseInt(this.$element.css("borderTopWidth"))+parseInt(this.$element.css("borderBottomWidth"))||0;r(this.element.value)&&this.$element.height(this.element.scrollHeight-i),this.$element.on("input keyup",function(n){var s=t(e),h=s.scrollTop();t(this).height(0).height(this.scrollHeight-i),s.scrollTop(h)})}},t.fn[h]=function(e){return this.each(function(){t.data(this,o)||t.data(this,o,new s(this,e))}),this}}(jQuery,window,document);
-
-// Initialize Textarea
-$('.textarea-autosize').textareaAutoSize();
+<script crossorigin type="module">
+    import { TextareaAutoSize } from './js/textarea-autosize.js'
+    var wrappers = [];
+    document.querySelectorAll('textarea.js-auto-size').forEach((e) => wrappers.push(new TextareaAutoSize(e)));
 </script>

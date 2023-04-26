@@ -25,7 +25,7 @@ from absl import app as absl_app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
-from flask import Flask, render_template
+from flask import Flask, send_from_directory
 from flask import request
 from utils import timer
 import gcsfs
@@ -113,7 +113,7 @@ def infer():
 
 @app.route("/ui", methods=["GET"])
 def ui():
-  return render_template("ui.html")
+  return send_from_directory("app", "ui.html")
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.
