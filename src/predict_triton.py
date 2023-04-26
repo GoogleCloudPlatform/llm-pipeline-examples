@@ -31,7 +31,7 @@ from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 
-app = Flask(__name__)
+app = Flask(__name__, root_path="app/")
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -113,7 +113,7 @@ def infer():
 
 @app.route("/ui", methods=["GET"])
 def ui():
-  return send_from_directory("app", "ui.html")
+  return send_from_directory("app", "templates/ui.html")
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.
