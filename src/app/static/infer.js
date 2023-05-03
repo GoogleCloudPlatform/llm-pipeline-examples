@@ -5,7 +5,7 @@ if (urlParams.has("fakedata")) {
     var fakeData=true
 }
 
-btn.addEventListener('click', function(event) {
+btn.addEventListener('click', async function(event) {
     event.preventDefault();
     var input = document.getElementById("prompt").value;
 
@@ -14,12 +14,12 @@ btn.addEventListener('click', function(event) {
     }
 
     var responseElement = document.getElementById("response")
-    responseJson = {}
+    var responsePromise = {}
     if (fakeData) {
-        responseJson = {"predictions": ["'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a"]};
+        responsePromise = Promise.resolve({"metrics": {"preprocessing": 10, "inferencing": 30, "postprocessing": 2}, "predictions": ["'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a"]});
     }
     else {
-        fetch('/infer', {
+        responsePromise = fetch('/infer', {
             method: 'POST',
             body: JSON.stringify(input),
             headers: {
@@ -27,16 +27,19 @@ btn.addEventListener('click', function(event) {
             },
             cache: "no-cache",
         })
-        .then((response) => response.json())
-        .then(function(json) {
-            responseJson = json;
-        });
+        .then((response) => response.json());
     }
 
+    var responseJson = await responsePromise;
     console.log(responseJson);
-    predictions = responseJson["predictions"];
+    var predictions = responseJson["predictions"];
     if (predictions.length == 1) {
         predictions = predictions[0];
+    }
+
+    if (responseJson["metrics"] != null) {
+        var metricsElement = document.getElementById("response-metrics")
+        metricsElement.innerHTML = JSON.stringify(responseJson["metrics"], null, 2);
     }
     
     responseElement.value = JSON.stringify(predictions, null, 2);

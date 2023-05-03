@@ -31,7 +31,7 @@ from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 
-app = Flask(__name__, root_path="app/")
+app = Flask(__name__, root_path="/workspace/app/")
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
