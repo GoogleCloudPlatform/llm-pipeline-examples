@@ -27,6 +27,4 @@ ENV SERVER_HOST=0.0.0.0
 EXPOSE 5000
 EXPOSE 8000
 
-ADD src/app ./app
-
 ENTRYPOINT ["/bin/python3", "predict_triton.py"]

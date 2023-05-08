@@ -25,14 +25,14 @@ from absl import app as absl_app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
-from flask import Flask, send_from_directory
+from flask import Flask
 from flask import request
 from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 import json
 
-app = Flask(__name__, root_path="/workspace/app/")
+app = Flask(__name__)
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -124,10 +124,6 @@ def infer():
     return_payload.pop(metrics_key)
 
   return return_payload
-
-@app.route("/ui", methods=["GET"])
-def ui():
-  return send_from_directory("templates", "ui.html")
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.
