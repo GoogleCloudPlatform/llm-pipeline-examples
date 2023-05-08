@@ -30,6 +30,7 @@ from flask import request
 from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
+import json
 
 app = Flask(__name__, root_path="/workspace/app/")
 FLAGS = flags.FLAGS
@@ -105,16 +106,20 @@ def infer():
 
   metrics_key = "metrics"
   predictions_key = "predictions"
+  send_metrics = request.args.get('metrics', False, bool)
   return_payload = {predictions_key: [], metrics_key: []}
   client = _get_triton_client()
 
   for req in request.json["instances"]:
     text_out, req_metrics = client.infer(text=req)
-    return_payload[metrics_key].append(req_metrics)
     return_payload[predictions_key].append(text_out)
+
+    logging.info(json.dumps(req_metrics))
+    if send_metrics:
+      return_payload[metrics_key].append(req_metrics)
+
   client.client.close()
   
-  send_metrics = request.args.get('metrics', False, bool)
   if not send_metrics:
     return_payload.pop(metrics_key)
 
