@@ -19,7 +19,7 @@ btn.addEventListener('click', async function(event) {
         responsePromise = Promise.resolve({"metrics": {"preprocessing": 10, "inferencing": 30, "postprocessing": 2}, "predictions": ["'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a", "'Tapi Tapi -- Handcrafted, authentic African ice cream' is a"]});
     }
     else {
-        responsePromise = fetch('/infer', {
+        responsePromise = fetch('/infer?metrics=true', {
             method: 'POST',
             body: JSON.stringify(input),
             headers: {
