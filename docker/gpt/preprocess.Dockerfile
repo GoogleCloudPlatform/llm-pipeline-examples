@@ -13,19 +13,7 @@
 # limitations under the License.
 FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
 
-WORKDIR /home/jupyter
+RUN pip install wikiextractor deepspeed regex nltk
+RUN git clone https://github.com/microsoft/Megatron-DeepSpeed.git
 
-COPY scripts/clean_up_torch_xla.sh .
-COPY scripts/install.sh .
-RUN ./install.sh
-
-COPY src/predict.py .
-
-ENV FLASK_APP=predict
-ENV SERVER_HOST=0.0.0.0
-
-RUN pip install Flask
-
-ADD src/app ./app
-
-ENTRYPOINT [ "deepspeed", "predict.py"]
+COPY scripts/gpt/preprocess.sh .

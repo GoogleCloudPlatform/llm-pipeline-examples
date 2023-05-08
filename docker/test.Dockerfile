@@ -19,6 +19,7 @@ COPY configs/small1vm1gpu.json .
 COPY pipeline.py .
 COPY predict_payload.json .
 COPY predict_result.json .
+COPY predict_result_triton.json .
 COPY components/* components/
 
-ENTRYPOINT ["python3",  "pipeline.py", "--config=small1vm1gpu.json", "--verify",  "--override_deploy"]
+ENTRYPOINT ["python3",  "pipeline.py", "--verify",  "--override_deploy"]
