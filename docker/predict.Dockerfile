@@ -26,4 +26,6 @@ ENV SERVER_HOST=0.0.0.0
 
 RUN pip install Flask
 
+ADD src/app ./app
+
 ENTRYPOINT [ "deepspeed", "predict.py"]
