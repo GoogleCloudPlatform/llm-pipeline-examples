@@ -92,7 +92,6 @@ def health():
 
 
 @app.route("/infer", methods=["POST"])
-@timer
 def infer():
   """Process a generic inference request.
 
@@ -103,13 +102,23 @@ def infer():
   """
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
-  return_payload = []
+
+  metrics_key = "metrics"
+  predictions_key = "predictions"
+  return_payload = {predictions_key: [], metrics_key: []}
   client = _get_triton_client()
+
   for req in request.json["instances"]:
-    text_out = client.infer(text=req)
-    return_payload.append(text_out)
+    text_out, req_metrics = client.infer(text=req)
+    return_payload[metrics_key].append(req_metrics)
+    return_payload[predictions_key].append(text_out)
   client.client.close()
-  return {"predictions": return_payload}
+  
+  send_metrics = request.args.get('metrics', False, bool)
+  if not send_metrics:
+    return_payload.pop(metrics_key)
+
+  return return_payload
 
 @app.route("/ui", methods=["GET"])
 def ui():
