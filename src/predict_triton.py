@@ -25,13 +25,13 @@ from absl import app as absl_app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask import request
 from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 
-app = Flask(__name__)
+app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
@@ -89,6 +89,11 @@ def download_model(model_path):
 @app.route("/health")
 def health():
   return {"health": "ok"}
+
+
+@app.route("/ui", methods=["GET"])
+def ui():
+  return send_from_directory("templates", "ui.html")
 
 
 @app.route("/infer", methods=["POST"])
