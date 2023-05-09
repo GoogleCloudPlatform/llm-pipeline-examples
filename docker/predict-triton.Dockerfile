@@ -15,7 +15,7 @@
 
 FROM gcr.io/llm-containers/ft-triton:22.09
 
-RUN pip3 install absl-py flask gcsfs transformers tritonclient[http]
+RUN pip3 install absl-py flask gcsfs==2023.1.0 transformers tritonclient[http]
 
 ADD src/predict_triton.py .
 ADD src/triton_processor.py .
