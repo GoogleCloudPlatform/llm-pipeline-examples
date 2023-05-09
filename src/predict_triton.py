@@ -30,6 +30,7 @@ from flask import request
 from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
+import requests
 
 app = Flask(__name__)
 FLAGS = flags.FLAGS
@@ -110,6 +111,28 @@ def infer():
     return_payload.append(text_out)
   client.client.close()
   return {"predictions": return_payload}
+
+
+@app.route('/infer:raw', methods=["POST"])
+def redirect_to_triton():
+    proxied_headers = ["inference-header-content-length", "host"]
+    res = requests.request(  # ref. https://stackoverflow.com/a/36601467/248616
+        method          = request.method,
+        url             = f'{FLAGS.triton_host}:{FLAGS.triton_port}/fastertransformer',
+        headers         = {k:v for k,v in request.headers if k.lower() in proxied_headers},
+        data            = request.get_data(),
+        cookies         = request.cookies,
+        allow_redirects = False,
+    )
+
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']  #NOTE we here exclude all "hop-by-hop headers" defined by RFC 2616 section 13.5.1 ref. https://www.rfc-editor.org/rfc/rfc2616#section-13.5.1
+    headers          = [
+        (k,v) for k,v in res.raw.headers.items()
+        if k.lower() not in excluded_headers
+    ]
+
+    response = requests.Response(res.content, res.status_code, headers)
+    return response
 
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
