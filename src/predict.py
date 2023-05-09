@@ -24,7 +24,7 @@ from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
 import deepspeed
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
 import torch
@@ -33,7 +33,7 @@ from transformers import AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
 from transformers.deepspeed import HfDeepSpeedConfig
 
-app = Flask(__name__)
+app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("model_path", None, "Path of HF model to load.")
@@ -120,6 +120,11 @@ def init_model():
 @app.route("/health")
 def health():
   return {"health": "ok"}
+
+
+@app.route("/ui", methods=["GET"])
+def ui():
+  return send_from_directory("templates", "ui.html")
 
 
 @app.route("/infer", methods=["POST"])

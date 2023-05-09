@@ -24,4 +24,6 @@ ADD src/utils.py .
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
+ADD src/app ./app
+
 ENTRYPOINT ["/bin/python3", "predict_triton.py"]
