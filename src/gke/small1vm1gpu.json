@@ -1,0 +1,8 @@
+{
+  "model_display_name" : "t5",
+  "deploy_gpu_type" : "NVIDIA_TESLA_V100",
+  "deploy_gpu_count" : 4,
+  "gke_zone": "us-central1-c",
+  "gke_id": "v100testcluster",
+  "model_checkpoint_location": "gs://pirillo-bucket/pipeline_runs/237939871711/llm-pipeline-20230330101008/convert_-2783175366569623552/converted_model"
+}

@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "$CONVERT_JOB_ID"
+spec:
+  template:
+    spec:
+      serviceAccountName: $KSA_NAME
+      containers:
+      - name: convert
+        image: gcr.io/llm-containers/convert
+        command: ["./convert_t5.sh"]
+        args:
+        - "$GPU_NUMBER"
+        - "$MODEL_SOURCE_PATH"
+        - "$MODEL_UPLOAD_PATH"
+      restartPolicy: Never

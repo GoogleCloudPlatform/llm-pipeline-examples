@@ -1,0 +1,16 @@
+PROJECT_ID=supercomputer-testing
+NAME_PREFIX=pirillo
+ZONE=us-central1-a
+ACCELERATOR_TYPE=nvidia-tesla-v100
+ORCHESTRATOR_TYPE=gke
+NETWORK_CONFIG=default_network
+GPU_COUNT=4
+GKE_NODE_POOL_COUNT=1
+GKE_NODE_COUNT_PER_NODE_POOL=3
+CLUSTER_ID=pirillo-gke
+GPU_NUMBER=4
+MODEL_SOURCE_PATH=gs://pirillo-sct-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/train_5373485673388965888/Model/
+MODEL_UPLOAD_PATH=gs://pirillo-sct-bucket/gke_conversion/1/Model
+KSA_NAME=test-wsi-sa
+MODEL_NAME=t5-flan
+INFERENCING_IMAGE_URI=gcr.io/llm-containers/predict-triton
