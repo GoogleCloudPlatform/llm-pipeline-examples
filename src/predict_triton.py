@@ -75,13 +75,12 @@ def download_model(model_path):
   logging.info("Model path: %s", model_path)
   if model_path.startswith("gs://"):
     src = model_path.replace("gs://", "")
-    dst = "/workspace/all_models/" + src.split("/")[-1] + "/"
-    app.model_directory = dst
+    dst = "/workspace/all_models/"
     gcs = gcsfs.GCSFileSystem()
     logging.info("Downloading model FROM %s", model_path)
     logging.info("Downloading model TO %s", dst)
     gcs.get(src, dst, recursive=True)
-    model_path = dst
+    model_path = dst + src.split("/")[-1] + "/"
 
   return model_path
 
