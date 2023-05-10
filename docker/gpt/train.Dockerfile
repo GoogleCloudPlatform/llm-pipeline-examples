@@ -10,6 +10,3 @@ RUN mv Megatron-DeepSpeed/* .
 
 
 COPY scripts/gpt/ .
-COPY scripts/train/update_env.sh .
-COPY scripts/train/train_common.sh .
-COPY scripts/train/setup_head.sh .

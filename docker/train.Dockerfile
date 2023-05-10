@@ -36,6 +36,7 @@ WORKDIR /home/llm
 USER llm
 
 COPY scripts/train/setup_head.sh .
+COPY scripts/train/train_common.sh .
 COPY scripts/train/train.sh .
 COPY scripts/train/update_env.sh .
 COPY scripts/train/ssh_server.sh .
