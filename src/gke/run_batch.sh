@@ -62,11 +62,6 @@ if [[ -z $CLUSTER_ID ]]; then
   export CLUSTER_ID=${NAME_PREFIX}-gke
   
   gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
-  
-  # Apply Nvidia daemonset
-  kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
-
-  # TODO: need to create Kubernetes Service Account that is linked to Workload Identity
 fi
 
 # Get kubeconfig for cluster
