@@ -1,6 +1,5 @@
 FROM gcr.io/llm-containers/train:latest
 
-RUN sudo apt install ninja-build
 RUN pip install regex pybind11
 RUN git clone https://github.com/NVIDIA/apex && \
     cd apex && git checkout 89cc215a49b0e99263a8184f17f17275879015aa && cd .. && \

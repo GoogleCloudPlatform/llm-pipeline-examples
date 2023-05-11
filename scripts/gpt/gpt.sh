@@ -37,7 +37,6 @@ GRADIENT_ACC_STEPS=128
 NODES=${NODE_COUNT}
 GPN=${GPU_COUNT}
 
-#GLOBAL_BATCH=$(( ${GPN} * ${MICRO_BATCH} * ${NODES} ))
 GLOBAL_BATCH=$(( ${GRADIENT_ACC_STEPS} * ${GPN} * ${MICRO_BATCH} * ${NODES}  / ${TP} / ${PP} ))
 
 # Initial power scale for loss
@@ -57,7 +56,6 @@ CPU_OPTIM=" "
 
 ZERO_STAGE=0
 OUTPUT_DIR=ds_z_off-${OFFLOAD_DEVICE}_stage_${ZERO_STAGE}_nl${NLAYERS}_hs${HIDDEN}_mb${MICRO_BATCH}_seq${SEQ}_gb${GLOBAL_BATCH}_nodes${NODES}
-#OUTPUT_DIR=baseline_nl${NLAYERS}_hs${HIDDEN}_gb${GLOBAL_BATCH}_mb${MICRO_BATCH}
 mkdir -p $OUTPUT_DIR
 
 cat <<EOT > $DS_CONFIG
