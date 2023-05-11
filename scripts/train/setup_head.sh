@@ -32,7 +32,7 @@ while read -r machine ip;
 do
   echo ${machine}
   while true; do
-    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --strict-host-key-checking=no -- -p 1022 -n; then
+    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --ssh-key-expire-after=1d --strict-host-key-checking=no -- -p 1022 -n; then
       break;
     fi
     echo "Waiting for ssh..."

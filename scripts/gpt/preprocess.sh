@@ -47,5 +47,7 @@ python3 ../Megatron-DeepSpeed/tools/preprocess_data.py \
     --workers 35 \
     --append-eod 
 
+gsutil cp vocab.json $destination/gpt2-vocab.json
+gsutil cp merges.txt $destination/gpt2-merges.txt
 gsutil cp wiki_data_text_document.bin $destination
 gsutil cp wiki_data_text_document.idx $destination
