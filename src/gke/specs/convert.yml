@@ -14,4 +14,7 @@ spec:
         - "$GPU_NUMBER"
         - "$MODEL_SOURCE_PATH"
         - "$MODEL_UPLOAD_PATH"
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
       restartPolicy: Never

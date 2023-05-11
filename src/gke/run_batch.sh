@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-EXIT_CODE = 0
+EXIT_CODE=0
 
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
@@ -44,6 +44,8 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
+REGION=${ZONE%-*}
+
 if [[ -z $CLUSTER_ID ]]; then
 
   export SERVICE_ACCOUNT=$(gcloud config get account)
@@ -65,7 +67,6 @@ if [[ -z $CLUSTER_ID ]]; then
 fi
 
 # Get kubeconfig for cluster
-REGION=${ZONE%-*}
 gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
 
 # Run convert image on cluster
