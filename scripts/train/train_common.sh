@@ -51,15 +51,12 @@ if [[ "$HEAD" == "$HOSTNAME" ]]; then
   fi
   echo started > progress.txt
   gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
-  ${TRAIN_CMD} 2>&1 | tee ${HOME_DIR}/deepspeed_output.log
-  export RESULT=$?
-  if [[ "${RESULT}" == "0" ]]; then
-    echo "Training succeeded!" | tee progress.txt
-    gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
+  ${TRAIN_CMD} 2>&1 && echo succeeded > progress.txt || echo failed > progress.txt | tee ${HOME_DIR}/deepspeed_output.log
+  gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
+  export RESULT=$(cat progress.txt)
+  if [[ "${RESULT}" == "succeeded" ]]; then
     exit 0
   else
-    echo "Training failed with code: ${RESULT}" | tee progress.txt
-    gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
     exit 1
   fi
 else
