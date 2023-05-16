@@ -19,7 +19,7 @@ spec:
         cloud.google.com/gke-accelerator: "$ACCELERATOR_TYPE"
       containers:
       - name: triton
-        image: "$INFERENCING_IMAGE_URI"
+        image: "$INFERENCING_IMAGE_URI:$INFERENCING_IMAGE_TAG"
         imagePullPolicy: Always
         env:
         - name: AIP_STORAGE_URI
@@ -52,9 +52,11 @@ spec:
     app: $MODEL_NAME
   ports:
   - protocol: TCP
+    name: flask
     port: 5000
     targetPort: 5000
   - protocol: TCP
+    name: triton
     port: 8000
     targetPort: 8000
   type: NodePort

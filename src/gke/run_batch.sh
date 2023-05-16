@@ -46,7 +46,7 @@ _invoke_cluster_tool () {
 
 REGION=${ZONE%-*}
 
-if [[ -z $CLUSTER_ID ]]; then
+if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
   export SERVICE_ACCOUNT=$(gcloud config get account)
   export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} | grep uniqueId | sed -e "s/.* '\(.*\)'/sa_\1/")
@@ -61,20 +61,42 @@ if [[ -z $CLUSTER_ID ]]; then
   _invoke_cluster_tool
 
   echo "Provisioning cluster..."
-  export CLUSTER_ID=${NAME_PREFIX}-gke
-  
-  gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
+  export EXISTING_CLUSTER_ID=${NAME_PREFIX}-gke
 fi
 
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
+
+if [[ -z $INFERENCING_IMAGE_TAG ]]; then
+  export INFERENCING_IMAGE_TAG=release
+fi
 
 # Run convert image on cluster
 export CONVERT_JOB_ID=convert-$RANDOM
 envsubst < specs/convert.yml | kubectl apply -f -
 kubectl wait --for=condition=complete --timeout=10m job/$CONVERT_JOB_ID
 
-# Run deploy-gke image on cluster
+# Run predict image on cluster
+if [[ -z $INFERENCING_IMAGE_URI ]]; then
+  export INFERENCING_IMAGE_URI=gcr.io/llm-containers/predict-triton
+fi
 envsubst < specs/inference.yml | kubectl apply -f -
+
+# Print urls to access the model
+echo Exposed Node IPs from node 0 on the cluster:
+ENDPOINTS=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[]')
+echo $ENDPOINTS | jq -r '.'
+INTERNAL_ENDPOINT=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="InternalIP") | .address | select(startswith("10."))')
+
+echo NodePort for Flask:
+FLASK_NODEPORT=$(kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="flask")')
+echo $FLASK_NODEPORT | jq -r '.'
+
+FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
+
+echo NodePort for Triton:
+kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="triton")'
+
+echo "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"
 
 exit $EXIT_CODE

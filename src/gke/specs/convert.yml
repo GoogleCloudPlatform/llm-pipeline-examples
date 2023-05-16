@@ -8,12 +8,12 @@ spec:
       serviceAccountName: $KSA_NAME
       containers:
       - name: convert
-        image: gcr.io/llm-containers/convert
+        image: gcr.io/llm-containers/convert:$INFERENCING_IMAGE_TAG
         command: ["./convert_t5.sh"]
         args:
         - "$GPU_NUMBER"
         - "$MODEL_SOURCE_PATH"
-        - "$MODEL_UPLOAD_PATH"
+        - "$CONVERTED_MODEL_UPLOAD_PATH"
         resources:
           limits:
             nvidia.com/gpu: "1"
