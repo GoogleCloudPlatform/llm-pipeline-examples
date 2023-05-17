@@ -23,13 +23,13 @@ spec:
         imagePullPolicy: Always
         env:
         - name: AIP_STORAGE_URI
-          value: "$MODEL_UPLOAD_PATH"
+          value: "$CONVERTED_MODEL_UPLOAD_PATH"
         ports:
         - containerPort: 5000
         resources:
           limits:
             cpu: 4
-            memory: 16Gi
+            memory: "$POD_MEMORY_LIMIT"
             nvidia.com/gpu: "$GPU_NUMBER"
           requests:
             cpu: 50m

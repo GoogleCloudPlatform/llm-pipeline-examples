@@ -24,8 +24,7 @@ ADD src/utils.py .
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
-EXPOSE 5000
-EXPOSE 8000
+EXPOSE 5000 8000
 
 ADD src/app ./app
 

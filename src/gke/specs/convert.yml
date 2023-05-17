@@ -16,5 +16,5 @@ spec:
         - "$CONVERTED_MODEL_UPLOAD_PATH"
         resources:
           limits:
-            nvidia.com/gpu: "1"
+            memory: "$POD_MEMORY_LIMIT"
       restartPolicy: Never

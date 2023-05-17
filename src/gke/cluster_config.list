@@ -16,3 +16,4 @@ MODEL_UPLOAD_PATH=gs://pirillo-sct-bucket/gke_conversion/3/Model
 KSA_NAME=aiinfra-gke-sa
 MODEL_NAME=t5-flan
 INFERENCING_IMAGE_TAG=latest
+POD_MEMORY_LIMIT=16Gi

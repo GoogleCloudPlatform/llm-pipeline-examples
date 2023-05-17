@@ -44,7 +44,18 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
-REGION=${ZONE%-*}
+if [[ -z $REGION ]]; then
+  export REGION=${ZONE%-*}
+fi
+if [[ -z $INFERENCING_IMAGE_TAG ]]; then
+  export INFERENCING_IMAGE_TAG=release
+fi
+if [[ -z $INFERENCING_IMAGE_URI ]]; then
+  export INFERENCING_IMAGE_URI=gcr.io/llm-containers/predict-triton
+fi
+if [[ -z $POD_MEMORY_LIMIT ]]; then
+  export POD_MEMORY_LIMIT="16Gi"
+fi
 
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
@@ -67,19 +78,12 @@ fi
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 
-if [[ -z $INFERENCING_IMAGE_TAG ]]; then
-  export INFERENCING_IMAGE_TAG=release
-fi
-
 # Run convert image on cluster
 export CONVERT_JOB_ID=convert-$RANDOM
 envsubst < specs/convert.yml | kubectl apply -f -
-kubectl wait --for=condition=complete --timeout=10m job/$CONVERT_JOB_ID
+kubectl wait --for=condition=complete job/$CONVERT_JOB_ID
 
 # Run predict image on cluster
-if [[ -z $INFERENCING_IMAGE_URI ]]; then
-  export INFERENCING_IMAGE_URI=gcr.io/llm-containers/predict-triton
-fi
 envsubst < specs/inference.yml | kubectl apply -f -
 
 # Print urls to access the model
