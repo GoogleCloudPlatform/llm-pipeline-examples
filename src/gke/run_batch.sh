@@ -65,7 +65,7 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
 fi
 
 # Get kubeconfig for cluster
-gcloud container clusters get-credentials $CLUSTER_ID --region $REGION --project $PROJECT_ID
+gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 
 if [[ -z $INFERENCING_IMAGE_TAG ]]; then
   export INFERENCING_IMAGE_TAG=release
