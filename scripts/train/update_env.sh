@@ -16,12 +16,10 @@
 # limitations under the License.
 
 echo "Configuring user..."
+export HOME_USER=llm
 export SERVICE_ACCOUNT=$(gcloud config get account)
 export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} | grep uniqueId | sed -e "s/.* '\(.*\)'/sa_\1/")
-sudo usermod -l ${OS_LOGIN_USER} jupyter
-sudo groupmod -n ${OS_LOGIN_USER} jupyter
+sudo usermod -l ${OS_LOGIN_USER} ${HOME_USER}
+sudo groupmod -n ${OS_LOGIN_USER} ${HOME_USER}
 
 echo 'export PATH="/opt/conda/bin:/opt/conda/condabin:${PATH}";conda activate base 2> /dev/null' >> .profile
-
-echo "Preloading model and config..."
-python3 -m prepare --workspace_path=${WORKSPACE_PATH}

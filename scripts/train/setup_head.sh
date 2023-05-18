@@ -32,7 +32,7 @@ while read -r machine ip;
 do
   echo ${machine}
   while true; do
-    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --ssh-key-expire-after=1d --strict-host-key-checking=no -- -p 1022; then
+    if gcloud compute ssh ${machine} --internal-ip --zone=${ZONE} --command="bash -l -c 'pip list | grep deepspeed'" --ssh-key-expire-after=1d --strict-host-key-checking=no -- -p 1022 -n; then
       break;
     fi
     echo "Waiting for ssh..."
@@ -47,7 +47,7 @@ do
   IdentityFile ~/.ssh/google_compute_engine
 
 " >> .ssh/config
-  ssh ${machine} -o StrictHostKeyChecking=no echo "Done ssh."
+  ssh ${machine} -n -o StrictHostKeyChecking=no echo "Done ssh."
   fi
   
   if [[ ! -e deepspeed_hostfile || -z "$(cat deepspeed_hostfile | grep ${machine})" ]]; then
