@@ -1,4 +1,5 @@
 from typing import NamedTuple
+from typing import List
 from kfp.v2.dsl import component
 
 @component(base_image="gcr.io/llm-containers/deploy-gke")
@@ -59,7 +60,7 @@ def create_deployment_object(model_display_name: str, gpu_type: str, gpu_count: 
     container = client.V1Container(
         name = model_display_name,
         image = image,
-        ports=[client.V1ContainerPort(container_port=5000)],
+        ports=[client.V1ContainerPort(container_port=5000), client.V1ContainerPort(container_port=8000)],
         resources=client.V1ResourceRequirements(
             requests={"cpu": "100m", "memory": "200Mi"},
             limits={"cpu": "4", "memory": "8Gi", "nvidia.com/gpu": f"{gpu_count}"}
@@ -67,9 +68,9 @@ def create_deployment_object(model_display_name: str, gpu_type: str, gpu_count: 
         env=[client.V1EnvVar("AIP_STORAGE_URI", model_location)],
         liveness_probe= client.V1Probe(
             http_get=client.V1HTTPGetAction(path="/health", port=5000),
-            initial_delay_seconds=10,
-            period_seconds=3,
-            failure_threshold=10
+            initial_delay_seconds=20,
+            period_seconds=10,
+            failure_threshold=15
         )
     )
 
@@ -96,15 +97,16 @@ def create_deployment_object(model_display_name: str, gpu_type: str, gpu_count: 
         spec=spec,
     )
 
-def create_service_object(model_display_name: str, target_port: int) -> client.V1Service:
+def create_service_object(model_display_name: str, target_ports: List[int]) -> client.V1Service:
     return client.V1Service(
     metadata=client.V1ObjectMeta(name=model_display_name),
     spec=client.V1ServiceSpec(
-    type="ClusterIP",
-    selector={"app": model_display_name},
-    ports=[client.V1ServicePort(
-        protocol="TCP",
-        port=80,
-        target_port=target_port)]
+        type="ClusterIP",
+        selector={"app": model_display_name},
+        ports= map(lambda p : client.V1ServicePort(
+                        protocol="TCP",
+                        port=p,
+                        target_port=p),
+                    target_ports)
     )
 )
