@@ -18,12 +18,12 @@ spec:
       nodeSelector:
         cloud.google.com/gke-accelerator: "$ACCELERATOR_TYPE"
       containers:
-      - name: triton
+      - name: server
         image: "$INFERENCING_IMAGE_URI:$INFERENCING_IMAGE_TAG"
         imagePullPolicy: Always
         env:
         - name: AIP_STORAGE_URI
-          value: "$CONVERTED_MODEL_UPLOAD_PATH"
+          value: "$MODEL_SOURCE_PATH"
         ports:
         - containerPort: 5000
         resources:

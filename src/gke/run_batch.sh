@@ -50,11 +50,21 @@ fi
 if [[ -z $INFERENCING_IMAGE_TAG ]]; then
   export INFERENCING_IMAGE_TAG=release
 fi
-if [[ -z $INFERENCING_IMAGE_URI ]]; then
-  export INFERENCING_IMAGE_URI=gcr.io/llm-containers/predict-triton
-fi
 if [[ -z $POD_MEMORY_LIMIT ]]; then
   export POD_MEMORY_LIMIT="16Gi"
+fi
+if [[ -z $KSA_NAME ]]; then
+  export KSA_NAME="aiinfra-gke-sa"
+fi
+if [[ -z $USE_FASTER_TRANSFORMER ]]; then
+  INFERENCE_IMAGE=gcr.io/llm-containers/predict-triton
+  CONVERT_MODEL=1
+fi
+else
+  INFERENCE_IMAGE=gcr.io/llm-containers/predict
+fi
+if [[ -z $INFERENCING_IMAGE_URI ]]; then
+  export INFERENCING_IMAGE_URI=$INFERENCE_IMAGE
 fi
 
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
@@ -78,13 +88,23 @@ fi
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 
-# Run convert image on cluster
-export CONVERT_JOB_ID=convert-$RANDOM
-envsubst < specs/convert.yml | kubectl apply -f -
-kubectl wait --for=condition=complete job/$CONVERT_JOB_ID
+if [[ $CONVERT_MODEL -eq 1 ]]
+  # Run convert image on cluster
+  export CONVERT_JOB_ID=convert-$RANDOM
+  envsubst < specs/convert.yml | kubectl apply -f -
+  echo "Running 'convert' job on cluster."
+  CONVERT_POD_ID=$(kubectl get pods -l job-name=$CONVERT_JOB_ID -o=json | jq -r '.items[0].metadata.name')
+  kubectl wait --for=condition=Ready --timeout=10m pod/$CONVERT_POD_ID
+  kubectl logs $CONVERT_POD_ID -f
+  kubectl wait --for=condition=Complete --timeout=60m job/$CONVERT_JOB_ID
+
+  export MODEL_SOURCE_PATH=$CONVERTED_MODEL_PATH
+fi
 
 # Run predict image on cluster
+echo "Deploying predict image to cluster"
 envsubst < specs/inference.yml | kubectl apply -f -
+kubectl wait --for=condition=Ready --timeout=60m pod -l app=$MODEL_NAME
 
 # Print urls to access the model
 echo Exposed Node IPs from node 0 on the cluster:
@@ -93,7 +113,7 @@ echo $ENDPOINTS | jq -r '.'
 INTERNAL_ENDPOINT=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="InternalIP") | .address | select(startswith("10."))')
 
 echo NodePort for Flask:
-FLASK_NODEPORT=$(kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="flask")')
+FLASK_NODEPORT=$(kubectl get svc -o json | jq -r '.items[].spec | select(.selector.app=="$MODEL_NAME") | .ports[] | select(.name=="flask")')
 echo $FLASK_NODEPORT | jq -r '.'
 
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
