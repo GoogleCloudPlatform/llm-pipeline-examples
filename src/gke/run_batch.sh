@@ -112,7 +112,7 @@ echo $ENDPOINTS | jq -r '.'
 INTERNAL_ENDPOINT=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="InternalIP") | .address | select(startswith("10."))')
 
 echo NodePort for Flask:
-FLASK_NODEPORT=$(kubectl get svc -o json | jq -r '.items[].spec | select(.selector.app=="$MODEL_NAME") | .ports[] | select(.name=="flask")')
+FLASK_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="flask")')
 echo $FLASK_NODEPORT | jq -r '.'
 
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
