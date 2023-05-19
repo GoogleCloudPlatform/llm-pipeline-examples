@@ -56,10 +56,9 @@ fi
 if [[ -z $KSA_NAME ]]; then
   export KSA_NAME="aiinfra-gke-sa"
 fi
-if [[ -z $USE_FASTER_TRANSFORMER ]]; then
+if [[ $USE_FASTER_TRANSFORMER -eq 1 ]]; then
   INFERENCE_IMAGE=gcr.io/llm-containers/predict-triton
   CONVERT_MODEL=1
-fi
 else
   INFERENCE_IMAGE=gcr.io/llm-containers/predict
 fi
@@ -88,7 +87,7 @@ fi
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 
-if [[ $CONVERT_MODEL -eq 1 ]]
+if [[ $CONVERT_MODEL -eq 1 ]]; then
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
   envsubst < specs/convert.yml | kubectl apply -f -
@@ -98,7 +97,7 @@ if [[ $CONVERT_MODEL -eq 1 ]]
   kubectl logs $CONVERT_POD_ID -f
   kubectl wait --for=condition=Complete --timeout=60m job/$CONVERT_JOB_ID
 
-  export MODEL_SOURCE_PATH=$CONVERTED_MODEL_PATH
+  export MODEL_SOURCE_PATH=$CONVERTED_MODEL_UPLOAD_PATH
 fi
 
 # Run predict image on cluster
