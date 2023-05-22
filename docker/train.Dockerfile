@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m108
 
 RUN apt-get update
-RUN apt install -yq openssh-server openssh-client
+RUN apt install -yq openssh-server openssh-client ninja-build libaio-dev
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
 
@@ -29,12 +29,14 @@ COPY scripts/install.sh .
 RUN ./install.sh
 
 
-RUN adduser jupyter sudo
+RUN useradd -ms /bin/bash llm
+RUN adduser llm sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-WORKDIR /home/jupyter
-USER jupyter
+WORKDIR /home/llm
+USER llm
 
 COPY scripts/train/setup_head.sh .
+COPY scripts/train/train_common.sh .
 COPY scripts/train/train.sh .
 COPY scripts/train/update_env.sh .
 COPY scripts/train/ssh_server.sh .

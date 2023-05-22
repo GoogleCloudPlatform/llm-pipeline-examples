@@ -13,8 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 export MODEL_CHECKPOINT=$1
 export DATA=$2
 export MODEL_OUTPUT=$3
@@ -24,55 +22,8 @@ export EPOCHS=$6
 export GPU_COUNT=$7
 export WORKSPACE_PATH=$8
 
-export HOSTNAME=$(hostname)
-shopt -s extglob
+echo "Preloading model and config from workspace ${WORKSPACE_PATH}..."
+python3 -m prepare --workspace_path=${WORKSPACE_PATH}
 
-echo "Node ${HOSTNAME} model ${MODEL_CHECKPOINT}..."
-
-gsutil cp ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/machines.txt .
-read -r HEAD HEAD_IP < machines.txt
-echo "Head node found as ${HEAD}"
-
-if [[ "$HEAD" == "$HOSTNAME" ]]; then
-  sudo /usr/sbin/google-fluentd & 
-  echo "Running ssh server..." >> /home/jupyter/deepspeed_output.log
-  ./ssh_server.sh &
-
-  ./update_env.sh >> /home/jupyter/deepspeed_output.log
-  
-  if [[ ! -d .ssh ]];
-  then mkdir .ssh;
-  fi
-  echo "Configuring head node ..." >> /home/jupyter/deepspeed_output.log
-  ./setup_head.sh ${ZONE} ${GPU_COUNT}
-  export result=$?
-  if [[ "$result" != "0" ]]; then 
-    echo "Head setup failed"
-    echo "Head setup failed" >> /home/jupyter/deepspeed_output.log
-    exit $result
-  fi
-  if [[ -e done.txt ]]; then
-    rm done.txt
-  fi
-  if [[ -e output.txt ]]; then
-    rm output.txt
-  fi
-  echo started > progress.txt
-  gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
-  deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=${MODEL_CHECKPOINT} --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT} &> /home/jupyter/deepspeed_output.log && echo succeeded > progress.txt || echo failed > progress.txt &
-  tail --pid=$! -f /home/jupyter/deepspeed_output.log
-  export RESULT=$(cat progress.txt)
-  if [[ "${RESULT}" == "succeeded" ]]; then
-    echo "Training finished successfully!"
-    gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
-    exit 0
-  fi
-  if [[ "${RESULT}" == "failed" ]]; then
-    echo "Training failed!"
-    gsutil cp progress.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/progress.txt
-    exit 1
-  fi
-else
-  ./update_env.sh
-  ./ssh_server.sh
-fi
+export TRAIN_CMD="deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=${MODEL_CHECKPOINT} --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT}"
+./train_common.sh "${TRAIN_CMD}"
