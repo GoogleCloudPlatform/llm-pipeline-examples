@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: convertshell
+  labels:
+    app: convertshell
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: convertshell
+  template:
+    metadata:
+      labels:
+        app: convertshell
+    spec:
+      serviceAccountName: aiinfra-gke-sa
+      containers:
+      - name: convert
+        image: gcr.io/llm-containers/convert
+        imagePullPolicy: Always
+        stdin: true
+        tty: true
+        resources:
+          limits:
+            cpu: 4
+            memory: 16Gi
+            nvidia.com/gpu: 4
+          requests:
+            cpu: 50m
+            memory: 50Mi

@@ -16,9 +16,7 @@
 Utility module for preprocessing and fine tuning.
 """
 
-import functools
 import gcsfs
-import time
 
 def gcs_path(path: str, gcs_prefix=''):
   if path.startswith('gs://'):
@@ -28,22 +26,3 @@ def gcs_path(path: str, gcs_prefix=''):
     fs = gcsfs.GCSFileSystem()
     return path.replace('/gcs/', gcs_prefix), fs
   return path, None
-
-def timer(func):
-  @functools.wraps(func)
-  def wrapper_timer(*args, **kwargs):
-    """
-    Modifies the return value of the function when used as a decorator.
-
-    New return value is:
-    Tuple<func(), Dict[]<str>>
-
-    Adds a time metric to the function call.
-    """
-    tic = time.perf_counter()
-    value = func(*args, **kwargs)
-    toc = time.perf_counter()
-    elapsed_time = toc - tic
-    print(f"Elapsed time for call to {func.__name__}: {elapsed_time:0.4f} seconds")
-    return value, {func.__name__: f"elapsed_time:0.4f"}
-  return wrapper_timer

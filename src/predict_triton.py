@@ -27,7 +27,6 @@ from absl import logging
 from absl.flags import argparse_flags
 from flask import Flask, send_from_directory
 from flask import request
-from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
 import json
@@ -85,6 +84,11 @@ def download_model(model_path):
 
   return model_path
 
+import requests
+from requests import Response
+Response
+resp = requests.post()
+resp.
 
 @app.route("/health")
 def health():
