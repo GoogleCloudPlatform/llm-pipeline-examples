@@ -40,6 +40,7 @@ COPY scripts/train/train_common.sh .
 COPY scripts/train/train.sh .
 COPY scripts/train/update_env.sh .
 COPY scripts/train/ssh_server.sh .
+COPY scripts/json_to_env.sh .
 
 COPY src/deepspeed.json .
 COPY src/finetune.py .
