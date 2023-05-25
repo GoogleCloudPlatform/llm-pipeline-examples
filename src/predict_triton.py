@@ -86,9 +86,7 @@ def download_model(model_path):
 
 import requests
 from requests import Response
-Response
 resp = requests.post()
-resp.
 
 @app.route("/health")
 def health():
