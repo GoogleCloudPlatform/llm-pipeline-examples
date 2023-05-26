@@ -126,16 +126,16 @@ printf "From a machine on the same VPC as this cluster you can call http://${INT
 # TODO replace this with actual notebook url
 NOTEBOOK_URL=https://raw.githubusercontent.com/GoogleCloudPlatform/vertex-ai-samples/main/notebooks/official/workbench/exploratory_data_analysis/explore_data_in_bigquery_with_workbench.ipynb
 ENCODED_NOTEBOOK_URL=$(jq -rn --arg x $NOTEBOOK_URL  '$x|@uri')
-DEPLOY_URL=https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=$ENCODED_NOTEBOOK_URL&project=$PROJECT_ID
+DEPLOY_URL="https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=${ENCODED_NOTEBOOK_URL}&project=${PROJECT_ID}"
 
 printf "\n***********\n"
-printf "To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:"
-printf "$DEPLOY_URL"
-printf "Set the following parameters in the variables cell of the notebook:"
-printf "host             = '$INTERNAL_ENDPOINT'"
-printf "flask_node_port  = '$FLASK_PORT'"
-printf "triton_node_port = '$TRITON_PORT'"
-printf "payload = '<your_payload_goes_here>'"
+printf "To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:\n"
+printf "%s\n" "$DEPLOY_URL"
+printf "Set the following parameters in the variables cell of the notebook:\n"
+printf "host             = '$INTERNAL_ENDPOINT'\n"
+printf "flask_node_port  = '$FLASK_PORT'\n"
+printf "triton_node_port = '$TRITON_PORT'\n"
+printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
 
 exit $EXIT_CODE
