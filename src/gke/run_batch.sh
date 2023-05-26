@@ -118,8 +118,33 @@ echo $FLASK_NODEPORT | jq -r '.'
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
 
 echo NodePort for Triton:
-kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="triton")'
+TRITON_NODEPORT=$(kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="triton")')
+TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
 
 echo "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"
+
+if [[ $PROVISION_NOTEBOOK -eq 1]]
+  echo "Creating notebook instance..."
+  NOTEBOOK_INSTANCE_NAME=${MODEL_NAME}-notebook-${RANDOM}
+  VM_IMAGE_FAMILY=pytorch-1-13-cu113-notebooks-debian-11-py310
+  VM_IMAGE_PROJECT=deeplearning-platform-release
+  gcloud notebooks instances create $NOTEBOOK_INSTANCE_NAME --location $REGION --vm-image-family=$VM_IMAGE_FAMILY --vm-image-project=$VM_IMAGE_PROJECT
+fi
+
+# TODO replace this with actual notebook url
+NOTEBOOK_URL=https://raw.githubusercontent.com/GoogleCloudPlatform/vertex-ai-samples/main/notebooks/official/workbench/exploratory_data_analysis/explore_data_in_bigquery_with_workbench.ipynb
+ENCODED_NOTEBOOK_URL=$(jq -rn --arg x $NOTEBOOK_URL  '$x|@uri')
+
+DEPLOY_URL=https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=$ENCODED_NOTEBOOK_URL&project=$PROJECT_ID
+
+echo "\n***********\n"
+echo "To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser."
+echo $DEPLOY_URL
+echo "Set the following parameters in the variables cell of the notebook:"
+echo "host             = '$INTERNAL_ENDPOINT'"
+echo "flask_node_port  = '$FLASK_PORT'"
+echo "triton_node_port = '$TRITON_PORT'"
+echo "payload = '<your_payload_goes_here>'"
+echo "\n***********\n"
 
 exit $EXIT_CODE
