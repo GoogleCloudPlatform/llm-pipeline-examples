@@ -11,18 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Utility module for preprocessing and fine tuning.
+FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.6.0
 
-Utility module for preprocessing and fine tuning.
-"""
+RUN apt-get -yq install jq python3-distutils python3-pip gettext-base
 
-import gcsfs
+RUN pip3 install yq google-cloud-storage absl-py
 
-def gcs_path(path: str, gcs_prefix=''):
-  if path.startswith('gs://'):
-    fs = gcsfs.GCSFileSystem()
-    return path.replace('gs://', gcs_prefix), fs
-  if path.startswith('/gcs/'):
-    fs = gcsfs.GCSFileSystem()
-    return path.replace('/gcs/', gcs_prefix), fs
-  return path, None
+WORKDIR /usr
+COPY src/gke/run_batch.sh .
+COPY src/gke/specs specs/
+ENTRYPOINT ./run_batch.sh
