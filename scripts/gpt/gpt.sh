@@ -1,43 +1,41 @@
-#!/bin/bash
-export GCS_BUCKET=$1
-export ZONE=$2
-export NODE_COUNT=$3
-export GPU_COUNT=$4
-export DATA_FILE_NAME=$5
-export MODEL_OUTPUT=gs://${GCS_BUCKET}
+#!/bin/bash -ev
 
-export BASE_PATH=~/data/
 
-mkdir ${BASE_PATH}
-gcsfuse ${GCS_BUCKET} ${BASE_PATH}
+# Copyright 2022 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+if [[ -n "$1" ]]; then
+  GCS_BUCKET=$1
+  BASE_PATH=~/data/
+  mkdir ${BASE_PATH}
+  gcsfuse ${GCS_BUCKET} ${BASE_PATH}
+  export MODEL_OUTPUT=gs://${GCS_BUCKET}
+fi
+
+source ./json_to_env.sh ~/data/gpt.json
+source ./json_to_env.sh ~/data/cluster.json
 
 DATA_PATH=${BASE_PATH}/${DATA_FILE_NAME}
-#wiki_data_text_document
+
 DS_CONFIG=ds_config.json
 
 # Hostfile path
 HF=deepspeed_hostfile 
 
-# Disabling tensor/pipeline parallelism
-TP=$6
-PP=$7
-
-# HEADS ~= HIDDEN/128
-
-# Model: BLOOM
-NLAYERS=$8
-HIDDEN=14336
-HEADS=112
-SEQ=2048
-
-
-MICRO_BATCH=2
-GRADIENT_ACC_STEPS=128
-
 NODES=${NODE_COUNT}
 GPN=${GPU_COUNT}
 
-GLOBAL_BATCH=$(( ${GRADIENT_ACC_STEPS} * ${GPN} * ${MICRO_BATCH} * ${NODES}  / ${TP} / ${PP} ))
+GLOBAL_BATCH=$(( ${GRADIENT_ACC_STEPS} * ${GPN} * ${MICRO_BATCH} * ${NODES}  / ${TENSOR_PARALLEL} / ${PIPELINE_PARALLEL} ))
 
 # Initial power scale for loss
 SP=15
@@ -104,14 +102,14 @@ ds_args=" --deepspeed-activation-checkpointing ${ds_args}"
 
 
 export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pretrain_gpt.py \
-    --tensor-model-parallel-size $TP \
-    --pipeline-model-parallel-size $PP \
+    --tensor-model-parallel-size $TENSOR_PARALLEL \
+    --pipeline-model-parallel-size $PIPELINE_PARALLEL \
     --num-layers $NLAYERS \
     --hidden-size $HIDDEN \
     --num-attention-heads $HEADS \
-    --seq-length $SEQ \
+    --seq-length $SEQ_LEN \
     --loss-scale $SP \
-    --max-position-embeddings $SEQ \
+    --max-position-embeddings $SEQ_LEN \
     --micro-batch-size $MICRO_BATCH \
     --global-batch-size $GLOBAL_BATCH \
     --train-iters 1000 \
