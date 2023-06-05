@@ -17,5 +17,7 @@
 
 for i in $(cat $1 | jq -r "keys | .[]")
 do
-  export ${i^^}=$(cat $1 | jq -r .$i)
+  NEW_VALUE=$(cat $1 | jq -r .$i)
+  export ${i^^}=${NEW_VALUE}
+  echo "${i^^}=${NEW_VALUE}"
 done
