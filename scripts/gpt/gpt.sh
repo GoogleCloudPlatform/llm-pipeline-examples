@@ -19,6 +19,7 @@ if [[ -n "$1" ]]; then
   BASE_PATH=~/data/
   mkdir ${BASE_PATH}
   gcsfuse ${GCS_BUCKET} ${BASE_PATH}
+  export MODEL_OUTPUT=gs://${GCS_BUCKET}
 fi
 
 source ./json_to_env.sh ~/data/gpt.json
