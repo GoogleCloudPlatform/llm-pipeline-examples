@@ -86,7 +86,6 @@ fi
 
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
-
 if [[ $CONVERT_MODEL -eq 1 ]]; then
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
@@ -119,6 +118,7 @@ FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
 
 echo NodePort for Triton:
 TRITON_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="triton")')
+echo $TRITON_NODEPORT | jq -r '.'
 TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
 
 printf "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"

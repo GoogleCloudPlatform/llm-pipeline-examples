@@ -42,7 +42,7 @@ There are also several variables that need to be set for the Model Deployment.
 <p>
 Note: For a model fine tuned using the pipeline, look at the Model Artifact after the training step and use the URL property.
    </td>
-   <td><code>gs://pirillo-sct-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/train_5373485673388965888/Model/</code>
+   <td><code>gs://my-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/train_5373485673388965888/Model/</code>
    </td>
   </tr>
   <tr>
@@ -52,7 +52,7 @@ Note: For a model fine tuned using the pipeline, look at the Model Artifact afte
    </td>
    <td>Name of an existing cluster (in the corresponding Region and Project) to use instead of provisioning a new cluster.
    </td>
-   <td><code>pirillo-gke</code>
+   <td><code>my-gke</code>
    </td>
   </tr>
   <tr>
@@ -182,6 +182,4 @@ Only available on FasterTransformer image. A raw endpoint that directly communic
 These limitations are accurate as of June 1, 2023.
 
 
-
-* USE_FASTER_TRANSFORMER is always true. Setting to false will not modify the flow, only FT-capable models will deploy properly.
 * `Tokenizer within the Predict image is based on the T5-base dictionary.`
