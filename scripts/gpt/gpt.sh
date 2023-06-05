@@ -21,8 +21,8 @@ if [[ -n "$1" ]]; then
   gcsfuse ${GCS_BUCKET} ${BASE_PATH}
 fi
 
-./json_to_env.sh ~/data/gpt.json
-./json_to_env.sh ~/data/cluster.json
+source ./json_to_env.sh ~/data/gpt.json
+source ./json_to_env.sh ~/data/cluster.json
 
 DATA_PATH=${BASE_PATH}/${DATA_FILE_NAME}
 
