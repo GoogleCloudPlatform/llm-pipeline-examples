@@ -13,6 +13,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 EXIT_CODE=0
+VERIFY_PAYLOAD=0
+
+while test $# -gt 0; do
+  case "$1" in
+    -h|--help)
+      echo "Use this script to deploy an LLM to a GKE cluster."
+      echo "Detailed documentation can be found at https://github.com/GoogleCloudPlatform/llm-pipeline-examples/pirillo/gke_samples/examples/running-on-gke.md"
+      echo 
+      echo "Options"
+      echo "-h|--help) Display this menu."
+      echo "-v|--verify) Setting this flag will use the -i and -o flags to validate the expected inferencing behavior of the deployed."
+      echo "-i|--verify-input-payload=) Path to a file containing the inferencing input for verification. This will route to the Flask endpoint on the image."
+      echo "-o|--verify-output-payload=) Path to a file containing the inferencing output for verification."
+      exit 0
+      ;;
+      -v|--verify)
+      shift
+      VERIFY_PAYLOAD=1
+      ;;
+    -i)
+      shift
+      if test $# -gt 0; then
+        export VERIFY_INPUT_PATH=$1
+        shift
+      else
+        echo "No input payload provided."
+        exit 1
+      fi
+      ;;
+    --verify-input-payload*)
+      export VERIFY_INPUT_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    -o)
+      shift
+      if test $# -gt 0; then
+        export VERIFY_OUTPUT_PATH=$1
+        shift
+      else
+        echo "No output payload provided."
+        exit 1
+      fi
+      ;;
+    --verify-output-payload*)
+      export VERIFY_OUTPUT_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
@@ -136,5 +188,25 @@ printf "flask_node_port  = '$FLASK_PORT'\n"
 printf "triton_node_port = '$TRITON_PORT'\n"
 printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
+
+if [[ $VERIFY_PAYLOAD -eq 1]]
+  PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
+  PREDICT_OUTPUT=$(curl \
+    -X POST $PREDICT_ENDPOINT \
+    --header 'Content-Type: application/json' \
+    --data $(cat $VERIFY_INPUT_PATH) \
+    | jq -rc )
+
+  EXPECTED_OUTPUT=$(cat $VERIFY_OUTPUT_PATH | jq -rc)
+  if [[ $PREDICT_OUTPUT -ne $EXPECTED_OUTPUT]]
+    echo "Predicted output does not match expected output."
+    echo "Predict output:"
+    echo $PREDICT_OUTPUT
+    echo
+    echo "Expected output:"
+    echo $EXPECTED_OUTPUT
+    exit 1
+  fi
+fi
 
 exit $EXIT_CODE
