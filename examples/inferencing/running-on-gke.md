@@ -51,11 +51,15 @@ There are several variables that need to be set for the Model Deployment.
    </td>
    <td>Y
    </td>
-   <td>GCS path pointing to the directory of the model to deploy.
+   <td>GCS path or Huggingface repo pointing to the directory of the model to deploy.
 <p>
 Note: For a model fine tuned using the pipeline, look at the Model Artifact after the training step and use the URL property.
    </td>
    <td><code>gs://my-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/train_5373485673388965888/Model/</code>
+
+   or
+   
+   <p>google/t5-flan-xxl
    </td>
   </tr>
   <tr>
@@ -170,7 +174,7 @@ Sample output:
 From a machine on the same VPC as this cluster you can call http://10.128.0.29:32754/infer
 ***********
 To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:
-https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=https%3A%2F%2Fraw.githubusercontent.com%2FGoogleCloudPlatform%2Fllm-pipeline-examples%2Fpirillo%2Fgke_samples%2Fexamples%2Ft5-gke-sample-notebook.ipynb&project=<project_id>
+https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=https%3A%2F%2Fraw.githubusercontent.com%2FGoogleCloudPlatform%2Fllm-pipeline-examples%main%2Fexamples%2Ft5-gke-sample-notebook.ipynb&project=<project_id>
 Set the following parameters in the variables cell of the notebook:
 host             = '10.128.0.29'
 flask_node_port  = '32754'
