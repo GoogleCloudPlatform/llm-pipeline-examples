@@ -1,16 +1,29 @@
-## Deployment
+# Running T5 on GKE
 
-The deployment to GKE is currently detached from the training pipeline. The model artifact that is a result of training will need to be manually deployed to the cluster using these instructions.
+This document covers deploying HuggingFace T5 models to GKE, whether it is directly from HuggingFace or fine-tuned through the LLM Pipeline in this repo.
 
+The output of running the commands described in this document will be a provisioned GKE cluster within your GCP project hosting the model you provide. The model will have an endpoint accessible from within your virtual cloud network, and external to the internet if your project's firewall is configured for it.
+
+Support has been tested for the following T5 families available on huggingface.
+
+* t5 (small, base, large, 11b)
+* google/t5-v1_1 (small, base, large, xl, xxl)
+* google/flan-t5 (small, base, large, xl, xxl)
+
+### Pre-Requisites
+
+These commands can be run from any terminal configured for gcloud, or through [Cloud Shell](https://cloud.google.com/shell/docs/launching-cloud-shell).
+
+Start by enabling the required APIs within your GCP project.
+`gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com`
 
 ### Create an Environment file
 
-&lt;TODO> / This section will need to change after CPT-0.7.0 release \
- \
-An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.list](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.list)
+An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.yml](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.yml)
 
-There are also several variables that need to be set for the Model Deployment.
+Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node.
 
+There are several variables that need to be set for the Model Deployment.
 
 <table>
   <tr>
@@ -106,7 +119,7 @@ This controls whether a Conversion job is scheduled, and the inference image tha
 <p>
 A GCS path to upload the model after it is converted for FasterTransformer
    </td>
-   <td><code>gs://pirillo-sct-bucket/converted_t5/1/Model</code>
+   <td><code>gs://my-bucket/converted_t5/1/Model</code>
    </td>
   </tr>
   <tr>
@@ -121,13 +134,15 @@ A GCS path to upload the model after it is converted for FasterTransformer
   </tr>
 </table>
 
-
+Note: The sample configuration still requires the user to specify a `MODEL_SOURCE_PATH` variable.
 
 ### Running the image
 
 The Cluster Provisioning + Deployment image is available at [gcr.io/llm-containers/gke-provision-deploy](gcr.io/llm-containers/gke-provision-deploy) .
 
-Run the image using the `docker run` command specifying the Environment File with `--env-file`.
+Run the image using [`gcloud run deploy`](https://cloud.google.com/sdk/gcloud/reference/run/deploy).
+
+`gcloud run deploy --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy`
 
 After the image finishes provisioning the cluster, the model will be converted (if necessary) and deployed to the cluster. The image will then terminate.
 
@@ -147,6 +162,23 @@ The cluster name will be `$NAME_PREFIX-gke`.
     $ kubectl get svc # Retrieve the Port mapped to 5000 for basic consumption, 8000 for raw consumption
     $ curl --location 'http://$IP:$PORT/health'
     200 { "health": "ok" }
+
+The image will also log these values at the end of a run.
+
+Sample output:
+```
+From a machine on the same VPC as this cluster you can call http://10.128.0.29:32754/infer
+***********
+To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:
+https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=https%3A%2F%2Fraw.githubusercontent.com%2FGoogleCloudPlatform%2Fllm-pipeline-examples%2Fpirillo%2Fgke_samples%2Fexamples%2Ft5-gke-sample-notebook.ipynb&project=<project_id>
+Set the following parameters in the variables cell of the notebook:
+host             = '10.128.0.29'
+flask_node_port  = '32754'
+triton_node_port = '31246'
+payload = '<your_payload_goes_here>'
+
+***********
+```
 
 
 ### Available Endpoints
@@ -182,4 +214,5 @@ Only available on FasterTransformer image. A raw endpoint that directly communic
 These limitations are accurate as of June 1, 2023.
 
 
-* `Tokenizer within the Predict image is based on the T5-base dictionary.`
+* Tokenizer within the FasterTransformer Predict image is based on the T5-base dictionary.
+* FasterTransformer image only supports the T5 model family (t5, t5-v1_1, flan-t5). All sizes are supported.

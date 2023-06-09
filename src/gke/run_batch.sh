@@ -123,7 +123,6 @@ TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
 
 printf "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"
 
-# TODO replace this with main branch link after check-in
 NOTEBOOK_URL=https://raw.githubusercontent.com/GoogleCloudPlatform/llm-pipeline-examples/pirillo/gke_samples/examples/t5-gke-sample-notebook.ipynb
 ENCODED_NOTEBOOK_URL=$(jq -rn --arg x $NOTEBOOK_URL  '$x|@uri')
 DEPLOY_URL="https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=${ENCODED_NOTEBOOK_URL}&project=${PROJECT_ID}"
