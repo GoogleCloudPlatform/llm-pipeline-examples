@@ -58,7 +58,7 @@ Note: For a model fine tuned using the pipeline, look at the Model Artifact afte
    <td><code>gs://my-bucket/pipeline_runs/237939871711/llm-pipeline-20230328153111/train_5373485673388965888/Model/</code>
 
    or
-   
+
    <p>google/t5-flan-xxl
    </td>
   </tr>
@@ -137,8 +137,6 @@ A GCS path to upload the model after it is converted for FasterTransformer
    </td>
   </tr>
 </table>
-
-Note: The sample configuration still requires the user to specify a `MODEL_SOURCE_PATH` variable.
 
 ### Running the image
 
