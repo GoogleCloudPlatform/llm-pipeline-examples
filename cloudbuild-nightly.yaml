@@ -164,6 +164,29 @@ steps:
     args:
       - push
       - 'gcr.io/llm-containers/predict-triton:github${SHORT_SHA}'
+  - name: gcr.io/cloud-builders/docker
+    id: build-gke
+    waitFor: ['-']
+    args:
+      - build
+      - '-t'
+      - 'gke-provision-deploy'
+      - '--cache-from'
+      - 'gcr.io/llm-containers/gke-provision-deploy:latest'
+      - '-f'
+      - docker/gke/gke-provision-deploy.Dockerfile
+      - .
+  - name: gcr.io/cloud-builders/docker
+    id: build-gke-test
+    waitFor: ['build-gke']
+    args:
+      - build
+      - '-t'
+      - 'gke-test'
+      - '-f'
+      - docker/gke/gke-test.Dockerfile
+      - '--build-arg baseimage=gke-provision-deploy'
+      - .
   # test
   - name: gcr.io/cloud-builders/docker
     id: build-test
@@ -207,6 +230,24 @@ steps:
       - '--endpoint_name=t5-nightly-ft'
       - '--use_faster_transformer'
       - '--cleanup_endpoint'
+  - name: gcr.io/cloud-builders/docker
+    id: run-gke-test
+    waitFor: ['push-convert', 'push-triton', 'push-predict']
+    args:
+      - run
+      - '--network=cloudbuild'
+      - "-e PROJECT_ID='llm-containers'"
+      - "-e EXISTING_CLUSTER_ID='llm-test-gke'"
+      - "-e CONVERTED_MODEL_UPLOAD_PATH='gs://converted_models/flan-t5-base'"
+      - "-e MODEL_SOURCE_PATH='google/flan-t5-base'"
+      - "-e MODEL_NAME='flan-t5-base'"
+      - "-e INFERENCING_IMAGE_TAG='github${SHORT_SHA}'"
+      - "-e USE_FASTER_TRANSFORMER='1'"
+      - "-e ACCELERATOR_TYPE='nvidia-tesla-a100'" 
+      - 'gke-test'
+      - '--verify'
+      - "--verify-input-payload='predict_payload.json'"
+      - "--verify-output-payload='predict_result_triton.json'"
 timeout: 86400s
 options:
   pool:
