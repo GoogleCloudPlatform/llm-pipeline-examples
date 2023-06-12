@@ -86,7 +86,6 @@ fi
 
 # Get kubeconfig for cluster
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
-
 if [[ $CONVERT_MODEL -eq 1 ]]; then
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
@@ -118,8 +117,24 @@ echo $FLASK_NODEPORT | jq -r '.'
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
 
 echo NodePort for Triton:
-kubectl get svc -o json | jq -r '.items[].spec.ports[] | select(.name=="triton")'
+TRITON_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="triton")')
+echo $TRITON_NODEPORT | jq -r '.'
+TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
 
-echo "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"
+printf "From a machine on the same VPC as this cluster you can call http://${INTERNAL_ENDPOINT}:${FLASK_PORT}/infer"
+
+NOTEBOOK_URL=https://raw.githubusercontent.com/GoogleCloudPlatform/llm-pipeline-examples/main/examples/t5-gke-sample-notebook.ipynb
+ENCODED_NOTEBOOK_URL=$(jq -rn --arg x $NOTEBOOK_URL  '$x|@uri')
+DEPLOY_URL="https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=${ENCODED_NOTEBOOK_URL}&project=${PROJECT_ID}"
+
+printf "\n***********\n"
+printf "To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:\n"
+printf "%s\n" "$DEPLOY_URL"
+printf "Set the following parameters in the variables cell of the notebook:\n"
+printf "host             = '$INTERNAL_ENDPOINT'\n"
+printf "flask_node_port  = '$FLASK_PORT'\n"
+printf "triton_node_port = '$TRITON_PORT'\n"
+printf "payload = '<your_payload_goes_here>'\n"
+printf "\n***********\n"
 
 exit $EXIT_CODE

@@ -410,13 +410,11 @@ again as in the example below:
 
 Now that our model is ready, we want to provide it as a service for authorized
 users to call. This can serve as a backend to a frontend web application. We go
-with a simple and quick solution to demo our model. For larger models or
-production class deployment, we could use an Nvidia
-[Triton Inference Server](https://developer.nvidia.com/nvidia-triton-inference-server).
+with a simple and quick solution to demo our model. 
 For this purpose, we use
 [Vertex AI Prediction](https://cloud.google.com/vertex-ai/docs/predictions/get-predictions)
-which provides us with the quickest path to serve our model. In future work, we
-will discuss serving using NVidia Triton Inference Server.
+which provides us with the quickest path to serve our model.
+
 
 ![Deployment component](img/deploy.png)
 ![Deployment Parameters](img/deploy_params.png)
@@ -426,6 +424,11 @@ available [here](httpgcr.io/llm-containers/predict). The container packs a Flask
 server with a simple python script that uses deepspeed to perform prediction
 from the model. It implements the necessary REST APIs required by Vertex AI
 Prediction.
+
+
+For larger models or
+production class deployment, we can deploy directly to GKE and use
+[Triton Inference Server](https://developer.nvidia.com/nvidia-triton-inference-server). See an [example with T5](examples/inferencing/running-on-gke.md).
 
 ### Deciding to deploy 
 
@@ -497,11 +500,6 @@ With the new
 of the DGCM monitoring plugin for GKE, we will be able to view GPU metrics in
 the cluster as the training makes progress. This will allow for better
 visibility and profiling.
-
-### NVIDIA Triton Server
-
-We can switch serving to an NVidia triton server instead of deepspeed. This will
-allow for very fast inference suitable for production use.
 
 ### Automatic restart from a check point  of failure
 
