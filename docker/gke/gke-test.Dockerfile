@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ARG baseimage=gcr.io/llm-containers/gke-provision-deploy:release
-FROM baseimage
+FROM $baseimage
 
 ADD predict_payload.json .
 ADD predict_result.json .
