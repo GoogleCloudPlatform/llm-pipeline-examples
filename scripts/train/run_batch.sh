@@ -53,17 +53,17 @@ export CLUSTER_CONFIG=$8
 
 if[[ -n "${TRAIN_CONFIG}" ]]; then
   echo ${TRAIN_CONFIG} > train_config.json
-  gsutil cp train_config.json ${DATA_DIR}\
+  gsutil cp train_config.json ${DATA_DIR}/
 else
-  gsutil cp ${DATA_DIR}\train_config.json .
+  gsutil cp ${DATA_DIR}/train_config.json .
 fi
 source train_config.json
 
 if[[ -n "${CLUSTER_CONFIG}" ]]; then
   echo ${CLUSTER_CONFIG} > cluster.json
-  gsutil cp cluster.json ${DATA_DIR}\
+  gsutil cp cluster.json ${DATA_DIR}/
 else
-  gsutil cp ${DATA_DIR}\cluster.json .
+  gsutil cp ${DATA_DIR}/cluster.json .
 fi
 source cluster.json
 

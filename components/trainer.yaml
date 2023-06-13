@@ -37,7 +37,7 @@ implementation:
       ./run_batch.sh, 
       # Path of the program inside the container
       {inputValue: Project},
-      {inputValue: Model},
+      {outputPath: Model},
       {inputPath: Data},
       {inputPath: Workspace Path},
       {inputValue: IMAGE},
