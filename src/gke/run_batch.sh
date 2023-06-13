@@ -96,6 +96,13 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
+if [[ -z $PROJECT_ID ]] then
+  echo "PROJECT_ID variable is not set."
+  exit 1
+else
+  gcloud config set project $PROJECT_ID
+fi
+
 if [[ -z $REGION ]]; then
   export REGION=${ZONE%-*}
 fi
