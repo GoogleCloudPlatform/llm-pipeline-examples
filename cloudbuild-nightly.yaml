@@ -244,6 +244,7 @@ steps:
       - "-e INFERENCING_IMAGE_TAG='github${SHORT_SHA}'"
       - "-e USE_FASTER_TRANSFORMER='1'"
       - "-e ACCELERATOR_TYPE='nvidia-tesla-a100'" 
+      - "-e REGION='us-central1'"
       - 'gke-test'
       - '--verify'
       - "--verify-input-payload='predict_payload.json'"
