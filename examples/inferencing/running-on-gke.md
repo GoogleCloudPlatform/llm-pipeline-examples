@@ -25,6 +25,8 @@ Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-
 
 There are several variables that need to be set for the Model Deployment.
 
+Note: The `PROJECT_ID` and `CONVERTED_MODEL_UPLOAD_PATH` values must be changed in the sample configuration before running.
+
 <table>
   <tr>
    <td><strong>Environment Variable Name</strong>
@@ -142,9 +144,14 @@ A GCS path to upload the model after it is converted for FasterTransformer
 
 The Cluster Provisioning + Deployment image is available at [gcr.io/llm-containers/gke-provision-deploy](gcr.io/llm-containers/gke-provision-deploy) .
 
-Run the image using [`gcloud run deploy`](https://cloud.google.com/sdk/gcloud/reference/run/deploy).
+Run the image using [`gcloud run jobs`](https://cloud.google.com/sdk/gcloud/reference/run/jobs).
 
-`gcloud run deploy --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy`
+```
+export JOB_NAME=my-job
+export REGION=us-central1
+gcloud run jobs create $JOB_NAME --region=$REGION --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy:release
+gcloud run jobs execute $JOB_NAME --region=$REGION
+``` 
 
 After the image finishes provisioning the cluster, the model will be converted (if necessary) and deployed to the cluster. The image will then terminate.
 
