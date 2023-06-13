@@ -80,6 +80,12 @@ while test $# -gt 0; do
   esac
 done
 
+echo "FLAGS SET:"
+echo $PROJECT_ID
+echo $VERIFY_PAYLOAD
+echo $VERIFY_INPUT_PATH
+echo $VERIFY_OUTPUT_PATH
+
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
   echo PROJECT_ID $PROJECT_ID
