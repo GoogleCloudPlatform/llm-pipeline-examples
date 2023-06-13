@@ -183,9 +183,10 @@ steps:
       - build
       - '-t'
       - 'gke-test'
+      - '--build-arg'
+      - 'baseimage=gke-provision-deploy'
       - '-f'
       - docker/gke/gke-test.Dockerfile
-      - '--build-arg baseimage=gke-provision-deploy'
       - .
   # test
   - name: gcr.io/cloud-builders/docker
@@ -236,15 +237,24 @@ steps:
     args:
       - run
       - '--network=cloudbuild'
-      - "-e PROJECT_ID='llm-containers'"
-      - "-e EXISTING_CLUSTER_ID='llm-test-gke'"
-      - "-e CONVERTED_MODEL_UPLOAD_PATH='gs://converted_models/flan-t5-base'"
-      - "-e MODEL_SOURCE_PATH='google/flan-t5-base'"
-      - "-e MODEL_NAME='flan-t5-base'"
-      - "-e INFERENCING_IMAGE_TAG='github${SHORT_SHA}'"
-      - "-e USE_FASTER_TRANSFORMER='1'"
-      - "-e ACCELERATOR_TYPE='nvidia-tesla-a100'" 
-      - "-e REGION='us-central1'"
+      - "-e"
+      - "PROJECT_ID='llm-containers'"
+      - "-e"
+      - "EXISTING_CLUSTER_ID='llm-test-gke'"
+      - "-e"
+      - "CONVERTED_MODEL_UPLOAD_PATH='gs://converted_models/flan-t5-base'"
+      - "-e"
+      - "MODEL_SOURCE_PATH='google/flan-t5-base'"
+      - "-e"
+      - "MODEL_NAME='flan-t5-base'"
+      - "-e"
+      - "INFERENCING_IMAGE_TAG='github${SHORT_SHA}'"
+      - "-e"
+      - "USE_FASTER_TRANSFORMER='1'"
+      - "-e"
+      - "ACCELERATOR_TYPE='nvidia-tesla-a100'" 
+      - "-e"
+      - "REGION='us-central1'"
       - 'gke-test'
       - '--verify'
       - "--verify-input-payload='predict_payload.json'"
