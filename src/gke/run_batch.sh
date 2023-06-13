@@ -96,7 +96,7 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
-if [[ -z $PROJECT_ID ]] then
+if [[ -z $PROJECT_ID ]]; then
   echo "PROJECT_ID variable is not set."
   exit 1
 else

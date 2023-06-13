@@ -233,7 +233,8 @@ steps:
       - '--cleanup_endpoint'
   - name: gcr.io/cloud-builders/docker
     id: run-gke-test
-    waitFor: ['push-convert', 'push-triton', 'push-predict']
+    #waitFor: ['push-convert', 'push-triton', 'push-predict']
+    waitFor: ['build-gke-test']
     args:
       - run
       - '--network=cloudbuild'
@@ -248,7 +249,7 @@ steps:
       - "-e"
       - "MODEL_NAME='flan-t5-base'"
       - "-e"
-      - "INFERENCING_IMAGE_TAG='github${SHORT_SHA}'"
+      - "INFERENCING_IMAGE_TAG='latest'"
       - "-e"
       - "USE_FASTER_TRANSFORMER='1'"
       - "-e"
