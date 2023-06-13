@@ -228,49 +228,36 @@ def my_pipeline(
     dataset_subset: str,
     document_column: str,
     summary_column: str,
-    cluster_prefix: str,
-    node_count: int,
-    model_checkpoint: str,
-    machine_type: str,
-    gpu_count: int,
-    batch_size: int,
-    epochs: int,
+    cluster_config: str,
+    train_config: str,
     model_display_name: str,
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
-    gpu_type: str,
-    zone: str,
     pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
+  cluster = json.loads(cluster_config)
   download_op = download_component(
     dataset=dataset,
     subset=dataset_subset,
-    model_checkpoint=model_checkpoint)
+    model_checkpoint=cluster["model_checkpoint"])
 
   preprocess_op = preprocess_component(
-      model_checkpoint=model_checkpoint,
+      model_checkpoint=cluster["model_checkpoint"],
       document_column=document_column,
       summary_column=summary_column,
       raw_dataset=download_op.outputs["dataset_path"],
   )
 
   train_op = trainer_component(
-      cluster_prefix=cluster_prefix,
-      node_count=node_count,
-      model_checkpoint=model_checkpoint,
-      machine_type=machine_type,
-      gpu_count=gpu_count,
+      cluster_config=cluster_config,
+      train_config=train_config,
       data=preprocess_op.outputs["output_dataset"],
       project=FLAGS.project,
-      batch_size=batch_size,
-      epochs=epochs,
-      gpu_type=gpu_type,
-      zone=zone,
       id=str(int(time.time())),
-      image_tag=FLAGS.image_tag,
+      image=f"gcr.io/llm-containers/train:{FLAGS.image_tag}",
       workspace_path=download_op.outputs["workspace_path"]
   )
 
