@@ -239,8 +239,6 @@ steps:
       - run
       - '--network=cloudbuild'
       - "-e"
-      - "PROJECT_ID='llm-containers'"
-      - "-e"
       - "EXISTING_CLUSTER_ID='llm-test-gke'"
       - "-e"
       - "CONVERTED_MODEL_UPLOAD_PATH='gs://converted_models/flan-t5-base'"
@@ -260,6 +258,7 @@ steps:
       - '--verify'
       - "--verify-input-payload='predict_payload.json'"
       - "--verify-output-payload='predict_result_triton.json'"
+      - "--project='llm-containers'"
 timeout: 86400s
 options:
   pool:

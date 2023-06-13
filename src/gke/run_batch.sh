@@ -32,6 +32,20 @@ while test $# -gt 0; do
       shift
       VERIFY_PAYLOAD=1
       ;;
+    -p)
+      shift
+      if test $# -gt 0; then
+        export PROJECT_ID=$1
+        shift
+      else
+        echo "No project id provided."
+        exit 1
+      fi
+      ;;
+    --project*)
+      export PROJECT_ID=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
     -i)
       shift
       if test $# -gt 0; then
@@ -99,8 +113,6 @@ _invoke_cluster_tool () {
 if [[ -z $PROJECT_ID ]]; then
   echo "PROJECT_ID variable is not set."
   exit 1
-else
-  gcloud config set project $PROJECT_ID
 fi
 
 if [[ -z $REGION ]]; then
