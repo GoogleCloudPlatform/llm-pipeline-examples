@@ -329,6 +329,7 @@ def main(argv: Sequence[str]) -> None:
     config = json.load(f)
 
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
+  zone = config["cluster_config"]["zone"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
 
@@ -358,7 +359,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.verify:
     job.wait()
 
-    endpoint = _get_endpoint(job, config["zone"])
+    endpoint = _get_endpoint(job, zone)
 
     with open(FLAGS.verify_payload, "r") as f:
       payload = json.load(f)
@@ -382,7 +383,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.cleanup_endpoint:
     job.wait()
     
-    endpoint = _get_endpoint(job, config["zone"])
+    endpoint = _get_endpoint(job, zone)
 
     logging.info(f"Deleting endpoint {endpoint.name}...")
     endpoint.delete(force=True)
