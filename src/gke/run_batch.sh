@@ -125,6 +125,8 @@ if [[ -z $PROJECT_ID ]]; then
 fi
 gcloud auth list
 gcloud projects list
+gcloud config list
+gcloud info
 gcloud config set project $PROJECT_ID
 
 if [[ -z $REGION ]]; then
