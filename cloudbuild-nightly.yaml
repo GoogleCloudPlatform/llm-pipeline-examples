@@ -258,10 +258,10 @@ steps:
       - "REGION='us-central1'"
       - 'gke-test'
       - '--verify'
-      - "--verify-input-payload='predict_payload.json'"
-      - "--verify-output-payload='predict_result_triton.json'"
-      - "--project='llm-containers'"
+      - "--verify-input-payload=predict_payload.json"
+      - "--verify-output-payload=predict_result_triton.json"
+      - "--project=llm-containers"
 timeout: 86400s
 options:
   pool:
-    name: projects/llm-containers/locations/us-central1/workerPools/deepspeed-build
+    name: projects/llm-containers/locations/us-central1/workerPools/gke-accessible-pool

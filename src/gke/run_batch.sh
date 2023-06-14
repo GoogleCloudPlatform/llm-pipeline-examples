@@ -127,7 +127,9 @@ gcloud auth list
 gcloud projects list
 gcloud config list
 gcloud info
+echo "ABOUT TO SET PROJECT TO $PROJECT_ID"
 gcloud config set project $PROJECT_ID
+echo "SET PROJECT"
 
 if [[ -z $REGION ]]; then
   export REGION=${ZONE%-*}
