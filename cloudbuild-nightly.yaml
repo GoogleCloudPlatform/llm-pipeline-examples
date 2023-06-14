@@ -188,6 +188,8 @@ steps:
       - '-f'
       - docker/gke/gke-test.Dockerfile
       - .
+    env:
+      - "DOCKER_BUILDKIT=1"
   # test
   - name: gcr.io/cloud-builders/docker
     id: build-test
@@ -251,7 +253,7 @@ steps:
       - "-e"
       - "USE_FASTER_TRANSFORMER='1'"
       - "-e"
-      - "ACCELERATOR_TYPE='nvidia-tesla-a100'" 
+      - "ACCELERATOR_TYPE='nvidia-tesla-a100'"
       - "-e"
       - "REGION='us-central1'"
       - 'gke-test'

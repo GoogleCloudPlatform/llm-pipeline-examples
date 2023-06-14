@@ -18,6 +18,8 @@ RUN apt-get -yq install jq python3-distutils python3-pip gettext-base
 RUN pip3 install yq google-cloud-storage absl-py
 
 WORKDIR /usr
+ENV PATH=/usr:$PATH
 COPY src/gke/run_batch.sh .
+RUN chmod 755 run_batch.sh
 COPY src/gke/specs specs/
-ENTRYPOINT ./run_batch.sh
+ENTRYPOINT ["run_batch.sh"]

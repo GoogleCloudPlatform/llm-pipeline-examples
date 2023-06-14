@@ -14,8 +14,11 @@
 # limitations under the License.
 EXIT_CODE=0
 VERIFY_PAYLOAD=0
+echo "Called with options:"
+echo $*
 
 while test $# -gt 0; do
+  echo $1
   case "$1" in
     -h|--help)
       echo "Use this script to deploy an LLM to a GKE cluster."
