@@ -123,6 +123,7 @@ if [[ -z $PROJECT_ID ]]; then
   echo "PROJECT_ID variable is not set."
   exit 1
 fi
+gcloud config set project $PROJECT_ID
 
 if [[ -z $REGION ]]; then
   export REGION=${ZONE%-*}
