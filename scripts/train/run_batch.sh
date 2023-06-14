@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
   echo PROJECT_ID $PROJECT_ID
@@ -51,21 +50,23 @@ export ID=$6
 export TRAIN_CONFIG=$7
 export CLUSTER_CONFIG=$8
 
-if[[ -n "${TRAIN_CONFIG}" ]]; then
+echo ${TRAIN_CONFIG}
+if [[ -n "${TRAIN_CONFIG}" ]]; then
   echo ${TRAIN_CONFIG} > train_config.json
   gsutil cp train_config.json ${DATA_DIR}/
 else
   gsutil cp ${DATA_DIR}/train_config.json .
 fi
-source train_config.json
+source ./json_to_env.sh train_config.json
 
-if[[ -n "${CLUSTER_CONFIG}" ]]; then
+echo ${CLUSTER_CONFIG}
+if [[ -n "${CLUSTER_CONFIG}" ]]; then
   echo ${CLUSTER_CONFIG} > cluster.json
   gsutil cp cluster.json ${DATA_DIR}/
 else
   gsutil cp ${DATA_DIR}/cluster.json .
 fi
-source cluster.json
+source ./json_to_env.sh cluster.json
 
 if [[ -n "${ID}" ]]; then
   export JOB_ID=${CLUSTER_PREFIX}-${ID}
