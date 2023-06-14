@@ -251,7 +251,7 @@ steps:
       - "-e"
       - "INFERENCING_IMAGE_TAG='latest'"
       - "-e"
-      - "USE_FASTER_TRANSFORMER='1'"
+      - "USE_FASTER_TRANSFORMER=1"
       - "-e"
       - "ACCELERATOR_TYPE='nvidia-tesla-a100'"
       - "-e"

@@ -31,7 +31,7 @@ while test $# -gt 0; do
       echo "-o|--verify-output-payload=) Path to a file containing the inferencing output for verification."
       exit 0
       ;;
-      -v|--verify)
+    -v|--verify)
       shift
       VERIFY_PAYLOAD=1
       ;;
