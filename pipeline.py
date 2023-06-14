@@ -329,7 +329,9 @@ def main(argv: Sequence[str]) -> None:
     config = json.load(f)
 
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
-  
+  config.update({"train_config": json.dumps(config["train_config"]),
+                 "cluster_config": json.dumps(config["cluster_config"])})
+
   dest_path = "/tmp/pipeline.json"
   compiler.Compiler().compile(
       pipeline_func=my_pipeline,
