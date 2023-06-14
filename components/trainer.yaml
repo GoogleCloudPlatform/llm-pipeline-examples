@@ -21,7 +21,7 @@ inputs:
 - {name: ID, type: String, description: 'Identifier for the training job'}
 - {name: IMAGE, type: String, description: 'Trainer image URL'}
 - {name: Workspace Path, type: GCSPath, description: 'Path for workspace data.'}
-- {name: Training Config, type: String, description: 'Training configuration parameters.'}
+- {name: Train Config, type: String, description: 'Training configuration parameters.'}
 - {name: Cluster Config, type: String, description: 'Cluster configuration parameters.'}
 
 outputs:
@@ -42,6 +42,6 @@ implementation:
       {inputPath: Workspace Path},
       {inputValue: IMAGE},
       {inputValue: ID},
-      {inputValue: Training Config},
+      {inputValue: Train Config},
       {inputValue: Cluster Config},
     ]

@@ -228,6 +228,7 @@ def my_pipeline(
     dataset_subset: str,
     document_column: str,
     summary_column: str,
+    model_checkpoint: str,
     cluster_config: str,
     train_config: str,
     model_display_name: str,
@@ -238,14 +239,13 @@ def my_pipeline(
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
-  cluster = json.loads(cluster_config)
   download_op = download_component(
     dataset=dataset,
     subset=dataset_subset,
-    model_checkpoint=cluster["model_checkpoint"])
+    model_checkpoint=model_checkpoint)
 
   preprocess_op = preprocess_component(
-      model_checkpoint=cluster["model_checkpoint"],
+      model_checkpoint=model_checkpoint,
       document_column=document_column,
       summary_column=summary_column,
       raw_dataset=download_op.outputs["dataset_path"],
@@ -328,6 +328,8 @@ def main(argv: Sequence[str]) -> None:
   with open(FLAGS.config, "r") as f:
     config = json.load(f)
 
+  config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
+  
   dest_path = "/tmp/pipeline.json"
   compiler.Compiler().compile(
       pipeline_func=my_pipeline,
