@@ -170,8 +170,11 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
 fi
 
 # Get kubeconfig for cluster
+echo "ABOUT TO CALL GET-CREDENTIALS WITH ARGS: $EXISTING_CLUSTER_ID , $REGIONS , $PROJECT_ID"
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+echo "CALLED GET-CREDENTIALS"
 if [[ $CONVERT_MODEL -eq 1 ]]; then
+  echo "ENTERING MODEL CONVERT FLOW"
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
   envsubst < specs/convert.yml | kubectl apply -f -
