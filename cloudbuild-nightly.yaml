@@ -241,21 +241,21 @@ steps:
       - run
       - '--network=cloudbuild'
       - "-e"
-      - "EXISTING_CLUSTER_ID='llm-test-gke'"
+      - "EXISTING_CLUSTER_ID=llm-test-gke"
       - "-e"
-      - "CONVERTED_MODEL_UPLOAD_PATH='gs://converted_models/flan-t5-base'"
+      - "CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base"
       - "-e"
-      - "MODEL_SOURCE_PATH='google/flan-t5-base'"
+      - "MODEL_SOURCE_PATH=google/flan-t5-base"
       - "-e"
-      - "MODEL_NAME='flan-t5-base'"
+      - "MODEL_NAME=flan-t5-base"
       - "-e"
-      - "INFERENCING_IMAGE_TAG='latest'"
+      - "INFERENCING_IMAGE_TAG=latest"
       - "-e"
       - "USE_FASTER_TRANSFORMER=1"
       - "-e"
-      - "ACCELERATOR_TYPE='nvidia-tesla-a100'"
+      - "ACCELERATOR_TYPE=nvidia-tesla-a100"
       - "-e"
-      - "REGION='us-central1'"
+      - "REGION=us-central1"
       - 'gke-test'
       - '--verify'
       - "--verify-input-payload=predict_payload.json"

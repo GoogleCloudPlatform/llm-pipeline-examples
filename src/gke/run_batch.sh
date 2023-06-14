@@ -172,7 +172,7 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
 fi
 
 # Get kubeconfig for cluster
-echo "ABOUT TO CALL GET-CREDENTIALS WITH ARGS: $EXISTING_CLUSTER_ID , $REGIONS , $PROJECT_ID"
+echo "ABOUT TO CALL GET-CREDENTIALS WITH ARGS: $EXISTING_CLUSTER_ID , $REGION , $PROJECT_ID"
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 echo "CALLED GET-CREDENTIALS"
 if [[ $CONVERT_MODEL -eq 1 ]]; then
