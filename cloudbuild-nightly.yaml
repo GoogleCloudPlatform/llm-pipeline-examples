@@ -264,4 +264,4 @@ steps:
 timeout: 86400s
 options:
   pool:
-    name: projects/llm-containers/locations/us-central1/workerPools/gke-accessible-pool
+    name: projects/llm-containers/locations/us-central1/workerPools/deepspeed-build
