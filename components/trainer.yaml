@@ -37,11 +37,11 @@ implementation:
       ./run_batch.sh, 
       # Path of the program inside the container
       {inputValue: Project},
-      {outputPath: Model},
-      {inputPath: Data},
-      {inputPath: Workspace Path},
       {inputValue: IMAGE},
+      {outputPath: Model},
       {inputValue: ID},
       {inputValue: Train Config},
       {inputValue: Cluster Config},
+      {inputPath: Data},
+      {inputPath: Workspace Path},
     ]

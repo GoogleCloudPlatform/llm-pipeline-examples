@@ -34,7 +34,7 @@ if [[ -z ${DATA_DIR} ]]; then
   exit 1
 fi
 
-source ./json_to_env.sh ${DATA_DIR}/gpt.json
+source ./json_to_env.sh ${DATA_DIR}/train_config.json
 source ./json_to_env.sh ${DATA_DIR}/cluster.json
 
 DATA_PATH=${DATA_DIR}/${DATA_FILE_NAME}

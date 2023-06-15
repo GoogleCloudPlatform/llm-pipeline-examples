@@ -42,13 +42,13 @@ _invoke_cluster_tool () {
 }
 
 export PROJECT=$1
-export DATA_DIR=${2/\/gcs\//gs:\/\/}
-export DATA=${3/\/gcs\//gs:\/\/}
-export WORKSPACE_PATH=${4/\/gcs\//gs:\/\/}
-export TRAIN_IMAGE=$5
-export ID=$6
-export TRAIN_CONFIG=$7
-export CLUSTER_CONFIG=$8
+export TRAIN_IMAGE=$2
+export DATA_DIR=${3/\/gcs\//gs:\/\/}
+export ID=$4
+export TRAIN_CONFIG=$5
+export CLUSTER_CONFIG=$6
+export DATA=${7/\/gcs\//gs:\/\/}
+export WORKSPACE_PATH=${8/\/gcs\//gs:\/\/}
 
 echo ${TRAIN_CONFIG}
 if [[ -n "${TRAIN_CONFIG}" ]]; then
