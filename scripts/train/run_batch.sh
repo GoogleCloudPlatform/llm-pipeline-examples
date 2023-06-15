@@ -104,6 +104,7 @@ echo "Provishioning cluster..."
 
 gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
 gsutil cp machines.txt ${MODEL_OUTPUT/\/gcs\//gs:\/\/}/
+export HEAD=$(head machines.txt -n 1 | sed "s/\(.*\) .*/\1/")
 
 monitoring_started=false
 export EXIT_CODE=
@@ -140,7 +141,7 @@ while [[ -z "$EXIT_CODE" ]]; do
   export LOG_END_TIME=$(date -Ins | sed -e "s/,/\./")
   sleep 15
   # Reading logs 15 seconds behind to give them a chance to be collected.
-  gcloud logging read "log_name=projects/${PROJECT}/logs/deepspeed labels.\"compute.googleapis.com/resource_name\"=~\"${JOB_ID}\" timestamp>=\"${LOG_START_TIME}\" timestamp<\"${LOG_END_TIME}\"" --project=${PROJECT} | yq -r .textPayload | tac
+  gcloud logging read "log_name=projects/${PROJECT}/logs/deepspeed labels.\"compute.googleapis.com/resource_name\"=~\"${HEAD}\" timestamp>=\"${LOG_START_TIME}\" timestamp<\"${LOG_END_TIME}\"" --project=${PROJECT} | yq -r .textPayload | tac
   export LOG_START_TIME=${LOG_END_TIME}
   
 done
