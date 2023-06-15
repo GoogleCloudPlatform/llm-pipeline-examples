@@ -175,6 +175,9 @@ fi
 echo "ABOUT TO CALL GET-CREDENTIALS WITH ARGS: $EXISTING_CLUSTER_ID , $REGION , $PROJECT_ID"
 gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 echo "CALLED GET-CREDENTIALS"
+
+kubectl apply -f specs/serviceAccount.yml
+
 if [[ $CONVERT_MODEL -eq 1 ]]; then
   echo "ENTERING MODEL CONVERT FLOW"
   # Run convert image on cluster
