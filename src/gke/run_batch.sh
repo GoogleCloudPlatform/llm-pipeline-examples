@@ -169,14 +169,12 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
   echo "Provisioning cluster..."
   export EXISTING_CLUSTER_ID=${NAME_PREFIX}-gke
+  gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+else
+  gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+  kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
+  kubectl apply -f specs/serviceAccount.yml
 fi
-
-# Get kubeconfig for cluster
-echo "ABOUT TO CALL GET-CREDENTIALS WITH ARGS: $EXISTING_CLUSTER_ID , $REGION , $PROJECT_ID"
-gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
-echo "CALLED GET-CREDENTIALS"
-
-kubectl apply -f specs/serviceAccount.yml
 
 if [[ $CONVERT_MODEL -eq 1 ]]; then
   echo "ENTERING MODEL CONVERT FLOW"
