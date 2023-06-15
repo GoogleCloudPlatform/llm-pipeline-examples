@@ -13,32 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+_env_to_tf_var_mig () {
+    TF_VAR_project_id="${PROJECT_ID:?}"
+    TF_VAR_resource_prefix="${NAME_PREFIX:?}"
+    TF_VAR_target_size="${INSTANCE_COUNT:?}"
+    TF_VAR_zone="${ZONE:?}"
+
+    if [ -n "${DISK_SIZE_GB}" ]; then TF_VAR_disk_size_gb="${DISK_SIZE_GB}"; fi
+    if [ -n "${DISK_TYPE}" ]; then TF_VAR_disk_type="${DISK_TYPE}"; fi
+    if [ -n "${GPU_COUNT}" ] && [ -n "${ACCELERATOR_TYPE}" ]; then
+        TF_VAR_guest_accelerator="{count=${GPU_COUNT},type=\"${ACCELERATOR_TYPE}\"}"
+    fi
+    if [ -n "${LABELS}" ]; then TF_VAR_labels="${LABELS}"; fi
+    if [ -n "${IMAGE_FAMILY_NAME}" ]; then
+        TF_VAR_machine_image="{family=\"${IMAGE_FAMILY_NAME}\",name=null,project=\"ml-images\"}"
+    elif [ -n "${IMAGE_NAME}" ]; then
+        TF_VAR_machine_image="{family=null,name=\"${IMAGE_NAME}\",project=\"ml-images\"}"
+    fi
+    if [ -n "${VM_TYPE}" ]; then TF_VAR_machine_type="${VM_TYPE}"; fi
+
+    if [ -n "${METADATA}" ]; then TF_VAR_metadata="${METADATA}"; fi
+    if [ -n "${STARTUP_COMMAND}" ]; then TF_VAR_startup_script="${STARTUP_COMMAND}"; fi
+    if [ -n "${NETWORK_CONFIG}" ]; then TF_VAR_network_config="${NETWORK_CONFIG}"; fi
+}
+
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
-  echo PROJECT_ID $PROJECT_ID
-  echo NAME_PREFIX $NAME_PREFIX
-  echo ZONE $ZONE
-  echo INSTANCE_COUNT $INSTANCE_COUNT
-  echo GPU_COUNT $GPU_COUNT
-  echo VM_TYPE $VM_TYPE
-  echo ACCELERATOR_TYPE $ACCELERATOR_TYPE
-  echo IMAGE_FAMILY_NAME $IMAGE_FAMILY_NAME
-  echo IMAGE_NAME $IMAGE_NAME
-  echo DISK_SIZE_GB $DISK_SIZE_GB
-  echo DISK_TYPE $DISK_TYPE
-  echo TERRAFORM_GCS_PATH $TERRAFORM_GCS_PATH
-  echo VM_LOCALFILE_DEST_PATH $VM_LOCALFILE_DEST_PATH
-  echo METADATA $METADATA
-  echo LABELS $LABELS
-  echo STARTUP_COMMAND $STARTUP_COMMAND
-  echo ORCHESTRATOR_TYPE $ORCHESTRATOR_TYPE
-  echo GCS_MOUNT_LIST $GCS_MOUNT_LIST
-  echo NFS_FILESHARE_LIST $NFS_FILESHARE_LIST
-  echo SHOW_PROXY_URL $SHOW_PROXY_URL
-  echo MINIMIZE_TERRAFORM_LOGGING $MINIMIZE_TERRAFORM_LOGGING
-  echo NETWORK_CONFIG $NETWORK_CONFIG
-  echo ACTION $ACTION
-  /usr/entrypoint.sh
+  printenv | grep 'TF_VAR_.*'
+
+  /root/aiinfra/scripts/entrypoint.sh \
+      ${MINIMIZE_TERRAFORM_LOGGING:+ --quiet} \
+      ${TERRAFORM_GCS_PATH:+ --backend-bucket ${TERRAFORM_GCS_PATH}} \
+      ${ACTION,,} \
+      mig
 }
 
 export PROJECT=$1
@@ -140,6 +147,7 @@ else
   export MINIMIZE_TERRAFORM_LOGGING=true
   #export DISK_SIZE_GB=1000
 
+  _env_to_tf_var_mig
   _invoke_cluster_tool
 
   gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
@@ -194,6 +202,7 @@ if [[ "${EXIT_CODE}" == "0" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
   export ACTION=DESTROY
+  _env_to_tf_var_mig
   _invoke_cluster_tool
 fi
 

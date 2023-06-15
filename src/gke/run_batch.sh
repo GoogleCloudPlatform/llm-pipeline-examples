@@ -14,34 +14,51 @@
 # limitations under the License.
 EXIT_CODE=0
 
+_env_to_tf_var_gke () {
+    TF_VAR_project_id="${PROJECT_ID:?}"
+    TF_VAR_resource_prefix="${NAME_PREFIX:?}"
+    TF_VAR_region="${REGION:- ${ZONE%-*}}"
+
+    if [ -n "${DISK_SIZE_GB}" ]; then TF_VAR_disk_size_gb="${DISK_SIZE_GB}"; fi
+    if [ -n "${DISK_TYPE}" ]; then TF_VAR_disk_type="${DISK_TYPE}"; fi
+    if [ -n "${NETWORK_CONFIG}" ]; then TF_VAR_network_config="${NETWORK_CONFIG}"; fi
+
+    {
+        GKE_NODE_POOL_COUNT=${GKE_NODE_POOL_COUNT:- 1}
+        GKE_NODE_COUNT_PER_NODE_POOL=${GKE_NODE_COUNT_PER_NODE_POOL:- 1}
+        GKE_ENABLE_COMPACT_PLACEMENT=${GKE_ENABLE_COMPACT_PLACEMENT:- true}
+
+        if [ -n "${GPU_COUNT}" ] && [ -n "${ACCELERATOR_TYPE}" ]; then
+            GUEST_ACCELERATOR="{count=${GPU_COUNT},type=\"${ACCELERATOR_TYPE}\"}"
+        fi
+        GUEST_ACCELERATOR="${GUEST_ACCELERATOR:- null}"
+
+        NODE_POOLS=""
+        while [ 0 -lt "${GKE_NODE_POOL_COUNT}" ]; do
+            NODE_POOLS="${NODE_POOLS}{ \
+                zone=${ZONE:?}, \
+                node_count=${GKE_NODE_COUNT_PER_NODE_POOL:?}, \
+                machine_type=${VM_TYPE:?}, \
+                guest_accelerator=${GUEST_ACCELERATOR:?}, \
+                enable_compact_placement=${GKE_ENABLE_COMPACT_PLACEMENT:?}, \
+            },"
+            ((--GKE_NODE_POOL_COUNT))
+        done
+
+        TF_VAR_node_pools="[${NODE_POOLS}]"
+    }
+    return 0
+}
+
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
-  echo PROJECT_ID $PROJECT_ID
-  echo NAME_PREFIX $NAME_PREFIX
-  echo ZONE $ZONE
-  echo INSTANCE_COUNT $INSTANCE_COUNT
-  echo GPU_COUNT $GPU_COUNT
-  echo VM_TYPE $VM_TYPE
-  echo ACCELERATOR_TYPE $ACCELERATOR_TYPE
-  echo IMAGE_FAMILY_NAME $IMAGE_FAMILY_NAME
-  echo IMAGE_NAME $IMAGE_NAME
-  echo DISK_SIZE_GB $DISK_SIZE_GB
-  echo DISK_TYPE $DISK_TYPE
-  echo TERRAFORM_GCS_PATH $TERRAFORM_GCS_PATH
-  echo VM_LOCALFILE_DEST_PATH $VM_LOCALFILE_DEST_PATH
-  echo METADATA $METADATA
-  echo LABELS $LABELS
-  echo STARTUP_COMMAND $STARTUP_COMMAND
-  echo ORCHESTRATOR_TYPE $ORCHESTRATOR_TYPE
-  echo GCS_MOUNT_LIST $GCS_MOUNT_LIST
-  echo NFS_FILESHARE_LIST $NFS_FILESHARE_LIST
-  echo SHOW_PROXY_URL $SHOW_PROXY_URL
-  echo MINIMIZE_TERRAFORM_LOGGING $MINIMIZE_TERRAFORM_LOGGING
-  echo NETWORK_CONFIG $NETWORK_CONFIG
-  echo ACTION $ACTION
-  echo GKE_NODE_POOL_COUNT $GKE_NODE_POOL_COUNT
-  echo GKE_NODE_COUNT_PER_NODE_POOL $GKE_NODE_COUNT_PER_NODE_POOL
-  /usr/entrypoint.sh
+  printenv | grep 'TF_VAR_.*'
+
+  /root/aiinfra/scripts/entrypoint.sh \
+      ${MINIMIZE_TERRAFORM_LOGGING:+ --quiet} \
+      ${TERRAFORM_GCS_PATH:+ --backend-bucket ${TERRAFORM_GCS_PATH}} \
+      ${ACTION,,} \
+      gke
 }
 
 if [[ -z $REGION ]]; then
@@ -81,6 +98,7 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
   export SHOW_PROXY_URL=no
   export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
   export MINIMIZE_TERRAFORM_LOGGING=true
+  _env_to_tf_var_gke
   _invoke_cluster_tool
 
   echo "Provisioning cluster..."
