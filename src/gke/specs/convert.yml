@@ -17,4 +17,5 @@ spec:
         resources:
           limits:
             memory: "$POD_MEMORY_LIMIT"
+            nvidia.com/gpu: 1
       restartPolicy: Never
