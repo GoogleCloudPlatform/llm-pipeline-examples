@@ -45,10 +45,10 @@ export PROJECT=$1
 export TRAIN_IMAGE=$2
 export DATA_DIR=${3/\/gcs\//gs:\/\/}
 export ID=$4
-export TRAIN_CONFIG=$5
-export CLUSTER_CONFIG=$6
-export DATA=${7/\/gcs\//gs:\/\/}
-export WORKSPACE_PATH=${8/\/gcs\//gs:\/\/}
+export DATA=${5/\/gcs\//gs:\/\/}
+export WORKSPACE_PATH=${6/\/gcs\//gs:\/\/}
+export TRAIN_CONFIG=$7
+export CLUSTER_CONFIG=$8
 
 echo ${TRAIN_CONFIG}
 if [[ -n "${TRAIN_CONFIG}" ]]; then

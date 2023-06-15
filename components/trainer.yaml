@@ -40,8 +40,8 @@ implementation:
       {inputValue: IMAGE},
       {outputPath: Model},
       {inputValue: ID},
-      {inputValue: Train Config},
-      {inputValue: Cluster Config},
       {inputPath: Data},
       {inputPath: Workspace Path},
+      {inputValue: Train Config},
+      {inputValue: Cluster Config},
     ]
