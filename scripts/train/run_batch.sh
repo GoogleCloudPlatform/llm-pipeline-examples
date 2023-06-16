@@ -85,7 +85,7 @@ export START="docker pull ${TRAIN_IMAGE}; nvidia-persistenced; docker run --name
 
 export JOB_FOUND=$(gsutil ls ${DATA_DIR}/machines.txt)
 
-if [[ -z "${JOB_FOUND}"]]; then
+if [[ -z "${JOB_FOUND}" ]]; then
   echo "No machines.txt found. Trying to find a cluster with the spified prefix ${JOB_ID}"
   export JOB_FOUND=$(gcloud compute instances list | grep ${JOB_ID})
   if [[ -n "${JOB_FOUND}" ]]; then
@@ -95,16 +95,21 @@ if [[ -z "${JOB_FOUND}"]]; then
   fi
 fi
 
-if [[ -n "${JOB_FOUND}"]]; then
-  if [[ -z ${ID} || "${ID}" == "0" ]]
+if [[ -n "${JOB_FOUND}" ]]; then
+  if [[ -z ${ID} || "${ID}" == "0" ]]; then
     echo "Restarting training on VMs..."
-    gsutil rm ${DATA_DIR}/progress.txt
+    gsutil rm ${DATA_DIR}/progress.txt || true
     gsutil cp ${DATA_DIR}/machines.txt .
+    mkdir ~/.ssh
+    gcloud compute ssh $(head -n 1 machines.txt | sed 's/\(\S\+\) .*/\1/') --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="echo 'ssh is available'"
+
     while read -r machine ip;
     do
       echo $machine
-      gcloud compute ssh $machine --zone=$ZONE --internal-ip --command="bash -c -l 'docker kill train_llm || TRUE; docker container prune -f || TRUE; $START'" -n &
+      (gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
+      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; $START ' >> log.txt 2>&1 &" -- -n) &
     done < machines.txt
+    echo "Training initiated on all machines!"
   else
     echo "Cluster already exist! Skipping further retries since no override is requested..."
     exit 1
@@ -141,6 +146,7 @@ else
   gsutil cp machines.txt ${DATA_DIR}/
 fi
 
+echo "Waiting for training to start..."
 (sleep 2400;echo check > check.txt) &
 
 monitoring_started=false
