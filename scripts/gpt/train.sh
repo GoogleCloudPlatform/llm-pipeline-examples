@@ -114,7 +114,6 @@ ds_args=" --zero-stage=$ZERO_STAGE ${ds_args}"
 ds_args=" --deepspeed-activation-checkpointing ${ds_args}"
 
 
-
 export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pretrain_gpt.py \
     --tensor-model-parallel-size $TENSOR_PARALLEL \
     --pipeline-model-parallel-size $PIPELINE_PARALLEL \
