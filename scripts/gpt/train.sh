@@ -15,9 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if [[ "$1" =~ gs://([^/]+)/*(.*) ]]; then
-  GCS_BUCKET=$BASH_REMATCH[1]
+  GCS_BUCKET=${BASH_REMATCH[1]}
   echo "GCS Bucket: ${GCS_BUCKET}"
-  GCS_FOLDER=$BASH_REMATCH[2]
+  GCS_FOLDER=${BASH_REMATCH[2]}
   echo "Folder under GCS Bucket: /${GCS_FOLDER}"
   if [[ -n $GCS_FOLDER ]]; then
     FOLDER="--only-dir ${GCS_FOLDER}"
