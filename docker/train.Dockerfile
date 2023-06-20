@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m108
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.2-0.py310:m109
 
 RUN apt-get update
 RUN apt install -yq openssh-server openssh-client ninja-build libaio-dev
