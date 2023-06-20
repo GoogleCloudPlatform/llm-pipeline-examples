@@ -21,4 +21,4 @@ COPY scripts/train/run_batch.sh .
 COPY scripts/json_to_env.sh .
 COPY src/orchestration/training_cluster_monitor.py .
 
-ENTRYPOINT ./run_batch.sh
+ENTRYPOINT [ "./run_batch.sh" ]
