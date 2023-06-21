@@ -3,15 +3,19 @@
   "dataset_subset": "3.0.0",
   "document_column": "article",
   "summary_column": "highlights",
-  "cluster_prefix" : "t5node",
-  "zone" : "us-central1-a",
-  "node_count" : 1,
-  "model_checkpoint" : "t5-small",
-  "machine_type" : "a2-highgpu-1g",
-  "gpu_type" : "nvidia-tesla-a100",
-  "gpu_count" : 1,
-  "batch_size" : 128,
-  "epochs" : 1,
+  "cluster_config": {
+    "name_prefix" : "t5node",
+    "zone" : "us-central1-a",
+    "node_count" : 1,
+    "machine_type" : "a2-highgpu-1g",
+    "gpu_type" : "nvidia-tesla-a100",
+    "gpu_count" : 1
+  },
+  "train_config": {
+    "model_checkpoint" : "t5-small",
+    "batch_size" : 128,
+    "epochs" : 1
+  },
   "model_display_name" : "t5",
   "deploy_machine_type" : "n1-standard-32",
   "deploy_gpu_type" : "NVIDIA_TESLA_V100",

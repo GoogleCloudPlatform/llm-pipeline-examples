@@ -228,19 +228,13 @@ def my_pipeline(
     dataset_subset: str,
     document_column: str,
     summary_column: str,
-    cluster_prefix: str,
-    node_count: int,
     model_checkpoint: str,
-    machine_type: str,
-    gpu_count: int,
-    batch_size: int,
-    epochs: int,
+    cluster_config: str,
+    train_config: str,
     model_display_name: str,
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
-    gpu_type: str,
-    zone: str,
     pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
@@ -258,19 +252,12 @@ def my_pipeline(
   )
 
   train_op = trainer_component(
-      cluster_prefix=cluster_prefix,
-      node_count=node_count,
-      model_checkpoint=model_checkpoint,
-      machine_type=machine_type,
-      gpu_count=gpu_count,
+      cluster_config=cluster_config,
+      train_config=train_config,
       data=preprocess_op.outputs["output_dataset"],
       project=FLAGS.project,
-      batch_size=batch_size,
-      epochs=epochs,
-      gpu_type=gpu_type,
-      zone=zone,
       id=str(int(time.time())),
-      image_tag=FLAGS.image_tag,
+      image=f"gcr.io/llm-containers/train:{FLAGS.image_tag}",
       workspace_path=download_op.outputs["workspace_path"]
   )
 
@@ -341,6 +328,11 @@ def main(argv: Sequence[str]) -> None:
   with open(FLAGS.config, "r") as f:
     config = json.load(f)
 
+  config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
+  zone = config["cluster_config"]["zone"]
+  config.update({"train_config": json.dumps(config["train_config"]),
+                 "cluster_config": json.dumps(config["cluster_config"])})
+
   dest_path = "/tmp/pipeline.json"
   compiler.Compiler().compile(
       pipeline_func=my_pipeline,
@@ -367,7 +359,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.verify:
     job.wait()
 
-    endpoint = _get_endpoint(job, config["zone"])
+    endpoint = _get_endpoint(job, zone)
 
     with open(FLAGS.verify_payload, "r") as f:
       payload = json.load(f)
@@ -391,7 +383,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.cleanup_endpoint:
     job.wait()
     
-    endpoint = _get_endpoint(job, config["zone"])
+    endpoint = _get_endpoint(job, zone)
 
     logging.info(f"Deleting endpoint {endpoint.name}...")
     endpoint.delete(force=True)

@@ -18,4 +18,7 @@ RUN apt-get -yq install jq python3-distutils python3-pip
 RUN pip3 install yq google-cloud-storage absl-py
 
 COPY scripts/train/run_batch.sh .
+COPY scripts/json_to_env.sh .
 COPY src/orchestration/training_cluster_monitor.py .
+
+ENTRYPOINT [ "./run_batch.sh" ]
