@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM gcr.io/llm-containers/ft-triton:22.09
+FROM gcr.io/llm-containers/ft-triton:22.12
 
 RUN pip3 install absl-py flask gcsfs transformers tritonclient[http]
 
@@ -23,6 +23,8 @@ ADD src/utils.py .
 
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
+
+EXPOSE 5000 8000
 
 ADD src/app ./app
 

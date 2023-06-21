@@ -51,8 +51,9 @@ if [[ "$HEAD" == "$HOSTNAME" ]]; then
   fi
   echo started > progress.txt
   gsutil cp progress.txt ${DATA_DIR}/progress.txt
-  ${TRAIN_CMD} 2>&1 && echo succeeded > progress.txt || echo failed > progress.txt | tee ${HOME_DIR}/deepspeed_output.log
+  (${TRAIN_CMD} 2>&1 && echo succeeded > progress.txt || echo failed > progress.txt) | tee ${HOME_DIR}/deepspeed_output.log
   gsutil cp progress.txt ${DATA_DIR}/progress.txt
+
   export RESULT=$(cat progress.txt)
   if [[ "${RESULT}" == "succeeded" ]]; then
     exit 0

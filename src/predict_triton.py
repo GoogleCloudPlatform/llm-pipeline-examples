@@ -27,9 +27,9 @@ from absl import logging
 from absl.flags import argparse_flags
 from flask import Flask, send_from_directory
 from flask import request
-from utils import timer
 import gcsfs
 from triton_processor import T5TritonProcessor
+import json
 
 app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
@@ -96,7 +96,6 @@ def ui():
 
 
 @app.route("/infer", methods=["POST"])
-@timer
 def infer():
   """Process a generic inference request.
 
@@ -107,14 +106,27 @@ def infer():
   """
   logging.info("Request received.")
   logging.info("Passing %s to Triton", request.json["instances"])
-  return_payload = []
-  client = _get_triton_client()
-  for req in request.json["instances"]:
-    text_out = client.infer(text=req)
-    return_payload.append(text_out)
-  client.client.close()
-  return {"predictions": return_payload}
 
+  metrics_key = "metrics"
+  predictions_key = "predictions"
+  send_metrics = request.args.get('metrics', False, bool)
+  return_payload = {predictions_key: [], metrics_key: []}
+  client = _get_triton_client()
+
+  for req in request.json["instances"]:
+    text_out, req_metrics = client.infer(text=req)
+    return_payload[predictions_key].append(text_out)
+
+    logging.info(json.dumps(req_metrics))
+    if send_metrics:
+      return_payload[metrics_key].append(req_metrics)
+
+  client.client.close()
+  
+  if not send_metrics:
+    return_payload.pop(metrics_key)
+
+  return return_payload
 
 def parse_flags(argv: List[str]) -> Tuple[argparse.Namespace, List[str]]:
   """Parses command line arguments entry_point.

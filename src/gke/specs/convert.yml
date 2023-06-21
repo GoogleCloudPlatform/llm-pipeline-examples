@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "$CONVERT_JOB_ID"
+spec:
+  template:
+    spec:
+      serviceAccountName: $KSA_NAME
+      containers:
+      - name: convert
+        image: gcr.io/llm-containers/convert:$INFERENCING_IMAGE_TAG
+        command: ["./convert_t5.sh"]
+        args:
+        - "$GPU_NUMBER"
+        - "$MODEL_SOURCE_PATH"
+        - "$CONVERTED_MODEL_UPLOAD_PATH"
+        resources:
+          limits:
+            memory: "$POD_MEMORY_LIMIT"
+      restartPolicy: Never
