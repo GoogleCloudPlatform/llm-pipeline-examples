@@ -228,7 +228,7 @@ printf "triton_node_port = '$TRITON_PORT'\n"
 printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
 
-if [[ $VERIFY_PAYLOAD -eq 1]]
+if [[ $VERIFY_PAYLOAD -eq 1]]; then
   PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \

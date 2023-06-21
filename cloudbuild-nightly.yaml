@@ -233,34 +233,52 @@ steps:
   #     - '--endpoint_name=t5-nightly-ft'
   #     - '--use_faster_transformer'
   #     - '--cleanup_endpoint'
-  - name: gcr.io/cloud-builders/docker
-    id: run-gke-test
+  # - name: gcr.io/cloud-builders/docker
+  #   id: run-gke-test-docker
+  #   #waitFor: ['push-convert', 'push-triton', 'push-predict']
+  #   waitFor: ['build-gke-test']
+  #   args:
+  #     - run
+  #     - '--network=cloudbuild'
+  #     - "-e"
+  #     - "EXISTING_CLUSTER_ID=llm-test-gke"
+  #     - "-e"
+  #     - "CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base"
+  #     - "-e"
+  #     - "MODEL_SOURCE_PATH=google/flan-t5-base"
+  #     - "-e"
+  #     - "MODEL_NAME=flan-t5-base"
+  #     - "-e"
+  #     - "INFERENCING_IMAGE_TAG=latest"
+  #     - "-e"
+  #     - "USE_FASTER_TRANSFORMER=1"
+  #     - "-e"
+  #     - "ACCELERATOR_TYPE=nvidia-tesla-a100"
+  #     - "-e"
+  #     - "REGION=us-central1"
+  #     - 'gke-test'
+  #     - '--verify'
+  #     - "--verify-input-payload=predict_payload.json"
+  #     - "--verify-output-payload=predict_result_triton.json"
+  #     - "--project=llm-containers"
+  - name: gcr.io/cloud-builders/gcloud
+    id: run-gke-test-gcloud
     #waitFor: ['push-convert', 'push-triton', 'push-predict']
     waitFor: ['build-gke-test']
     args:
+      - gcloud
       - run
-      - '--network=cloudbuild'
-      - "-e"
-      - "EXISTING_CLUSTER_ID=llm-test-gke"
-      - "-e"
-      - "CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base"
-      - "-e"
-      - "MODEL_SOURCE_PATH=google/flan-t5-base"
-      - "-e"
-      - "MODEL_NAME=flan-t5-base"
-      - "-e"
-      - "INFERENCING_IMAGE_TAG=latest"
-      - "-e"
-      - "USE_FASTER_TRANSFORMER=1"
-      - "-e"
-      - "ACCELERATOR_TYPE=nvidia-tesla-a100"
-      - "-e"
-      - "REGION=us-central1"
-      - 'gke-test'
-      - '--verify'
-      - "--verify-input-payload=predict_payload.json"
-      - "--verify-output-payload=predict_result_triton.json"
-      - "--project=llm-containers"
+      - deploy
+      - "--image=gcr.io/llm-containers/gke-provision-deploy:test"
+      - "--set-env-vars=EXISTING_CLUSTER_ID=llm-test-gke"
+      - "--set-env-vars=CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base"
+      - "--set-env-vars=MODEL_SOURCE_PATH=google/flan-t5-base"
+      - "--set-env-vars=MODEL_NAME=flan-t5-base"
+      - "--set-env-vars=INFERENCING_IMAGE_TAG=latest"
+      - "--set-env-vars=USE_FASTER_TRANSFORMER=1"
+      - "--set-env-vars=ACCELERATOR_TYPE=nvidia-tesla-a100"
+      - "--set-env-vars=REGION=us-central1"
+      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_triton.json,--project=llm-containers"
 timeout: 86400s
 options:
   pool:
