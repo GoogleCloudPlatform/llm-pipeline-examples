@@ -27,14 +27,6 @@ gsutil cp ${DATA_DIR}/cluster.json .
 source ./json_to_env.sh ./train_config.json
 source ./json_to_env.sh ./cluster.json
 
-#export MODEL_CHECKPOINT=$1
-#export BATCH_SIZE=$5
-#export EPOCHS=$6
-
-#export GPU_COUNT=$7
-#export ZONE=$3
-
-
 echo "Preloading model and config from workspace ${WORKSPACE_PATH}..."
 python3 -m prepare --workspace_path=${WORKSPACE_PATH}
 

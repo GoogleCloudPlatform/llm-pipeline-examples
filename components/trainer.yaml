@@ -19,7 +19,7 @@ inputs:
 - {name: Data, type: Dataset, description: 'Preprocessed Data records to train the model on.'}
 - {name: Project, type: String, description: 'Project ID where training should run'}
 - {name: ID, type: String, description: 'Identifier for the training job'}
-- {name: IMAGE, type: String, description: 'Trainer image URL'}
+- {name: Image, type: String, description: 'Trainer image URL'}
 - {name: Workspace Path, type: GCSPath, description: 'Path for workspace data.'}
 - {name: Train Config, type: String, description: 'Training configuration parameters.'}
 - {name: Cluster Config, type: String, description: 'Cluster configuration parameters.'}
@@ -37,7 +37,7 @@ implementation:
       ./run_batch.sh, 
       # Path of the program inside the container
       {inputValue: Project},
-      {inputValue: IMAGE},
+      {inputValue: Image},
       {outputPath: Model},
       {inputValue: ID},
       {inputPath: Data},

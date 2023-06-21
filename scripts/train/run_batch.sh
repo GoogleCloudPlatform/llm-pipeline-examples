@@ -69,9 +69,9 @@ fi
 source ./json_to_env.sh cluster.json
 
 if [[ -n "${ID}" && "${ID}" != "0" ]]; then
-  export JOB_ID=${CLUSTER_PREFIX}-${ID}
+  export JOB_ID=${NAME_PREFIX}-${ID}
 else
-  export JOB_ID=${CLUSTER_PREFIX}
+  export JOB_ID=${NAME_PREFIX}
 fi
 
 shopt -s extglob
@@ -136,7 +136,7 @@ else
   export STARTUP_COMMAND=${START}
   export PROJECT_ID=${PROJECT}
   export SHOW_PROXY_URL=no
-  export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
+  export LABELS="{gcpllm=\"$NAME_PREFIX\"}"
   export MINIMIZE_TERRAFORM_LOGGING=true
   #export DISK_SIZE_GB=1000
 
