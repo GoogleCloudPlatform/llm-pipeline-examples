@@ -9,6 +9,7 @@ GKE_NODE_POOL_COUNT: "1"
 GKE_NODE_COUNT_PER_NODE_POOL: "2"
 GPU_NUMBER: "4"
 MODEL_SOURCE_PATH: google/flan-t5-base
+CONVERTED_MODEL_UPLOAD_PATH: gs://converted_models/flan-t5-base
 MODEL_NAME: flan-t5-base
 INFERENCING_IMAGE_TAG: latest
 NAME_PREFIX: llm-test5

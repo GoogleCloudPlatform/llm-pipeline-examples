@@ -187,9 +187,6 @@ if [[ $CONVERT_MODEL -eq 1 ]]; then
   export CONVERT_JOB_ID=convert-$RANDOM
   envsubst < specs/convert.yml | kubectl apply -f -
   echo "Running 'convert' job on cluster."
-  CONVERT_POD_ID=$(kubectl get pods -l job-name=$CONVERT_JOB_ID -o=json | jq -r '.items[0].metadata.name')
-  kubectl wait --for=condition=Ready --timeout=10m pod/$CONVERT_POD_ID
-  kubectl logs $CONVERT_POD_ID -f
   kubectl wait --for=condition=Complete --timeout=60m job/$CONVERT_JOB_ID
 
   export MODEL_SOURCE_PATH=$CONVERTED_MODEL_UPLOAD_PATH
