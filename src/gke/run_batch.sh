@@ -177,6 +177,11 @@ else
 fi
 
 if [[ $CONVERT_MODEL -eq 1 ]]; then
+  if [[ -z $CONVERTED_MODEL_UPLOAD_PATH ]]; then
+    echo "CONVERTED_MODEL_UPLOAD_PATH env var is not set."
+    exit 1
+  fi
+
   echo "ENTERING MODEL CONVERT FLOW"
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
@@ -192,8 +197,9 @@ fi
 
 # Run predict image on cluster
 echo "Deploying predict image to cluster"
+DEPLOYMENT_NAME=$MODEL_NAME-deployment
 envsubst < specs/inference.yml | kubectl apply -f -
-kubectl wait --for=condition=Ready --timeout=60m pod -l app=$MODEL_NAME
+kubectl rollout status deployment/$DEPLOYMENT_NAME -n default
 
 # Print urls to access the model
 echo Exposed Node IPs from node 0 on the cluster:

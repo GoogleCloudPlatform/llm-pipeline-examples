@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $MODEL_NAME-deployment
+  name: $DEPLOYMENT_NAME
   labels:
     app: $MODEL_NAME
 spec:
