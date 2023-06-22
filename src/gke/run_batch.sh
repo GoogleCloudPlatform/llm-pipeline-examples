@@ -228,7 +228,7 @@ printf "triton_node_port = '$TRITON_PORT'\n"
 printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
 
-if [[ $VERIFY_PAYLOAD -eq 1]]; then
+if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
@@ -237,7 +237,7 @@ if [[ $VERIFY_PAYLOAD -eq 1]]; then
     | jq -rc )
 
   EXPECTED_OUTPUT=$(cat $VERIFY_OUTPUT_PATH | jq -rc)
-  if [[ $PREDICT_OUTPUT -ne $EXPECTED_OUTPUT]]
+  if [[ $PREDICT_OUTPUT -ne $EXPECTED_OUTPUT ]]; then
     echo "Predicted output does not match expected output."
     echo "Predict output:"
     echo $PREDICT_OUTPUT
