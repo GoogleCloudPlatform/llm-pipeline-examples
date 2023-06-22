@@ -237,7 +237,7 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
     --header 'Content-Type: application/json' \
-    --data $(cat $VERIFY_INPUT_PATH) \
+    --data @$VERIFY_INPUT_PATH \
     | jq -rc ) > output.json
 
   OUTPUT_DIFF=$(diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json))
