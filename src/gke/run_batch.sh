@@ -194,7 +194,7 @@ fi
 
 # Run predict image on cluster
 echo "Deploying predict image to cluster"
-DEPLOYMENT_NAME=$MODEL_NAME-deployment
+export DEPLOYMENT_NAME=$MODEL_NAME-deployment
 envsubst < specs/inference.yml | kubectl apply -f -
 kubectl rollout status deployment/$DEPLOYMENT_NAME -n default
 
