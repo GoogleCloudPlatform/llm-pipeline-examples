@@ -15,13 +15,9 @@
 EXIT_CODE=0
 
 _env_to_tf_var_gke () {
-    TF_VAR_project_id="${PROJECT_ID:?}"
-    TF_VAR_resource_prefix="${NAME_PREFIX:?}"
-    TF_VAR_region="${REGION:- ${ZONE%-*}}"
-
-    if [ -n "${DISK_SIZE_GB}" ]; then TF_VAR_disk_size_gb="${DISK_SIZE_GB}"; fi
-    if [ -n "${DISK_TYPE}" ]; then TF_VAR_disk_type="${DISK_TYPE}"; fi
-    if [ -n "${NETWORK_CONFIG}" ]; then TF_VAR_network_config="${NETWORK_CONFIG}"; fi
+    echo "project_id = \"${PROJECT_ID:?}\""
+    echo "resource_prefix = \"${NAME_PREFIX:?}\""
+    echo "region = \"${REGION:- ${ZONE%-*}}\""
 
     {
         GKE_NODE_POOL_COUNT=${GKE_NODE_POOL_COUNT:- 1}
@@ -29,36 +25,38 @@ _env_to_tf_var_gke () {
         GKE_ENABLE_COMPACT_PLACEMENT=${GKE_ENABLE_COMPACT_PLACEMENT:- true}
 
         if [ -n "${GPU_COUNT}" ] && [ -n "${ACCELERATOR_TYPE}" ]; then
-            GUEST_ACCELERATOR="{count=${GPU_COUNT},type=\"${ACCELERATOR_TYPE}\"}"
+            GUEST_ACCELERATOR="{ count = ${GPU_COUNT}, type = \"${ACCELERATOR_TYPE}\" }"
         fi
         GUEST_ACCELERATOR="${GUEST_ACCELERATOR:- null}"
 
         NODE_POOLS=""
         while [ 0 -lt "${GKE_NODE_POOL_COUNT}" ]; do
             NODE_POOLS="${NODE_POOLS}{ \
-                zone=${ZONE:?}, \
-                node_count=${GKE_NODE_COUNT_PER_NODE_POOL:?}, \
-                machine_type=${VM_TYPE:?}, \
-                guest_accelerator=${GUEST_ACCELERATOR:?}, \
-                enable_compact_placement=${GKE_ENABLE_COMPACT_PLACEMENT:?}, \
+                zone = \"${ZONE:?}\", \
+                node_count = ${GKE_NODE_COUNT_PER_NODE_POOL:?}, \
+                machine_type = \"${VM_TYPE:?}\", \
+                guest_accelerator = ${GUEST_ACCELERATOR:?}, \
+                enable_compact_placement = ${GKE_ENABLE_COMPACT_PLACEMENT:?}, \
             },"
             ((--GKE_NODE_POOL_COUNT))
         done
 
-        TF_VAR_node_pools="[${NODE_POOLS}]"
+        echo "node_pools = [${NODE_POOLS}]"
     }
     return 0
 }
 
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
-  printenv | grep 'TF_VAR_.*'
-
+  echo '```tfvars'
+  cat "${TFVARS_FILE}"
+  echo '```'
   /root/aiinfra/scripts/entrypoint.sh \
       ${MINIMIZE_TERRAFORM_LOGGING:+ --quiet} \
       ${TERRAFORM_GCS_PATH:+ --backend-bucket ${TERRAFORM_GCS_PATH}} \
       ${ACTION,,} \
-      gke
+      gke \
+      "${TFVARS_FILE}"
 }
 
 if [[ -z $REGION ]]; then
@@ -98,7 +96,8 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
   export SHOW_PROXY_URL=no
   export LABELS="{gcpllm=\"$CLUSTER_PREFIX\"}"
   export MINIMIZE_TERRAFORM_LOGGING=true
-  _env_to_tf_var_gke
+  export TFVARS_FILE=$(mktemp)
+  _env_to_tf_var_gke >"${TFVARS_FILE}"
   _invoke_cluster_tool
 
   echo "Provisioning cluster..."

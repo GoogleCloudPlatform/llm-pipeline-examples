@@ -14,38 +14,37 @@
 # limitations under the License.
 
 _env_to_tf_var_mig () {
-    TF_VAR_project_id="${PROJECT_ID:?}"
-    TF_VAR_resource_prefix="${NAME_PREFIX:?}"
-    TF_VAR_target_size="${INSTANCE_COUNT:?}"
-    TF_VAR_zone="${ZONE:?}"
+    echo "project_id = \"${PROJECT_ID:?}\""
+    echo "resource_prefix = \"${NAME_PREFIX:?}\""
+    echo "target_size = ${INSTANCE_COUNT:?}"
+    echo "zone = \"${ZONE:?}\""
 
-    if [ -n "${DISK_SIZE_GB}" ]; then TF_VAR_disk_size_gb="${DISK_SIZE_GB}"; fi
-    if [ -n "${DISK_TYPE}" ]; then TF_VAR_disk_type="${DISK_TYPE}"; fi
     if [ -n "${GPU_COUNT}" ] && [ -n "${ACCELERATOR_TYPE}" ]; then
-        TF_VAR_guest_accelerator="{count=${GPU_COUNT},type=\"${ACCELERATOR_TYPE}\"}"
+        echo "guest_accelerator = { count = ${GPU_COUNT}, type = \"${ACCELERATOR_TYPE}\" }"
     fi
-    if [ -n "${LABELS}" ]; then TF_VAR_labels="${LABELS}"; fi
+    if [ -n "${LABELS}" ]; then echo "labels = ${LABELS}"; fi
     if [ -n "${IMAGE_FAMILY_NAME}" ]; then
-        TF_VAR_machine_image="{family=\"${IMAGE_FAMILY_NAME}\",name=null,project=\"ml-images\"}"
+        echo "machine_image = { family = \"${IMAGE_FAMILY_NAME}\", name = null, project = \"ml-images\" }"
     elif [ -n "${IMAGE_NAME}" ]; then
-        TF_VAR_machine_image="{family=null,name=\"${IMAGE_NAME}\",project=\"ml-images\"}"
+         echo "machine_image = { family = null, name = \"${IMAGE_NAME}\", project = \"ml-images\" }"
     fi
-    if [ -n "${VM_TYPE}" ]; then TF_VAR_machine_type="${VM_TYPE}"; fi
+    if [ -n "${VM_TYPE}" ]; then  echo "machine_type = \"${VM_TYPE}\""; fi
 
-    if [ -n "${METADATA}" ]; then TF_VAR_metadata="${METADATA}"; fi
-    if [ -n "${STARTUP_COMMAND}" ]; then TF_VAR_startup_script="${STARTUP_COMMAND}"; fi
-    if [ -n "${NETWORK_CONFIG}" ]; then TF_VAR_network_config="${NETWORK_CONFIG}"; fi
+    if [ -n "${METADATA}" ]; then echo "metadata = ${METADATA}"; fi
+    if [ -n "${STARTUP_COMMAND}" ]; then echo "startup_script=\"${STARTUP_COMMAND}\""; fi
 }
 
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
-  printenv | grep 'TF_VAR_.*'
-
+  echo '```tfvars'
+  cat "${TFVARS_FILE}"
+  echo '```'
   /root/aiinfra/scripts/entrypoint.sh \
       ${MINIMIZE_TERRAFORM_LOGGING:+ --quiet} \
       ${TERRAFORM_GCS_PATH:+ --backend-bucket ${TERRAFORM_GCS_PATH}} \
       ${ACTION,,} \
-      mig
+      mig \
+      "${TFVARS_FILE}"
 }
 
 export PROJECT=$1
@@ -91,6 +90,7 @@ export START="docker pull ${TRAIN_IMAGE}; nvidia-persistenced; docker run --name
 #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
 
 export JOB_FOUND=$(gsutil ls ${DATA_DIR}/machines.txt)
+export TFVARS_FILE=$(mktemp)
 
 if [[ -z "${JOB_FOUND}" ]]; then
   echo "No machines.txt found. Trying to find a cluster with the spified prefix ${JOB_ID}"
@@ -147,7 +147,7 @@ else
   export MINIMIZE_TERRAFORM_LOGGING=true
   #export DISK_SIZE_GB=1000
 
-  _env_to_tf_var_mig
+  _env_to_tf_var_mig >"${TFVARS_FILE}"
   _invoke_cluster_tool
 
   gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
@@ -202,7 +202,7 @@ if [[ "${EXIT_CODE}" == "0" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
   export ACTION=DESTROY
-  _env_to_tf_var_mig
+  _env_to_tf_var_mig >"${TFVARS_FILE}"
   _invoke_cluster_tool
 fi
 
