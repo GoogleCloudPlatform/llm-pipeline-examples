@@ -233,20 +233,17 @@ printf "\n***********\n"
 
 if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
+  echo "Calling predict endpoint: $PREDICT_ENDPOINT"
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
     --header 'Content-Type: application/json' \
     --data $(cat $VERIFY_INPUT_PATH) \
-    | jq -rc )
+    | jq -rc ) > output.json
 
-  EXPECTED_OUTPUT=$(cat $VERIFY_OUTPUT_PATH | jq -rc)
-  if [[ $PREDICT_OUTPUT -ne $EXPECTED_OUTPUT ]]; then
+  OUTPUT_DIFF=$(diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json))
+  if [[ -z $OUTPUT_DIFF ]]; then
     echo "Predicted output does not match expected output."
-    echo "Predict output:"
-    echo $PREDICT_OUTPUT
-    echo
-    echo "Expected output:"
-    echo $EXPECTED_OUTPUT
+    echo $OUTPUT_DIFF
     exit 1
   fi
 fi
