@@ -234,11 +234,14 @@ printf "\n***********\n"
 if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
   echo "Calling predict endpoint: $PREDICT_ENDPOINT"
+
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
     --header 'Content-Type: application/json' \
-    --data @$VERIFY_INPUT_PATH \
-    | jq -rc ) > output.json
+    --data @$VERIFY_INPUT_PATH)
+
+  echo $PREDICT_OUTPUT
+  $(echo $PREDICT_OUTPUT) | jq -rc > output.json
 
   OUTPUT_DIFF=$(diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json))
   if [[ -z $OUTPUT_DIFF ]]; then
