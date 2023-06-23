@@ -224,6 +224,7 @@ def deploy(
 
 @kfp.dsl.pipeline(name="llm-pipeline")
 def my_pipeline(
+    project: str,
     dataset: str,
     dataset_subset: str,
     document_column: str,
@@ -235,6 +236,9 @@ def my_pipeline(
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
+    use_faster_transformer: bool,
+    image_tag: str,
+    endpoint_name: str,
     pipeline_node_memory_limit: str = "16G",
 ):
   """Pipeline defintion function."""
@@ -255,49 +259,49 @@ def my_pipeline(
       cluster_config=cluster_config,
       train_config=train_config,
       data=preprocess_op.outputs["output_dataset"],
-      project=FLAGS.project,
+      project=project,
       id=str(int(time.time())),
       image=f"gcr.io/llm-containers/train:{FLAGS.image_tag}",
       workspace_path=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(
-      project=FLAGS.project,
+      project=project,
       model_display_name=model_display_name,
       model=train_op.outputs["model"],
       override_deploy=FLAGS.override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    if FLAGS.use_faster_transformer:
+    if use_faster_transformer:
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
         gpu_number=deploy_gpu_count
       ).set_memory_limit(pipeline_node_memory_limit)
 
       deploy_op = deploy(
-        project=FLAGS.project,
+        project=project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
+            f"gcr.io/llm-containers/predict-triton:{image_tag}"
         ),
         model=convert_op.outputs["converted_model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
         gpu_count=deploy_gpu_count,
-        endpoint_name=FLAGS.endpoint_name)
+        endpoint_name=endpoint_name)
 
     else:
       deploy_op = deploy(
-        project=FLAGS.project,
+        project=project,
         model_display_name=model_display_name,
         serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
+            f"gcr.io/llm-containers/predict:{image_tag}"
         ),
         model=train_op.outputs["model"],
         machine_type=deploy_machine_type,
         gpu_type=deploy_gpu_type,
         gpu_count=deploy_gpu_count,
-        endpoint_name=FLAGS.endpoint_name)
+        endpoint_name=endpoint_name)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
@@ -329,6 +333,10 @@ def main(argv: Sequence[str]) -> None:
     config = json.load(f)
 
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
+  config["project"] = FLAGS.project
+  config["use_faster_transformer"] = FLAGS.use_faster_transformer
+  config["image_tag"] = FLAGS.image_tag
+  config["endpoint_name"] = FLAGS.endpoint_name
   zone = config["cluster_config"]["zone"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
