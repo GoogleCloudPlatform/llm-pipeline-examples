@@ -266,7 +266,6 @@ steps:
     #waitFor: ['push-convert', 'push-triton', 'push-predict']
     waitFor: ['build-gke-test']
     args:
-      - gcloud
       - run
       - jobs
       - create
