@@ -245,9 +245,8 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt
   if [[ $(wc -c diff.txt | awk '{print $1}') != 0 ]]; then
     echo "Predicted output does not match expected output."
-    
     cat diff.txt
-    exit 1
+    EXIT_CODE=1
   fi
 fi
 
