@@ -30,5 +30,5 @@ source ./json_to_env.sh ./cluster.json
 echo "Preloading model and config from workspace ${WORKSPACE_PATH}..."
 python3 -m prepare --workspace_path=${WORKSPACE_PATH}
 
-export TRAIN_CMD="deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=${MODEL_CHECKPOINT} --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT}"
+export TRAIN_CMD="deepspeed --hostfile=deepspeed_hostfile finetune.py --deepspeed=deepspeed.json --model_checkpoint=${MODEL_CHECKPOINT} --batch_size=${BATCH_SIZE} --epochs=${EPOCHS} --tokenized_dataset_path=${DATA} --gcs_output=${MODEL_OUTPUT} | grep -v -e 'using a T5TokenizerFast tokenizer' -e 'Using default tokenizer'"
 ./train_common.sh "${TRAIN_CMD}"
