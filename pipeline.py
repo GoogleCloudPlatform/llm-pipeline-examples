@@ -236,6 +236,7 @@ def my_pipeline(
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
+    override_deploy: bool,
     use_faster_transformer: bool,
     image_tag: str,
     endpoint_name: str,
@@ -261,7 +262,7 @@ def my_pipeline(
       data=preprocess_op.outputs["output_dataset"],
       project=project,
       id=str(int(time.time())),
-      image=f"gcr.io/llm-containers/train:{FLAGS.image_tag}",
+      image=f"gcr.io/llm-containers/train:{image_tag}",
       workspace_path=download_op.outputs["workspace_path"]
   )
 
@@ -269,7 +270,7 @@ def my_pipeline(
       project=project,
       model_display_name=model_display_name,
       model=train_op.outputs["model"],
-      override_deploy=FLAGS.override_deploy)
+      override_deploy=override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
     if use_faster_transformer:
@@ -334,6 +335,7 @@ def main(argv: Sequence[str]) -> None:
 
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
   config["project"] = FLAGS.project
+  config["override_deploy"] = FLAGS.override_deploy
   config["use_faster_transformer"] = FLAGS.use_faster_transformer
   config["image_tag"] = FLAGS.image_tag
   config["endpoint_name"] = FLAGS.endpoint_name
