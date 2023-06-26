@@ -274,6 +274,7 @@ steps:
       - "--task-timeout=60m"
       - "--vpc-connector=cloudrun-vpc-connector"
       - "--max-retries=0"
+      - "--region=us-central1"
       - "--image=gcr.io/llm-containers/gke-test:test"
       - "--set-env-vars=EXISTING_CLUSTER_ID=llm-test6-gke"
       - "--set-env-vars=CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base/${SHORT_SHA}"
