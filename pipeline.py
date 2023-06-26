@@ -239,8 +239,7 @@ def my_pipeline(
     override_deploy: bool,
     use_faster_transformer: bool,
     image_tag: str,
-    endpoint_name: str,
-    pipeline_node_memory_limit: str = "16G",
+    endpoint_name: str
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -277,7 +276,7 @@ def my_pipeline(
       convert_op = convert_component(
         model_checkpoint=train_op.outputs["model"],
         gpu_number=deploy_gpu_count
-      ).set_memory_limit(pipeline_node_memory_limit)
+      ).set_memory_limit("16G")
 
       deploy_op = deploy(
         project=project,
