@@ -207,18 +207,18 @@ envsubst < specs/inference.yml | kubectl apply -f -
 kubectl rollout status deployment/$DEPLOYMENT_NAME -n default
 
 # Print urls to access the model
-echo Exposed Node IPs from node 0 on the cluster:
+echo "Exposed Node IPs from node 0 on the cluster:"
 ENDPOINTS=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[]')
 echo $ENDPOINTS | jq -r '.'
 INTERNAL_ENDPOINT=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="InternalIP") | .address | select(startswith("10."))')
 
-echo NodePort for Flask:
+echo "NodePort for Flask:"
 FLASK_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="flask")')
 echo $FLASK_NODEPORT | jq -r '.'
 
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
 
-echo NodePort for Triton:
+echo "NodePort for Triton:"
 TRITON_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="triton")')
 echo $TRITON_NODEPORT | jq -r '.'
 TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
@@ -246,7 +246,7 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
     --header 'Content-Type: application/json' \
-    -d @$VERIFY_INPUT_PATH)
+    -d @$VERIFY_INPUT_PATH ||:)
 
   echo $PREDICT_OUTPUT | jq -rc > output.json
 
@@ -258,4 +258,6 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   fi
 fi
 
+# Let logs flush before exit
+sleep 5
 exit $EXIT_CODE
