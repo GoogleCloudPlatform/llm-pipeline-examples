@@ -160,6 +160,17 @@ if [[ -z $GKE_VERSION ]]; then
   export GKE_VERSION="1.26.3-gke.1000"
 fi
 
+TERRAFORM_DIRECTORY_NAME="aiinfra-terraform-$NAME_PREFIX-gke"
+GS_REGEX_MATCH='^gs://([a-z0-9\.\-_])/.*'
+if [[ $CONVERTED_MODEL_UPLOAD_PATH =~ $GS_REGEX_MATCH]]; then
+  TARGET_BUCKET_NAME=${BASH_REMATCH[1]}
+elif [[ $MODEL_SOURCE_PATH ~= $GS_REGEX_MATCH]]; then
+  TARGET_BUCKET_NAME=${BASH_REMATCH[1]}
+else
+  TARGET_BUCKET_NAME="aiinfra-terraform"
+fi
+export TERRAFORM_GCS_PATH="$TARGET_BUCKET_NAME/$TERRAFORM_DIRECTORY_NAME"
+
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
   export SERVICE_ACCOUNT=$(gcloud config get account)
