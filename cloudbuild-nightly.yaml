@@ -284,6 +284,7 @@ steps:
       - "--set-env-vars=INFERENCING_IMAGE_TAG=latest"
       - "--set-env-vars=USE_FASTER_TRANSFORMER=1"
       - "--set-env-vars=ACCELERATOR_TYPE=nvidia-tesla-v100"
+      - "--set-env-vars=ORCHESTRATOR_TYPE=gke"
       - "--set-env-vars=GKE_ENABLE_COMPACT_PLACEMENT=false"
       - "--set-env-vars=VM_TYPE=n1-standard-32"
       - "--set-env-vars=GPU_COUNT=4"
