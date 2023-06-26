@@ -177,8 +177,16 @@ else
 fi
 
 if [[ $CONVERT_MODEL -eq 1 ]]; then
+  if [[ -z $MODEL_SOURCE_PATH ]]; then
+    echo "MODEL_SOURCE_PATH env var is not set."
+    exit 1
+  fi
   if [[ -z $CONVERTED_MODEL_UPLOAD_PATH ]]; then
     echo "CONVERTED_MODEL_UPLOAD_PATH env var is not set."
+    exit 1
+  fi
+  if [[ -z $GPU_NUMBER ]]; then
+    echo "GPU_NUMBER env var is not set."
     exit 1
   fi
 
