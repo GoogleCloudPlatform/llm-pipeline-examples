@@ -350,7 +350,7 @@ def main(argv: Sequence[str]) -> None:
 
   with open(dest_path, "r") as f:
     js = json.load(f)
-    for _, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
+    for _, v in js["deploymentSpec"]["executors"].items():
       v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
 
   with open(dest_path, "w") as f:
