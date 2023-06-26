@@ -284,6 +284,7 @@ steps:
       - "--set-env-vars=USE_FASTER_TRANSFORMER=1"
       - "--set-env-vars=ACCELERATOR_TYPE=nvidia-tesla-v100"
       - "--set-env-vars=REGION=us-central1"
+      - "--set-env-vars=GPU_NUMBER=4"
       - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_triton.json,--project=llm-containers"
       - "--execute-now"
       - "--wait"
