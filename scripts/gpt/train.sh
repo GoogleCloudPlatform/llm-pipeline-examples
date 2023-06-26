@@ -14,18 +14,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-if [[ -n "$1" ]]; then
-  GCS_BUCKET=$1
-  BASE_PATH=~/data/
-  mkdir ${BASE_PATH}
-  gcsfuse ${GCS_BUCKET} ${BASE_PATH}
-  export MODEL_OUTPUT=gs://${GCS_BUCKET}
+if [[ "$1" =~ gs://([^/]+)/*(.*) ]]; then
+  GCS_BUCKET=${BASH_REMATCH[1]}
+  echo "GCS Bucket: ${GCS_BUCKET}"
+  GCS_FOLDER=${BASH_REMATCH[2]}
+  echo "Folder under GCS Bucket: /${GCS_FOLDER}"
+  if [[ -n $GCS_FOLDER ]]; then
+    FOLDER="--only-dir ${GCS_FOLDER}"
+  else
+    FOLDER=
+  fi
+  export DATA_DIR=~/data/
+  mkdir ${DATA_DIR}
+  gcsfuse ${FOLDER} ${GCS_BUCKET} ${DATA_DIR}
+else
+  export DATA_DIR=$1
 fi
 
-source ./json_to_env.sh ~/data/gpt.json
-source ./json_to_env.sh ~/data/cluster.json
+if [[ -z ${DATA_DIR} ]]; then
+  echo "error: DATA_DIR is undefined!"
+  exit 1
+fi
 
-DATA_PATH=${BASE_PATH}/${DATA_FILE_NAME}
+source ./json_to_env.sh ${DATA_DIR}/train_config.json
+source ./json_to_env.sh ${DATA_DIR}/cluster.json
+
+DATA_PATH=${DATA_DIR}/${DATA_FILE_NAME}
 
 DS_CONFIG=ds_config.json
 
@@ -100,7 +114,6 @@ ds_args=" --zero-stage=$ZERO_STAGE ${ds_args}"
 ds_args=" --deepspeed-activation-checkpointing ${ds_args}"
 
 
-
 export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pretrain_gpt.py \
     --tensor-model-parallel-size $TENSOR_PARALLEL \
     --pipeline-model-parallel-size $PIPELINE_PARALLEL \
@@ -121,10 +134,10 @@ export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pret
     --eval-interval 1000 \
     --data-path $DATA_PATH \
     --num-workers 2 \
-    --vocab-file $BASE_PATH/gpt2-vocab.json \
-    --merge-file $BASE_PATH/gpt2-merges.txt \
+    --vocab-file $DATA_DIR/gpt2-vocab.json \
+    --merge-file $DATA_DIR/gpt2-merges.txt \
     --save-interval 100 \
-    --save ${BASE_PATH}/checkpoints
+    --save ${DATA_DIR}/checkpoints
     --split 98,2,0 \
     --clip-grad 1.0 \
     --weight-decay 0.1 \

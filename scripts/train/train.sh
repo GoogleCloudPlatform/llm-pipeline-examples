@@ -13,14 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-export MODEL_CHECKPOINT=$1
+export DATA_DIR=$1
 export DATA=$2
-export MODEL_OUTPUT=$3
-export ZONE=$4
-export BATCH_SIZE=$5
-export EPOCHS=$6
-export GPU_COUNT=$7
-export WORKSPACE_PATH=$8
+export WORKSPACE_PATH=$3
+
+export MODEL_OUTPUT=${DATA_DIR}
+
+
+
+gsutil cp ${DATA_DIR}/train_config.json .
+gsutil cp ${DATA_DIR}/cluster.json .
+
+source ./json_to_env.sh ./train_config.json
+source ./json_to_env.sh ./cluster.json
 
 echo "Preloading model and config from workspace ${WORKSPACE_PATH}..."
 python3 -m prepare --workspace_path=${WORKSPACE_PATH}

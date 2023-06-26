@@ -3,15 +3,19 @@
   "dataset_subset": "3.0.0",
   "document_column": "article",
   "summary_column": "highlights",
-  "cluster_prefix" : "bartnode",
-  "zone" : "us-central1-f",
-  "node_count" : 2,
-  "model_checkpoint" : "facebook/bart-base",
-  "machine_type" : "a2-megagpu-16g",
-  "gpu_type" : "nvidia-tesla-a100",
-  "gpu_count" : 16,
-  "batch_size" : 128,
-  "epochs" : 6,
+  "cluster_config": {
+    "name_prefix" : "t5node",
+    "zone" : "us-central1-f",
+    "node_count" : 2,
+    "machine_type" : "a2-megagpu-16g",
+    "gpu_type" : "nvidia-tesla-a100",
+    "gpu_count" : 16
+  },
+  "train_config": {
+    "model_checkpoint" : "facebook/bart-base",
+    "batch_size" : 128,
+    "epochs" : 6
+  },
   "model_display_name" : "bart",
   "deploy_machine_type" : "n1-standard-32",
   "deploy_gpu_type" : "NVIDIA_TESLA_V100",
