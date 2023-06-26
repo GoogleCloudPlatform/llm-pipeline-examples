@@ -77,6 +77,10 @@ while test $# -gt 0; do
       export VERIFY_OUTPUT_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
       shift
       ;;
+    --cleanup)
+      export CLEANUP=1
+      shift
+      ;;
     *)
       break
       ;;
@@ -256,6 +260,10 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
     cat diff.txt
     EXIT_CODE=1
   fi
+fi
+
+if [[ $CLEANUP -eq 1]]; then
+  gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH
 fi
 
 # Let logs flush before exit
