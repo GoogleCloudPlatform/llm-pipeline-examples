@@ -237,7 +237,8 @@ def hf_pipeline(
     deploy_gpu_type: str,
     deploy_gpu_count: int,
     override_deploy: bool,
-    image_tag: str,
+    train_image: str,
+    predict_image: str,
     endpoint_name: str
 ):
   """Pipeline defintion function."""
@@ -260,7 +261,7 @@ def hf_pipeline(
       data=preprocess_op.outputs["output_dataset"],
       project=project,
       id=str(int(time.time())),
-      image=f"gcr.io/llm-containers/train:{image_tag}",
+      image=train_image,
       workspace_path=download_op.outputs["workspace_path"]
   )
 
@@ -274,9 +275,7 @@ def hf_pipeline(
     deploy_op = deploy(
       project=project,
       model_display_name=model_display_name,
-      serving_container_image_uri=(
-          f"gcr.io/llm-containers/predict:{image_tag}"
-      ),
+      serving_container_image_uri=predict_image,
       model=train_op.outputs["model"],
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
@@ -298,7 +297,8 @@ def triton_pipeline(
     deploy_gpu_type: str,
     deploy_gpu_count: int,
     override_deploy: bool,
-    image_tag: str,
+    train_image: str,
+    predict_image: str,
     endpoint_name: str
 ):
   """Pipeline defintion function."""
@@ -321,7 +321,7 @@ def triton_pipeline(
       data=preprocess_op.outputs["output_dataset"],
       project=project,
       id=str(int(time.time())),
-      image=f"gcr.io/llm-containers/train:{image_tag}",
+      image=train_image,
       workspace_path=download_op.outputs["workspace_path"]
   )
 
@@ -340,9 +340,7 @@ def triton_pipeline(
     deploy_op = deploy(
       project=project,
       model_display_name=model_display_name,
-      serving_container_image_uri=(
-          f"gcr.io/llm-containers/predict-triton:{image_tag}"
-      ),
+      serving_container_image_uri=predict_image,
       model=convert_op.outputs["converted_model"],
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
@@ -381,18 +379,23 @@ def main(argv: Sequence[str]) -> None:
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
   config["project"] = FLAGS.project
   config["override_deploy"] = FLAGS.override_deploy
-  config["image_tag"] = FLAGS.image_tag
   config["endpoint_name"] = FLAGS.endpoint_name
+  config["train_image"] = f"gcr.io/llm-containers/train:{FLAGS.image_tag}"
+  
   zone = config["cluster_config"]["zone"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
+  
 
   dest_path = "/tmp/pipeline.json"
 
-  pipeline_func = hf_pipeline
   if FLAGS.use_faster_transformer:
     pipeline_func = triton_pipeline
-  
+    config["predict_image"] = f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
+  else:
+    pipeline_func = hf_pipeline
+    config["predict_image"] = f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
+
   compiler.Compiler().compile(
       pipeline_func=pipeline_func,
       package_path=dest_path,
