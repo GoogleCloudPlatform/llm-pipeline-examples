@@ -242,6 +242,7 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
 
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
+    --silent \
     --header 'Content-Type: application/json' \
     -d @$VERIFY_INPUT_PATH ||:)
 
