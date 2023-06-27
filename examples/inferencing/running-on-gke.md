@@ -46,7 +46,7 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 
 An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.yml](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.yml)
 
-Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a cloud storage bucket named: `aiinfra-terraform-<project_id>`.
+Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a newly created cloud storage bucket named: `aiinfra-terraform-<project_id>`.
 
 There are several variables that need to be set for the Model Deployment.
 
