@@ -149,7 +149,8 @@ Run the image using [`gcloud run jobs`](https://cloud.google.com/sdk/gcloud/refe
 ```
 export JOB_NAME=my-job
 export REGION=us-central1
-gcloud run jobs create $JOB_NAME --region=$REGION --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy:release
+export PROJECT_ID=$(gcloud config get project)
+gcloud run jobs create $JOB_NAME --region=$REGION --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy:release --args=--project=$PROJECT_ID
 gcloud run jobs execute $JOB_NAME --region=$REGION
 ``` 
 
