@@ -1,10 +1,19 @@
 {
   "train_batch_size": "auto",
+  "train_micro_batch_size_per_gpu": "auto",
   "gradient_accumulation_steps": 1,
   "optimizer": {
     "type": "AdamW",
     "params": {
       "lr": "auto"
+    }
+  },
+  "scheduler": {
+    "type": "WarmupLR",
+    "params": {
+        "warmup_min_lr": "auto",
+        "warmup_max_lr": "auto",
+        "warmup_num_steps": "auto"
     }
   },
   "fp16": {
