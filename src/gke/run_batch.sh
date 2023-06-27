@@ -87,12 +87,6 @@ while test $# -gt 0; do
   esac
 done
 
-echo "FLAGS SET:"
-echo $PROJECT_ID
-echo $VERIFY_PAYLOAD
-echo $VERIFY_INPUT_PATH
-echo $VERIFY_OUTPUT_PATH
-
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
   echo PROJECT_ID $PROJECT_ID
@@ -127,13 +121,7 @@ if [[ -z $PROJECT_ID ]]; then
   echo "PROJECT_ID variable is not set."
   exit 1
 fi
-gcloud auth list
-gcloud projects list
-gcloud config list
-gcloud info
-echo "ABOUT TO SET PROJECT TO $PROJECT_ID"
 gcloud config set project $PROJECT_ID
-echo "SET PROJECT"
 
 if [[ -z $REGION ]]; then
   export REGION=${ZONE%-*}
@@ -156,20 +144,6 @@ fi
 if [[ -z $INFERENCING_IMAGE_URI ]]; then
   export INFERENCING_IMAGE_URI=$INFERENCE_IMAGE
 fi
-if [[ -z $GKE_VERSION ]]; then
-  export GKE_VERSION="1.26.3-gke.1000"
-fi
-
-TERRAFORM_DIRECTORY_NAME="aiinfra-terraform-$PROJECT_ID"
-GS_REGEX_MATCH='^gs://([a-z0-9_\.-]+)/.*'
-if [[ $CONVERTED_MODEL_UPLOAD_PATH =~ GS_REGEX_MATCH ]]; then
-  TARGET_BUCKET_NAME="${BASH_REMATCH[1]}"
-elif [[ $MODEL_SOURCE_PATH =~ $GS_REGEX_MATCH ]]; then
-  TARGET_BUCKET_NAME=${BASH_REMATCH[1]}
-else
-  TARGET_BUCKET_NAME=$TERRAFORM_DIRECTORY_NAME
-fi
-export TERRAFORM_GCS_PATH="gs://$TARGET_BUCKET_NAME/$TERRAFORM_DIRECTORY_NAME"
 
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
@@ -190,8 +164,14 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
   gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 else
   gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+  export PROJECT_NUMBER=$(gcloud projects list \
+    --filter="${PROJECT_ID}" \
+    --format="value(PROJECT_NUMBER)")
+  echo "Using existing cluster $EXISTING_CLUSTER_ID"
+  echo "Deploying Nvidia driver daemonset"
   kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
-  kubectl apply -f specs/serviceAccount.yml
+  echo "Creating service account binding"
+  envsubst < specs/serviceAccount.yml | kubectl apply -f -
 fi
 
 if [[ $CONVERT_MODEL -eq 1 ]]; then
@@ -208,7 +188,6 @@ if [[ $CONVERT_MODEL -eq 1 ]]; then
     exit 1
   fi
 
-  echo "ENTERING MODEL CONVERT FLOW"
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
   envsubst < specs/convert.yml | kubectl apply -f -
@@ -273,11 +252,16 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
     echo "Predicted output does not match expected output."
     cat diff.txt
     EXIT_CODE=1
+  else
+    echo "Predicted output matches expected output."
   fi
 fi
 
 if [[ $CLEANUP -eq 1 ]]; then
+  echo "Running clean-up."
+  echo "Deleting uploaded model form path $CONVERTED_MODEL_UPLOAD_PATH"
   gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH
+  echo "Deleting provisioned cluster $EXISTING_CLUSTER_ID"
   gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION
 fi
 
