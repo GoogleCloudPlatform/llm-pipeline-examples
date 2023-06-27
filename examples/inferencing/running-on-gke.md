@@ -46,7 +46,7 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 
 An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.yml](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.yml)
 
-Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node.
+Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a cloud storage bucket named: `aiinfra-terraform-<project_id>`.
 
 There are several variables that need to be set for the Model Deployment.
 
@@ -237,6 +237,7 @@ Responses will be returned in Vertex format:
 
 { “predictions”: [“prediction1”, “prediction2” … ], “metrics”: [ {“metric1”: “value1”}, {“units”: “unit_measurement”}]
 
+Examples of payloads can be seen in [predict_payload.json](../../predict_payload.json) and [predict_result.json](../../predict_result.json) 
 
 #### /v2/models/fastertransformer/infer [POST]
 
@@ -247,6 +248,4 @@ Only available on FasterTransformer image. A raw endpoint that directly communic
 
 These limitations are accurate as of June 1, 2023.
 
-
-* Tokenizer within the FasterTransformer Predict image is based on the T5-base dictionary.
 * FasterTransformer image only supports the T5 model family (t5, t5-v1_1, flan-t5). All sizes are supported.
