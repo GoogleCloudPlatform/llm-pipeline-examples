@@ -15,7 +15,32 @@ Support has been tested for the following T5 families available on huggingface.
 These commands can be run from any terminal configured for gcloud, or through [Cloud Shell](https://cloud.google.com/shell/docs/launching-cloud-shell).
 
 Start by enabling the required APIs within your GCP project.
-`gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com`
+
+```
+gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com
+```
+
+The default compute service account in your project must also have several permissions set, Editor, Project IAM Admin, and Service Account Admin.
+```
+PROJECT_ID=$(gcloud config get-value project)
+PROJECT_NUMBER=$(gcloud projects list \
+--filter="${PROJECT_ID}" \
+--format="value(PROJECT_NUMBER)")
+
+SERVICE_ACCOUNT=${PROJECT_NUMBER}-compute@developer.gserviceaccount.com
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member=serviceAccount:${SERVICE_ACCOUNT} \
+    --role=roles/editor
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member=serviceAccount:${SERVICE_ACCOUNT} \
+    --role=roles/resourcemanager.projectIamAdmin
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member=serviceAccount:${SERVICE_ACCOUNT} \
+    --role=roles/iam.serviceAccountAdmin
+```
 
 ### Create an Environment file
 
