@@ -276,8 +276,9 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
   fi
 fi
 
-if [[ $CLEANUP -eq 1]]; then
+if [[ $CLEANUP -eq 1 ]]; then
   gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH
+  gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION
 fi
 
 # Let logs flush before exit
