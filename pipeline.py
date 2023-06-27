@@ -386,7 +386,6 @@ def main(argv: Sequence[str]) -> None:
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
   
-
   dest_path = "/tmp/pipeline.json"
 
   if FLAGS.use_faster_transformer:
