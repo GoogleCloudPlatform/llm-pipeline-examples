@@ -87,7 +87,12 @@ def download_model(model_path):
 
 @app.route("/health")
 def health():
-  return {"health": "ok"}
+  app.triton_server.poll()
+  if app.triton_server.returncode is None:
+    return {"health": "ok"}
+  else:
+    body = {"health": "triton_crash"}
+    return Flask.make_response((body, 500))
 
 
 @app.route("/ui", methods=["GET"])
@@ -154,7 +159,7 @@ def main(argv):
   model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path).rstrip("/")
   model_dir = download_model(model_path)
 
-  subprocess.Popen(
+  app.triton_server = subprocess.Popen(
       ["/opt/tritonserver/bin/tritonserver", f"--model-repository={model_dir}", "--allow-vertex-ai=false", "--allow-http=true", "--http-port=8000"]
   )
 
