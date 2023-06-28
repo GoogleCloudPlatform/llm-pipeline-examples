@@ -223,7 +223,8 @@ def deploy(
 
 
 @kfp.dsl.pipeline(name="llm-pipeline")
-def my_pipeline(
+def hf_pipeline(
+    project: str,
     dataset: str,
     dataset_subset: str,
     document_column: str,
@@ -235,7 +236,10 @@ def my_pipeline(
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
-    pipeline_node_memory_limit: str = "16G",
+    override_deploy: bool,
+    train_image: str,
+    predict_image: str,
+    endpoint_name: str
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -255,49 +259,93 @@ def my_pipeline(
       cluster_config=cluster_config,
       train_config=train_config,
       data=preprocess_op.outputs["output_dataset"],
-      project=FLAGS.project,
+      project=project,
       id=str(int(time.time())),
-      image=f"gcr.io/llm-containers/train:{FLAGS.image_tag}",
+      image=train_image,
       workspace_path=download_op.outputs["workspace_path"]
   )
 
   should_deploy_op = should_deploy(
-      project=FLAGS.project,
+      project=project,
       model_display_name=model_display_name,
       model=train_op.outputs["model"],
-      override_deploy=FLAGS.override_deploy)
+      override_deploy=override_deploy)
 
   with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
-    if FLAGS.use_faster_transformer:
-      convert_op = convert_component(
-        model_checkpoint=train_op.outputs["model"],
-        gpu_number=deploy_gpu_count
-      ).set_memory_limit(pipeline_node_memory_limit)
+    deploy_op = deploy(
+      project=project,
+      model_display_name=model_display_name,
+      serving_container_image_uri=predict_image,
+      model=train_op.outputs["model"],
+      machine_type=deploy_machine_type,
+      gpu_type=deploy_gpu_type,
+      gpu_count=deploy_gpu_count,
+      endpoint_name=endpoint_name)
+      
+@kfp.dsl.pipeline(name="llm-pipeline")
+def triton_pipeline(
+    project: str,
+    dataset: str,
+    dataset_subset: str,
+    document_column: str,
+    summary_column: str,
+    model_checkpoint: str,
+    cluster_config: str,
+    train_config: str,
+    model_display_name: str,
+    deploy_machine_type: str,
+    deploy_gpu_type: str,
+    deploy_gpu_count: int,
+    override_deploy: bool,
+    train_image: str,
+    predict_image: str,
+    endpoint_name: str
+):
+  """Pipeline defintion function."""
+# pylint: disable=unused-variable
+  download_op = download_component(
+    dataset=dataset,
+    subset=dataset_subset,
+    model_checkpoint=model_checkpoint)
 
-      deploy_op = deploy(
-        project=FLAGS.project,
-        model_display_name=model_display_name,
-        serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
-        ),
-        model=convert_op.outputs["converted_model"],
-        machine_type=deploy_machine_type,
-        gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count,
-        endpoint_name=FLAGS.endpoint_name)
+  preprocess_op = preprocess_component(
+      model_checkpoint=model_checkpoint,
+      document_column=document_column,
+      summary_column=summary_column,
+      raw_dataset=download_op.outputs["dataset_path"],
+  )
 
-    else:
-      deploy_op = deploy(
-        project=FLAGS.project,
-        model_display_name=model_display_name,
-        serving_container_image_uri=(
-            f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
-        ),
-        model=train_op.outputs["model"],
-        machine_type=deploy_machine_type,
-        gpu_type=deploy_gpu_type,
-        gpu_count=deploy_gpu_count,
-        endpoint_name=FLAGS.endpoint_name)
+  train_op = trainer_component(
+      cluster_config=cluster_config,
+      train_config=train_config,
+      data=preprocess_op.outputs["output_dataset"],
+      project=project,
+      id=str(int(time.time())),
+      image=train_image,
+      workspace_path=download_op.outputs["workspace_path"]
+  )
+
+  should_deploy_op = should_deploy(
+      project=project,
+      model_display_name=model_display_name,
+      model=train_op.outputs["model"],
+      override_deploy=override_deploy)
+
+  with dsl.Condition(should_deploy_op.output == "deploy", name="Deploy"):
+    convert_op = convert_component(
+      model_checkpoint=train_op.outputs["model"],
+      gpu_number=deploy_gpu_count
+    ).set_memory_limit("16G")
+
+    deploy_op = deploy(
+      project=project,
+      model_display_name=model_display_name,
+      serving_container_image_uri=predict_image,
+      model=convert_op.outputs["converted_model"],
+      machine_type=deploy_machine_type,
+      gpu_type=deploy_gpu_type,
+      gpu_count=deploy_gpu_count,
+      endpoint_name=endpoint_name)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
@@ -329,19 +377,32 @@ def main(argv: Sequence[str]) -> None:
     config = json.load(f)
 
   config["model_checkpoint"] = config["train_config"]["model_checkpoint"]
+  config["project"] = FLAGS.project
+  config["override_deploy"] = FLAGS.override_deploy
+  config["endpoint_name"] = FLAGS.endpoint_name
+  config["train_image"] = f"gcr.io/llm-containers/train:{FLAGS.image_tag}"
+  
   zone = config["cluster_config"]["zone"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
-
+  
   dest_path = "/tmp/pipeline.json"
+
+  if FLAGS.use_faster_transformer:
+    pipeline_func = triton_pipeline
+    config["predict_image"] = f"gcr.io/llm-containers/predict-triton:{FLAGS.image_tag}"
+  else:
+    pipeline_func = hf_pipeline
+    config["predict_image"] = f"gcr.io/llm-containers/predict:{FLAGS.image_tag}"
+
   compiler.Compiler().compile(
-      pipeline_func=my_pipeline,
+      pipeline_func=pipeline_func,
       package_path=dest_path,
       pipeline_parameters=config)
 
   with open(dest_path, "r") as f:
     js = json.load(f)
-    for _, v in js["pipelineSpec"]["deploymentSpec"]["executors"].items():
+    for _, v in js["deploymentSpec"]["executors"].items():
       v["container"]["image"] = f"{v['container']['image']}:{FLAGS.image_tag}"
 
   with open(dest_path, "w") as f:
