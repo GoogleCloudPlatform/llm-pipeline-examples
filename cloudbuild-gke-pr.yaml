@@ -27,14 +27,14 @@ steps:
     env:
       - "DOCKER_BUILDKIT=1"
   - name: gcr.io/cloud-builders/docker
-    id: push-gke-test
-    waitFor: ['build-gke-test']
+    id: push-gke
+    waitFor: ['build-gke']
     args:
       - push
       - 'gcr.io/llm-containers/gke-provision-deploy:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/gcloud
-    id: run-gke-test-gcloud
-    waitFor: ['push-gke-test']
+    id: run-gke-gcloud
+    waitFor: ['push-gke']
     args:
       - run
       - jobs
