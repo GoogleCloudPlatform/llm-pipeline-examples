@@ -248,12 +248,12 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
     -X POST $PREDICT_ENDPOINT \
     -v \
     --header 'Content-Type: application/json' \
-    -d @$VERIFY_INPUT_PATH ||:)
+    -d @$VERIFY_INPUT_PATH || :)
 
   echo $PREDICT_OUTPUT
   echo $PREDICT_OUTPUT | jq -rc > output.json
 
-  diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt
+  diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt || :
   if [[ $(wc -c diff.txt | awk '{print $1}') != 0 ]]; then
     echo "Predicted output does not match expected output."
     cat diff.txt
