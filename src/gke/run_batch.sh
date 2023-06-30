@@ -146,7 +146,7 @@ if [[ -z $INFERENCING_IMAGE_URI ]]; then
   export INFERENCING_IMAGE_URI=$INFERENCE_IMAGE
 fi
 if [[ -z $GKE_VERSION ]]; then
-  export GKE_VERSION="1.26.3-gke.1000"
+  export GKE_VERSION="1.23"
 fi
 
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
