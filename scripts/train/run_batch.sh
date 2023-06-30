@@ -77,8 +77,17 @@ fi
 shopt -s extglob
 export REGION=${ZONE/%-+([a-z0-9])/}
 
+if [[ ${USE_COS_IMAGE} ]]; then
+  export DOCKER_PARAMS="--volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin --device /dev/nvidia-uvm:/dev/nvidia-uvm --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia0:/dev/nvidia0 --device /dev/nvidia1:/dev/nvidia1 --device /dev/nvidia2:/dev/nvidia2 --device /dev/nvidia3:/dev/nvidia3 --device /dev/nvidia4:/dev/nvidia4 --device /dev/nvidia5:/dev/nvidia5 --device /dev/nvidia6:/dev/nvidia6 --device /dev/nvidia7:/dev/nvidia7  -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
+  export VM_IMAGE=cos-105-17412-101-17
+else
+  export DOCKER_PARAMS="--gpus all"
+  export VM_IMAGE=c0-deeplearning-common-cu113-v20221026-debian-10
+fi
+
+export VM_IMAGE
 export TRAIN_CMD="./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
-export START="docker pull ${TRAIN_IMAGE}; nvidia-persistenced; docker run --name train_llm --security-opt apparmor=unconfined --cap-add SYS_ADMIN --device /dev/fuse --ipc host --network host --hostname \$(hostname) --gpus all -v /etc/ssh:/etc/ssh ${TRAIN_IMAGE} ${TRAIN_CMD}"
+export START="docker pull ${TRAIN_IMAGE}; nvidia-persistenced; docker run --name train_llm --security-opt apparmor=unconfined --cap-add SYS_ADMIN --device /dev/fuse --ipc host --network host --hostname \$(hostname) ${DOCKER_PARAMS} -v /etc/ssh:/etc/ssh ${TRAIN_IMAGE} ${TRAIN_CMD}"
 #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
 #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
 #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
@@ -90,7 +99,7 @@ if [[ -z "${JOB_FOUND}" ]]; then
   export JOB_FOUND=$(gcloud compute instances list | grep ${JOB_ID})
   if [[ -n "${JOB_FOUND}" ]]; then
     echo "Cluster found! Exporting machine list..."
-    gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
+    gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
     gsutil cp machines.txt ${DATA_DIR}/
   fi
 fi
@@ -130,7 +139,7 @@ else
   export INSTANCE_COUNT=${NODE_COUNT}
   export VM_TYPE=${MACHINE_TYPE}
   export ACCELERATOR_TYPE=${GPU_TYPE}
-  export IMAGE_NAME=c0-deeplearning-common-cu113-v20221026-debian-10
+  export IMAGE_NAME=${VM_IMAGE}
   export TERRAFORM_GCS_PATH=${DATA_DIR}/deployment
   export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
   export STARTUP_COMMAND=${START}
@@ -142,7 +151,7 @@ else
 
   _invoke_cluster_tool
 
-  gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\) \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
+  gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
 fi
 
