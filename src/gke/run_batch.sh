@@ -246,10 +246,11 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
 
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
-    --silent \
+    -v \
     --header 'Content-Type: application/json' \
     -d @$VERIFY_INPUT_PATH ||:)
 
+  echo $PREDICT_OUTPUT
   echo $PREDICT_OUTPUT | jq -rc > output.json
 
   diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt
@@ -259,6 +260,7 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
     EXIT_CODE=1
   else
     echo "Predicted output matches expected output."
+    EXIT_CODE=0
   fi
 fi
 
