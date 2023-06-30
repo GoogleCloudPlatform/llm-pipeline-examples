@@ -46,7 +46,6 @@ steps:
       - "--max-retries=0"
       - "--region=us-central1"
       - "--image=gcr.io/llm-containers/gke-provision-deploy:github${SHORT_SHA}"
-      #- "--set-env-vars=EXISTING_CLUSTER_ID=test-create-454653c-gke"
       - "--set-env-vars=NAME_PREFIX=test-create-${SHORT_SHA}"
       - "--set-env-vars=CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base/${SHORT_SHA}"
       - "--set-env-vars=MODEL_SOURCE_PATH=google/flan-t5-base"
@@ -63,7 +62,7 @@ steps:
       - "--set-env-vars=REGION=us-central1"
       - "--set-env-vars=ZONE=us-central1-a"
       - "--set-env-vars=GPU_NUMBER=4"
-      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_flan.json,--project=llm-containers"
+      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_flan.json,--project=llm-containers,--cleanup"
       - "--execute-now"
       - "--wait"
 timeout: 86400s
