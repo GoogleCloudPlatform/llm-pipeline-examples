@@ -18,23 +18,11 @@ steps:
     args:
       - build
       - '-t'
-      - 'gke-provision-deploy'
+      - 'gcr.io/llm-containers/gke-provision-deploy:github${SHORT_SHA}'
       - '--cache-from'
       - 'gcr.io/llm-containers/gke-provision-deploy:latest'
       - '-f'
       - docker/gke/gke-provision-deploy.Dockerfile
-      - .
-  - name: gcr.io/cloud-builders/docker
-    id: build-gke-test
-    waitFor: ['build-gke']
-    args:
-      - build
-      - '-t'
-      - 'gcr.io/llm-containers/gke-test:github${SHORT_SHA}'
-      - '--build-arg'
-      - 'baseimage=gke-provision-deploy'
-      - '-f'
-      - docker/gke/gke-test.Dockerfile
       - .
     env:
       - "DOCKER_BUILDKIT=1"
@@ -43,7 +31,7 @@ steps:
     waitFor: ['build-gke-test']
     args:
       - push
-      - 'gcr.io/llm-containers/gke-test:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/gke-provision-deploy:github${SHORT_SHA}'
   - name: gcr.io/cloud-builders/gcloud
     id: run-gke-test-gcloud
     waitFor: ['push-gke-test']
@@ -57,8 +45,8 @@ steps:
       - "--vpc-connector=cloudrun-vpc-connector"
       - "--max-retries=0"
       - "--region=us-central1"
-      - "--image=gcr.io/llm-containers/gke-test:github${SHORT_SHA}"
-      #- "--set-env-vars=EXISTING_CLUSTER_ID=llm-test6-gke"
+      - "--image=gcr.io/llm-containers/gke-provision-deploy:github${SHORT_SHA}"
+      - "--set-env-vars=EXISTING_CLUSTER_ID=test-create-454653c-gke"
       - "--set-env-vars=NAME_PREFIX=test-create-${SHORT_SHA}"
       - "--set-env-vars=CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base/${SHORT_SHA}"
       - "--set-env-vars=MODEL_SOURCE_PATH=google/flan-t5-base"
@@ -75,7 +63,7 @@ steps:
       - "--set-env-vars=REGION=us-central1"
       - "--set-env-vars=ZONE=us-central1-a"
       - "--set-env-vars=GPU_NUMBER=4"
-      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_triton.json,--project=llm-containers"
+      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_triton.json,--project=llm-containers,--cleanup"
       - "--execute-now"
       - "--wait"
 timeout: 86400s

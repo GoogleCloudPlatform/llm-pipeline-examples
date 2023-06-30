@@ -23,3 +23,7 @@ COPY src/gke/run_batch.sh .
 RUN chmod 755 run_batch.sh
 COPY src/gke/specs specs/
 ENTRYPOINT ["run_batch.sh"]
+
+ADD predict_payload.json .
+ADD predict_result.json .
+ADD predict_result_triton.json .
