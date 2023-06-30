@@ -63,7 +63,7 @@ steps:
       - "--set-env-vars=REGION=us-central1"
       - "--set-env-vars=ZONE=us-central1-a"
       - "--set-env-vars=GPU_NUMBER=4"
-      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_triton.json,--project=llm-containers,--cleanup"
+      - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_flan.json,--project=llm-containers"
       - "--execute-now"
       - "--wait"
 timeout: 86400s

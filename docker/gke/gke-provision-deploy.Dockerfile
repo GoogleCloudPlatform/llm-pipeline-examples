@@ -26,4 +26,5 @@ ENTRYPOINT ["run_batch.sh"]
 
 ADD predict_payload.json .
 ADD predict_result.json .
+ADD predict_result_flan.json .
 ADD predict_result_triton.json .
