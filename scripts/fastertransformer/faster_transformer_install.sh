@@ -32,6 +32,6 @@ git clone --depth 1 --branch release/v5.3_tag https://github.com/NVIDIA/FasterTr
 mkdir -p FasterTransformer/build
 cd FasterTransformer/build
 git submodule init && git submodule update
-cmake -DSM=60,61,70,75,80,86 -DCMAKE_BUILD_TYPE=Release -DBUILD_PYT=ON -DBUILD_MULTI_GPU=ON ..
+cmake -DSM=60,61,70,75,80,86,90 -DCMAKE_BUILD_TYPE=Release -DBUILD_PYT=ON -DBUILD_MULTI_GPU=ON ..
 make -j12
 cd ../..

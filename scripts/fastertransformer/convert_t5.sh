@@ -64,6 +64,7 @@ sed -i "s/PLACEHOLDERNUMGPU/$NUM_GPUS/g" $OUTPUT_PATH/config.pbtxt
 
 cp $MODEL_NAME/config.json $OUTPUT_PATH/1/$NUM_GPUS-gpu/config.json
 cp $MODEL_NAME/tokenizer.json $OUTPUT_PATH/1/$NUM_GPUS-gpu/tokenizer.json
+cp $MODEL_NAME/tokenizer_config.json $OUTPUT_PATH/1/$NUM_GPUS-gpu/tokenizer.json
 cd ../..
 
 # Upload converted model
