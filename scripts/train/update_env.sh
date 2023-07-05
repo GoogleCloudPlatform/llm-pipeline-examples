@@ -22,4 +22,4 @@ export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} |
 sudo usermod -l ${OS_LOGIN_USER} ${HOME_USER}
 sudo groupmod -n ${OS_LOGIN_USER} ${HOME_USER}
 
-echo 'export PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/nvidia/lib64:/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}";conda activate base 2> /dev/null' >> .profile
+echo 'export PATH="/opt/conda/bin:/opt/conda/condabin:/usr/local/nvidia/lib64:/usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}";conda activate base 2> /dev/null;sudo ldconfig.real' >> .profile
