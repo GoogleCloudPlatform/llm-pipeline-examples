@@ -29,6 +29,8 @@ while test $# -gt 0; do
       echo "-i|--verify-input-payload=) Path to a file containing the inferencing input for verification. This will route to the Flask endpoint on the image."
       echo "-o|--verify-output-payload=) Path to a file containing the inferencing output for verification."
       echo "-p|--project=) ID of the project to use. Defaults to environment variable \$PROJECT_ID"
+      echo "--name-prefix=) Name prefix for the cluster to create. Cluster will be named <name-prefix>-gke Defaults to environment variable \$NAME_PREFIX"
+      echo "--converted-model-upload-path=) Only required when USE_FASTER_TRANSFORMER is set. A GCS path to upload the model after it is converted for FasterTransformer"
       echo "--cleanup) Deletes the model and cluster at the end of the run. Used for testing."
       exit 0
       ;;
@@ -50,6 +52,14 @@ while test $# -gt 0; do
       export PROJECT_ID=`echo $1 | sed -e 's/^[^=]*=//g'`
       shift
       ;;
+    --name-prefix*)
+      export NAME_PREFIX=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    --converted-model-upload-path*)
+      export CONVERTED_MODEL_UPLOAD_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;; 
     -i)
       shift
       if test $# -gt 0; then
@@ -241,15 +251,17 @@ printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
 
 if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
+  echo "Running inference validation using input: $VERIFY_INPUT_PATH and output: $PREDICT_OUTPUT"
   PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
   echo "Calling predict endpoint: $PREDICT_ENDPOINT"
 
+  echo Sending input: $(cat $VERIFY_INPUT_PATH)
   PREDICT_OUTPUT=$(curl \
     -X POST $PREDICT_ENDPOINT \
     --header 'Content-Type: application/json' \
     -d @$VERIFY_INPUT_PATH || :)
 
-  echo $PREDICT_OUTPUT
+  echo Received output: $PREDICT_OUTPUT
   echo $PREDICT_OUTPUT | jq -rc > output.json
 
   diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt || :
