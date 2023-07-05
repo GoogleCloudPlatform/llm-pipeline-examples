@@ -95,7 +95,7 @@ if [[ ${USE_COS_IMAGE} ]]; then
   export PRE_DOCKER_RUN=""
   export VM_IMAGE=cos-105-17412-101-17
 else
-  echo "Using deeplearning image"
+  echo "Using DLVM image"
   export DOCKER_PARAMS="--gpus all"
   export PRE_DOCKER_RUN="nvidia-persistenced;"
   export VM_IMAGE=c0-deeplearning-common-cu113-v20221026-debian-10
