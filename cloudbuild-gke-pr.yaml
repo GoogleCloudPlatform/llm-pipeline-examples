@@ -38,7 +38,7 @@ steps:
     args:
       - run
       - jobs
-      - create
+      - deploy
       - gke-test-${SHORT_SHA}
       - "--memory=4Gi"
       - "--task-timeout=60m"
