@@ -13,4 +13,4 @@ GPU_NUMBER: "4"
 MODEL_SOURCE_PATH: google/flan-t5-base
 CONVERTED_MODEL_UPLOAD_PATH: gs://intended/path/to/converted/Model
 MODEL_NAME: flan-t5-base
-INFERENCING_IMAGE_TAG: latest
+INFERENCING_IMAGE_TAG: release

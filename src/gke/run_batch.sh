@@ -13,6 +13,80 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 EXIT_CODE=0
+VERIFY_PAYLOAD=0
+echo "Called with options:"
+echo $*
+
+while test $# -gt 0; do
+  case "$1" in
+    -h|--help)
+      echo "Use this script to deploy an LLM to a GKE cluster."
+      echo "Detailed documentation can be found at https://github.com/GoogleCloudPlatform/llm-pipeline-examples/pirillo/gke_samples/examples/running-on-gke.md"
+      echo 
+      echo "Options"
+      echo "-h|--help) Display this menu."
+      echo "-v|--verify) Setting this flag will use the -i and -o flags to validate the expected inferencing behavior of the deployed."
+      echo "-i|--verify-input-payload=) Path to a file containing the inferencing input for verification. This will route to the Flask endpoint on the image."
+      echo "-o|--verify-output-payload=) Path to a file containing the inferencing output for verification."
+      echo "-p|--project=) ID of the project to use. Defaults to environment variable \$PROJECT_ID"
+      echo "--cleanup) Deletes the model and cluster at the end of the run. Used for testing."
+      exit 0
+      ;;
+    -v|--verify)
+      shift
+      VERIFY_PAYLOAD=1
+      ;;
+    -p)
+      shift
+      if test $# -gt 0; then
+        export PROJECT_ID=$1
+        shift
+      else
+        echo "No project id provided."
+        exit 1
+      fi
+      ;;
+    --project*)
+      export PROJECT_ID=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    -i)
+      shift
+      if test $# -gt 0; then
+        export VERIFY_INPUT_PATH=$1
+        shift
+      else
+        echo "No input payload provided."
+        exit 1
+      fi
+      ;;
+    --verify-input-payload*)
+      export VERIFY_INPUT_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    -o)
+      shift
+      if test $# -gt 0; then
+        export VERIFY_OUTPUT_PATH=$1
+        shift
+      else
+        echo "No output payload provided."
+        exit 1
+      fi
+      ;;
+    --verify-output-payload*)
+      export VERIFY_OUTPUT_PATH=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift
+      ;;
+    --cleanup)
+      export CLEANUP=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 _invoke_cluster_tool () {
   echo "Invoking cluster tool"
@@ -44,6 +118,12 @@ _invoke_cluster_tool () {
   /usr/entrypoint.sh
 }
 
+if [[ -z $PROJECT_ID ]]; then
+  echo "PROJECT_ID variable is not set."
+  exit 1
+fi
+gcloud config set project $PROJECT_ID
+
 if [[ -z $REGION ]]; then
   export REGION=${ZONE%-*}
 fi
@@ -66,7 +146,7 @@ if [[ -z $INFERENCING_IMAGE_URI ]]; then
   export INFERENCING_IMAGE_URI=$INFERENCE_IMAGE
 fi
 if [[ -z $GKE_VERSION ]]; then
-  export GKE_VERSION="1.26.3-gke.1000"
+  export GKE_VERSION="1.23"
 fi
 
 if [[ -z $EXISTING_CLUSTER_ID ]]; then
@@ -85,18 +165,37 @@ if [[ -z $EXISTING_CLUSTER_ID ]]; then
 
   echo "Provisioning cluster..."
   export EXISTING_CLUSTER_ID=${NAME_PREFIX}-gke
+  gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+else
+  gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
+  export PROJECT_NUMBER=$(gcloud projects list \
+    --filter="${PROJECT_ID}" \
+    --format="value(PROJECT_NUMBER)")
+  echo "Using existing cluster $EXISTING_CLUSTER_ID"
+  echo "Deploying Nvidia driver daemonset"
+  kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
+  echo "Creating service account binding"
+  envsubst < specs/serviceAccount.yml | kubectl apply -f -
 fi
 
-# Get kubeconfig for cluster
-gcloud container clusters get-credentials $EXISTING_CLUSTER_ID --region $REGION --project $PROJECT_ID
 if [[ $CONVERT_MODEL -eq 1 ]]; then
+  if [[ -z $MODEL_SOURCE_PATH ]]; then
+    echo "MODEL_SOURCE_PATH env var is not set."
+    exit 1
+  fi
+  if [[ -z $CONVERTED_MODEL_UPLOAD_PATH ]]; then
+    echo "CONVERTED_MODEL_UPLOAD_PATH env var is not set."
+    exit 1
+  fi
+  if [[ -z $GPU_NUMBER ]]; then
+    echo "GPU_NUMBER env var is not set."
+    exit 1
+  fi
+
   # Run convert image on cluster
   export CONVERT_JOB_ID=convert-$RANDOM
   envsubst < specs/convert.yml | kubectl apply -f -
   echo "Running 'convert' job on cluster."
-  CONVERT_POD_ID=$(kubectl get pods -l job-name=$CONVERT_JOB_ID -o=json | jq -r '.items[0].metadata.name')
-  kubectl wait --for=condition=Ready --timeout=10m pod/$CONVERT_POD_ID
-  kubectl logs $CONVERT_POD_ID -f
   kubectl wait --for=condition=Complete --timeout=60m job/$CONVERT_JOB_ID
 
   export MODEL_SOURCE_PATH=$CONVERTED_MODEL_UPLOAD_PATH
@@ -104,22 +203,23 @@ fi
 
 # Run predict image on cluster
 echo "Deploying predict image to cluster"
+export DEPLOYMENT_NAME=$MODEL_NAME-deployment
 envsubst < specs/inference.yml | kubectl apply -f -
-kubectl wait --for=condition=Ready --timeout=60m pod -l app=$MODEL_NAME
+kubectl rollout status deployment/$DEPLOYMENT_NAME -n default
 
 # Print urls to access the model
-echo Exposed Node IPs from node 0 on the cluster:
+echo "Exposed Node IPs from node 0 on the cluster:"
 ENDPOINTS=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[]')
 echo $ENDPOINTS | jq -r '.'
 INTERNAL_ENDPOINT=$(kubectl get nodes -o json | jq -r '.items[0].status.addresses[] | select(.type=="InternalIP") | .address | select(startswith("10."))')
 
-echo NodePort for Flask:
+echo "NodePort for Flask:"
 FLASK_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="flask")')
 echo $FLASK_NODEPORT | jq -r '.'
 
 FLASK_PORT=$(echo $FLASK_NODEPORT | jq -r '.nodePort')
 
-echo NodePort for Triton:
+echo "NodePort for Triton:"
 TRITON_NODEPORT=$(kubectl get svc -o json | jq -r --arg NAME "$MODEL_NAME" '.items[].spec | select(.selector.app==$NAME) | .ports[] | select(.name=="triton")')
 echo $TRITON_NODEPORT | jq -r '.'
 TRITON_PORT=$(echo $TRITON_NODEPORT | jq -r '.nodePort')
@@ -140,4 +240,37 @@ printf "triton_node_port = '$TRITON_PORT'\n"
 printf "payload = '<your_payload_goes_here>'\n"
 printf "\n***********\n"
 
+if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
+  PREDICT_ENDPOINT="http://$INTERNAL_ENDPOINT:$FLASK_PORT/infer"
+  echo "Calling predict endpoint: $PREDICT_ENDPOINT"
+
+  PREDICT_OUTPUT=$(curl \
+    -X POST $PREDICT_ENDPOINT \
+    --header 'Content-Type: application/json' \
+    -d @$VERIFY_INPUT_PATH || :)
+
+  echo $PREDICT_OUTPUT
+  echo $PREDICT_OUTPUT | jq -rc > output.json
+
+  diff <(jq -S . $VERIFY_OUTPUT_PATH) <(jq -S . output.json) > diff.txt || :
+  if [[ $(wc -c diff.txt | awk '{print $1}') != 0 ]]; then
+    echo "Predicted output does not match expected output."
+    cat diff.txt
+    EXIT_CODE=1
+  else
+    echo "Predicted output matches expected output."
+    EXIT_CODE=0
+  fi
+fi
+
+if [[ $CLEANUP -eq 1 ]]; then
+  echo "Running clean-up."
+  echo "Deleting uploaded model from path $CONVERTED_MODEL_UPLOAD_PATH"
+  gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH || :
+  echo "Deleting provisioned cluster $EXISTING_CLUSTER_ID"
+  gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION || :
+fi
+
+# Let logs flush before exit
+sleep 5
 exit $EXIT_CODE
