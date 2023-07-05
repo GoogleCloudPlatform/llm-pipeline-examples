@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
+FROM gcr.io/deeplearning-platform-release/pytorch-gpu.2-0.py310:m109
 
 WORKDIR /home/jupyter
 
 COPY scripts/clean_up_torch_xla.sh .
+
+RUN pip3 uninstall -y torch torchvision
+RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 COPY scripts/install.sh .
 RUN ./install.sh
 
