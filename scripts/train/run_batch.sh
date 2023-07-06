@@ -79,20 +79,28 @@ export REGION=${ZONE/%-+([a-z0-9])/}
 
 if [[ ${USE_COS_IMAGE} ]]; then
   echo "Using COS image"
-  export DOCKER_PARAMS="--volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64
-   --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin
-   --device /dev/nvidia-uvm:/dev/nvidia-uvm
-   --device /dev/nvidiactl:/dev/nvidiactl
-   --device /dev/nvidia0:/dev/nvidia0
-   --device /dev/nvidia1:/dev/nvidia1
-   --device /dev/nvidia2:/dev/nvidia2
-   --device /dev/nvidia3:/dev/nvidia3
-   --device /dev/nvidia4:/dev/nvidia4
-   --device /dev/nvidia5:/dev/nvidia5
-   --device /dev/nvidia6:/dev/nvidia6
-   --device /dev/nvidia7:/dev/nvidia7
+  export DOCKER_PARAMS="--volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+   --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+   --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+   --device /dev/nvidiactl:/dev/nvidiactl \
+   --device /dev/nvidia0:/dev/nvidia0 \
+   --device /dev/nvidia1:/dev/nvidia1 \
+   --device /dev/nvidia2:/dev/nvidia2 \
+   --device /dev/nvidia3:/dev/nvidia3 \
+   --device /dev/nvidia4:/dev/nvidia4 \
+   --device /dev/nvidia5:/dev/nvidia5 \
+   --device /dev/nvidia6:/dev/nvidia6 \
+   --device /dev/nvidia7:/dev/nvidia7 \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
-  export PRE_DOCKER_RUN=""
+
+  if [[ ${MACHINE_TYPE} == "a3-highgpu-8g" ]]; then
+    export DOCKER_PARAMS="--env NCCL_TOPO_FILE=${HOME_DIR}/a3_cos.xml \
+    ${DOCKER_PARAMS}"
+  fi
+  export PRE_DOCKER_RUN="if [[ -z \$(sudo ls /var/lib/nvidia) ]]; then sudo /sbin/iptables -I INPUT -p tcp -j ACCEPT -d 192.168.0.0/16 -s 192.168.0.0/16; \
+  sudo cos-extensions install gpu -- -version=525.105.17; \
+  sudo mount --bind /var/lib/nvidia /var/lib/nvidia; \
+  sudo mount -o remount,exec /var/lib/nvidia; fi"
   export VM_IMAGE=cos-105-17412-101-17
 else
   echo "Using DLVM image"
@@ -103,16 +111,16 @@ fi
 
 export VM_IMAGE
 export TRAIN_CMD="./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
-export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm
- --security-opt
- apparmor=unconfined
- --cap-add SYS_ADMIN
- --device /dev/fuse
- --ipc host
- --network host
- --hostname \$(hostname)
- ${DOCKER_PARAMS}
- -v /etc/ssh:/etc/ssh
+export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN}; docker run --name train_llm \
+ --security-opt \
+ apparmor=unconfined \
+ --cap-add SYS_ADMIN \
+ --device /dev/fuse \
+ --ipc host \
+ --network host \
+ --hostname \$(hostname) \
+ ${DOCKER_PARAMS} \
+ -v /etc/ssh:/etc/ssh \
  ${TRAIN_IMAGE} ${TRAIN_CMD}"
 #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
 #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
