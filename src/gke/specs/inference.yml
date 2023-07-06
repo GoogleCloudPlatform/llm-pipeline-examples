@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $MODEL_NAME-deployment
+  name: $DEPLOYMENT_NAME
   labels:
     app: $MODEL_NAME
 spec:
@@ -39,8 +39,15 @@ spec:
             path: /health
             port: 5000
           initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
           periodSeconds: 3
-          failureThreshold: 10
+          failureThreshold: 30
 
 ---
 apiVersion: v1
