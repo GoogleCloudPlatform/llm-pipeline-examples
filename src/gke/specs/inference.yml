@@ -30,7 +30,7 @@ spec:
           limits:
             cpu: 4
             memory: "$POD_MEMORY_LIMIT"
-            nvidia.com/gpu: "$GPU_NUMBER"
+            nvidia.com/gpu: "$GPU_COUNT_PER_MODEL"
           requests:
             cpu: 50m
             memory: 50Mi
