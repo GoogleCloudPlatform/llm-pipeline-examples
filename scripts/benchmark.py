@@ -24,6 +24,11 @@ flags.DEFINE_string(
    "article",
    ("Json key in the dataset for the payload to send.")
 )
+flags.DEFINE_string(
+   "dataset_config_id",
+   "1.0.0"
+   ("Config within list of splits to use.")
+)
 flags.DEFINE_integer(
    "num_rows",
    100,
@@ -50,7 +55,7 @@ flags.DEFINE_string(
 )
 
 def main(argv):
-    rows = get_rows(FLAGS.hf_dataset_id, FLAGS.dataset_split_id, FLAGS.num_rows)
+    rows = get_rows(FLAGS.hf_dataset_id, FLAGS.dataset_split_id, FLAGS.dataset_config_id, FLAGS.num_rows)
     results = benchmark(FLAGS.target_url, rows, FLAGS.total_requests, FLAGS.dataset_row_text_key, FLAGS.batch_size)
     pprint(results)
 
