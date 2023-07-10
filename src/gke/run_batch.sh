@@ -268,7 +268,7 @@ if [[ $CLEANUP -eq 1 ]]; then
   echo "Deleting uploaded model from path $CONVERTED_MODEL_UPLOAD_PATH"
   gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH || :
   echo "Deleting provisioned cluster $EXISTING_CLUSTER_ID"
-  gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION || :
+  gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION --quiet || :
 fi
 
 # Let logs flush before exit
