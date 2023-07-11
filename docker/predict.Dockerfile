@@ -19,7 +19,7 @@ COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN ./install.sh
 
-COPY src/predict.py .
+COPY src/predict_transformers.py .
 
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
@@ -28,4 +28,4 @@ RUN pip install Flask
 
 ADD src/app ./app
 
-ENTRYPOINT [ "deepspeed", "predict.py"]
+ENTRYPOINT [ "python", "predict_transformers.py"]

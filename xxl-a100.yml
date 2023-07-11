@@ -1,0 +1,10 @@
+PROJECT_ID: llm-containers
+EXISTING_CLUSTER_ID: llm-test-a100-gke
+ZONE: us-central1-a
+ACCELERATOR_TYPE: nvidia-tesla-a100
+ORCHESTRATOR_TYPE: gke
+GPU_NUMBER_PER_MODEL: "8"
+MODEL_SOURCE_PATH: google/flan-t5-xxl
+CONVERTED_MODEL_UPLOAD_PATH: gs://intended/path/to/converted/Model
+MODEL_NAME: flan-t5-xxl
+INFERENCING_IMAGE_TAG: release

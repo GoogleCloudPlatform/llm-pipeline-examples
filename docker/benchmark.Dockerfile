@@ -13,6 +13,6 @@
 # limitations under the License.
 
 FROM python:3.11
-RUN pip install numpy absl-py
+RUN pip3 install numpy absl-py requests
 ADD ../scripts/benchmark.py .
-ENTRYPOINT ["/bin/python3", "benchmark.py"]
+ENTRYPOINT ["python3", "benchmark.py"]

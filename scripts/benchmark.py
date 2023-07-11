@@ -26,7 +26,7 @@ flags.DEFINE_string(
 )
 flags.DEFINE_string(
    "dataset_config_id",
-   "1.0.0"
+   "1.0.0",
    ("Config within list of splits to use.")
 )
 flags.DEFINE_integer(
@@ -50,7 +50,7 @@ flags.DEFINE_integer(
 )
 flags.DEFINE_string(
    "target_url",
-   "localhost:5000/infer"
+   "localhost:5000/infer",
    ("Url to infer against.")
 )
 

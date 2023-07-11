@@ -23,7 +23,6 @@ from absl import app as absl_app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
-import deepspeed
 from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
@@ -41,80 +40,25 @@ flags.DEFINE_integer("port", 5000, "server port.")
 
 
 def init_model():
-  """Initializes the model using deep speed."""
-  os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-  # distributed setup
-  local_rank = int(os.getenv("LOCAL_RANK", "0"))
-  world_size = int(os.getenv("WORLD_SIZE", "1"))
-  torch.cuda.set_device(local_rank)
-  app.local_rank = local_rank
-  app.world_size = world_size
-
   model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path)
   logging.info("Model path: %s", model_path)
   if model_path.startswith("gs://"):
     src = model_path.replace("gs://", "")
     dst = src.split("/")[-1] + "/"
-    if local_rank == 0:
-      gcs = gcsfs.GCSFileSystem()
-      logging.info("Downloading model from %s", model_path)
-      for f in gcs.ls(src):
-        if gcs.isfile(f):
-          logging.info("Downloading %s", f)
-          gcs.get(f, dst)
+    gcs = gcsfs.GCSFileSystem()
+    logging.info("Downloading model from %s", model_path)
+    for f in gcs.ls(src):
+      if gcs.isfile(f):
+        logging.info("Downloading %s", f)
+        gcs.get(f, dst)
     model_path = dst
-
-  deepspeed.init_distributed()
-  config = AutoConfig.from_pretrained(model_path)
-  model_hidden_size = config.d_model
-
-  train_batch_size = 1 * world_size
-
-  ds_config = {
-      "fp16": {
-          "enabled": False
-      },
-      "bf16": {
-          "enabled": False
-      },
-      "zero_optimization": {
-          "stage":
-              3,
-          "offload_param": None,
-          "overlap_comm":
-              True,
-          "contiguous_gradients":
-              True,
-          "reduce_bucket_size":
-              model_hidden_size * model_hidden_size,
-          "stage3_prefetch_bucket_size":
-              0.9 * model_hidden_size * model_hidden_size,
-          "stage3_param_persistence_threshold":
-              10 * model_hidden_size
-      },
-      "steps_per_print": 2000,
-      "train_batch_size": train_batch_size,
-      "train_micro_batch_size_per_gpu": 1,
-      "wall_clock_breakdown": False
-  }
-  # fmt: on
-
-  dschf = HfDeepSpeedConfig(ds_config)  # keep this object alive
-
+  
   # now a model can be loaded.
   logging.info("Loading local model from %s", model_path)
-  model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
-
-  # initialise Deepspeed ZeRO and store only the engine object
-  ds_engine = deepspeed.initialize(model=model, config_params=ds_config)[0]
-  ds_engine.module.eval()  # inference
-
+  app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
   tokenizer = AutoTokenizer.from_pretrained(model_path)
   logging.info("Model ready to serve")
-  app.ds_engine = ds_engine
   app.tokenizer = tokenizer
-  app.dschf = dschf
 
 
 @app.route("/health")
@@ -135,12 +79,10 @@ def infer():
       request.json["instances"],
       return_tensors="pt",
       padding=True,
-      truncation=True).to(device=app.local_rank)
+      truncation=True).to(app.model.device)
   logging.info("Encoded")
-  with torch.no_grad():
-    outputs = app.ds_engine.module.generate(
-        inputs["input_ids"], synced_gpus=True)
-    logging.info("Generated.")
+  outputs = app.model.generate(inputs["input_ids"])
+  logging.info("Generated.")
   text_out = map(lambda x: app.tokenizer.decode(x, skip_special_tokens=True),
                  outputs)
   logging.info("Decoded")
