@@ -27,10 +27,9 @@ from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
 import torch
-from transformers import AutoConfig
 from transformers import AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
-from transformers.deepspeed import HfDeepSpeedConfig
+from transformers import GenerationConfig
 
 app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
@@ -56,7 +55,9 @@ def init_model():
   # now a model can be loaded.
   logging.info("Loading local model from %s", model_path)
   app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
-  tokenizer = AutoTokenizer.from_pretrained(model_path)
+  tokenizer = AutoTokenizer.from_pretrained(model_path, min_tokens=128, max_length=128)
+  app.generation_config = GenerationConfig.from_pretrained(model_path)
+  app.generation_config.max_new_tokens = 50
   logging.info("Model ready to serve")
   app.tokenizer = tokenizer
 
@@ -81,7 +82,10 @@ def infer():
       padding=True,
       truncation=True).to(app.model.device)
   logging.info("Encoded")
-  outputs = app.model.generate(inputs["input_ids"])
+  outputs = app.model.generate(
+    inputs["input_ids"],
+    generation_config=app.generation_config
+  )
   logging.info("Generated.")
   text_out = map(lambda x: app.tokenizer.decode(x, skip_special_tokens=True),
                  outputs)
