@@ -17,7 +17,7 @@ WORKDIR /home/jupyter
 
 RUN pip install Flask 'datasets>=2.9.0' evaluate transformers nltk rouge_score ipywidgets accelerate scipy sentencepiece
 
-COPY src/predict_transformers.py .
+COPY src/predict.py .
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
