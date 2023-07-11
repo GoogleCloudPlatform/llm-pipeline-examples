@@ -82,10 +82,14 @@ def infer():
       truncation=True).to(app.model.device)
   logging.info("Encoded")
   config_overrides = request.json["config"]
+  if config_overrides is None:
+    config_overrides = {}
+  logging.debug("Passing inferencing configuration: %s", config_overrides)
   outputs = app.model.generate(
     inputs["input_ids"],
     **config_overrides
   )
+
   logging.info("Generated.")
   text_out = map(lambda x: app.tokenizer.decode(x, skip_special_tokens=True),
                  outputs)
