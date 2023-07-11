@@ -55,9 +55,8 @@ def init_model():
   # now a model can be loaded.
   logging.info("Loading local model from %s", model_path)
   app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
-  tokenizer = AutoTokenizer.from_pretrained(model_path, min_tokens=128, max_length=128)
+  tokenizer = AutoTokenizer.from_pretrained(model_path)
   app.generation_config = GenerationConfig.from_pretrained(model_path)
-  app.generation_config.max_new_tokens = 50
   logging.info("Model ready to serve")
   app.tokenizer = tokenizer
 
@@ -82,9 +81,14 @@ def infer():
       padding=True,
       truncation=True).to(app.model.device)
   logging.info("Encoded")
+  config_overrides = request.json["config"]
+  gen_config = app.generation_config
+  if config_overrides is not None:
+    for k, v in config_overrides.items():
+      gen_config[k] = v
   outputs = app.model.generate(
     inputs["input_ids"],
-    generation_config=app.generation_config
+    generation_config=gen_config
   )
   logging.info("Generated.")
   text_out = map(lambda x: app.tokenizer.decode(x, skip_special_tokens=True),
