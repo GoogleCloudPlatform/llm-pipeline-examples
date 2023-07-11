@@ -117,13 +117,7 @@ def main(argv):
   app.port = int(os.environ.get("AIP_HTTP_PORT", str(FLAGS.port)))
 
   init_model()
-  if app.local_rank == 0:
-    app.run(app.host, app.port, debug=False)
-  else:
-    t = app.tokenizer.encode("", return_tensors="pt").to(device=app.local_rank)
-    while True:
-      with torch.no_grad():
-        app.ds_engine.module.generate(t, synced_gpus=True)
+  app.run(app.host, app.port, debug=False)
 
 
 if __name__ == "__main__":
