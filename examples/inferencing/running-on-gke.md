@@ -17,7 +17,7 @@ These commands can be run from any terminal configured for gcloud, or through [C
 Start by enabling the required APIs within your GCP project.
 
 ```
-gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com
+gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com cloudresourcemanager.googleapis.com
 ```
 
 The default compute service account in your project must also have several permissions set: Editor, Project IAM Admin, and Service Account Admin.
@@ -46,7 +46,7 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 
 Start by ensuring the [Pre-Requisites](#pre-requisites) have been met. Afterwards these commands can be run in your Cloud Shell or gcloud configured terminal to get started.
 
-The result of these commands will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 16 nvidia-tesla-a100 GPUs on each node.
+The result of these commands will create a 2 node GKE cluster with a2-highgpu-1g VMs, and 1 nvidia-tesla-a100 GPU on each node.
 
 The commands will deploy the [google/flan-t5-base](https://huggingface.co/google/flan-t5-base) model onto the cluster, and expose the model on an http endpoint in the specified project's default VPC.
 
@@ -75,7 +75,7 @@ gcloud run jobs create $JOB_NAME --project=$PROJECT_ID --region=$REGION --env-va
 
 An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.yml](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.yml)
 
-Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 16 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a newly created cloud storage bucket named: `aiinfra-terraform-<project_id>`.
+Using the sample configuration will create a 2 node GKE cluster with a2-highgpu-1g VMs, and 1 nvidia-tesla-a100 GPU on each node. The logs from the provisioning of the cluster will be uploaded to a newly created cloud storage bucket named: `aiinfra-terraform-<project_id>`.
 
 There are several variables that need to be set for the Model Deployment.
 
