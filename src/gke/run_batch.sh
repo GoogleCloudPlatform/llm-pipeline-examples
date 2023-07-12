@@ -12,6 +12,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+function cleanup {
+  if [[ $CLEANUP -eq 1 ]]; then
+    echo "Running clean-up."
+    if [[ -n $CONVERTED_MODEL_UPLOAD_PATH ]]; then
+      echo "Deleting uploaded model from path $CONVERTED_MODEL_UPLOAD_PATH"
+      gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH || :
+    fi
+    if [[ -n $EXISTING_CLUSTER_ID ]]; then
+      echo "Deleting provisioned cluster $EXISTING_CLUSTER_ID"
+      gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION --quiet || :
+    fi
+  fi
+}
+
+trap cleanup EXIT
+
 EXIT_CODE=0
 VERIFY_PAYLOAD=0
 echo "Called with options:"
@@ -261,14 +277,6 @@ if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
     echo "Predicted output matches expected output."
     EXIT_CODE=0
   fi
-fi
-
-if [[ $CLEANUP -eq 1 ]]; then
-  echo "Running clean-up."
-  echo "Deleting uploaded model from path $CONVERTED_MODEL_UPLOAD_PATH"
-  gsutil -m rm -r $CONVERTED_MODEL_UPLOAD_PATH || :
-  echo "Deleting provisioned cluster $EXISTING_CLUSTER_ID"
-  gcloud container clusters delete $EXISTING_CLUSTER_ID --region $REGION --quiet || :
 fi
 
 # Let logs flush before exit
