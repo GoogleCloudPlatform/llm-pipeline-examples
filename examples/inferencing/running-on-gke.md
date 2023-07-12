@@ -242,22 +242,10 @@ After the image finishes provisioning the cluster, the model will be converted (
 
 A NodePort service on the cluster is automatically created during deployment. This nodeport allows a user to consume the model on a network that has access to the GKE node.
 
-The IP address of the nodes can be found using the GKE dashboard on Pantheon or using gcloud -> kubectl.
-
-For gcloud, retrieve the kubeconfig file and use kubectl commands to communicate with the cluster.
-
-    $ CLUSTER_NAME=$NAME_PREFIX-gke
-    $ gcloud containers clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT
-    $ kubectl get nodes –output=wide	# Retrieve the Internal or External IP
-    $ kubectl get svc # Retrieve the Port mapped to 5000 for basic consumption, 8000 for raw consumption
-    $ curl 'http://$IP:$PORT/health'
-    200 { "health": "ok" }
-
-The image will also log these values at the end of a run. If the image was run through `gcloud run` then you will need to retrieve the logs from the job execution to see this output. You can retrieve the log uri using these commands.
+The image will log these values at the end of a run. If the image was run through `gcloud run` then you will need to retrieve the logs from the job execution to see this output. You can retrieve the logs using these commands.
 
 ```
-gcloud run jobs executions list $JOB_NAME
-gcloud run jobs executions describe <execution_id>
+    gcloud logging read "resource.type=\"cloud_run_job\" resource.labels.job_name=\"${JOB_NAME}\" resource.labels.location=\"${REGION}\" severity>=DEFAULT" --project=${PROJECT_ID} --format=json | jq -r '.[].textPayload' | tac | tail -n 20
 ```
 
 Sample output:
