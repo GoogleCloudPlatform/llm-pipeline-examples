@@ -46,10 +46,20 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
 
 Start by ensuring the [Pre-Requisites](#pre-requisites) have been met. Afterwards these commands can be run in your Cloud Shell or gcloud configured terminal to get started.
 
-The result of these commands will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node.
+The result of these commands will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 16 nvidia-tesla-a100 GPUs on each node.
 
 The commands will deploy the [google/flan-t5-base](https://huggingface.co/google/flan-t5-base) model onto the cluster, and expose the model on an http endpoint in the specified project's default VPC.
 
+1. Follow the pre-requisites section to enable the necessary services and IAM policies
+
+1. Clone this repository
+
+```   
+git clone https://github.com/gcp-llm-platform/llm-pipeline.git
+cd llm-pipeline
+```
+
+2. Run these commands:
 ```
 PROJECT_ID=$(gcloud config get-value project)
 NAME_PREFIX=my-test-cluster
@@ -59,13 +69,13 @@ REGION=us-central1
 gcloud run jobs create $JOB_NAME --project=$PROJECT_ID --region=$REGION --env-vars-file src/gke/cluster_config.yml --image=gcr.io/llm-containers/gke-provision-deploy:release --args=--project=$PROJECT_ID,--name-prefix=$NAME_PREFIX --execute-now --wait
 ```
 
-Follow the instructions in [Consuming the deployed model](#consuming-the-deployed-model).
+4. Follow the instructions in [Consuming the deployed model](#consuming-the-deployed-model).
 
 ### Create an Environment file
 
 An environment variable file containing the configuration for the GKE cluster and the model needs to be created. The full specification for the cluster configuration can be found [here](https://github.com/GoogleCloudPlatform/ai-infra-cluster-provisioning#configuration-for-users). A sample configuration is available in the repository at [llm-pipeline-examples/src/gke/sample_environment_config.yml](https://github.com/GoogleCloudPlatform/llm-pipeline-examples/blob/main/src/gke/cluster_config.yml)
 
-Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 4 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a newly created cloud storage bucket named: `aiinfra-terraform-<project_id>`.
+Using the sample configuration will create a 2 node GKE cluster with a2-megagpu-16g VMs, and 16 nvidia-tesla-a100 GPUs on each node. The logs from the provisioning of the cluster will be uploaded to a newly created cloud storage bucket named: `aiinfra-terraform-<project_id>`.
 
 There are several variables that need to be set for the Model Deployment.
 
@@ -236,8 +246,7 @@ The IP address of the nodes can be found using the GKE dashboard on Pantheon or 
 
 For gcloud, retrieve the kubeconfig file and use kubectl commands to communicate with the cluster.
 
-The cluster name will be `$NAME_PREFIX-gke`.
-
+    $ CLUSTER_NAME=$NAME_PREFIX-gke
     $ gcloud containers clusters get-credentials $CLUSTER_NAME --region $REGION --project $PROJECT
     $ kubectl get nodes –output=wide	# Retrieve the Internal or External IP
     $ kubectl get svc # Retrieve the Port mapped to 5000 for basic consumption, 8000 for raw consumption
