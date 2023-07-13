@@ -26,7 +26,6 @@ from absl.flags import argparse_flags
 from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
-import torch
 from transformers import AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
 from transformers import GenerationConfig
