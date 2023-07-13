@@ -4,12 +4,12 @@ ZONE: us-central1-a
 ACCELERATOR_TYPE: nvidia-tesla-a100
 ORCHESTRATOR_TYPE: gke
 NETWORK_CONFIG: default_network
-VM_TYPE: a2-megagpu-16g
+VM_TYPE: a2-highgpu-1g
 GKE_ENABLE_COMPACT_PLACEMENT: "true"
-GPU_COUNT: "4"
+GPU_COUNT: "1"
 GKE_NODE_POOL_COUNT: "1"
-GKE_NODE_COUNT_PER_NODE_POOL: "2"
-GPU_NUMBER: "4"
+GKE_NODE_COUNT_PER_NODE_POOL: "1"
+GPU_COUNT_PER_MODEL: "1"
 MODEL_SOURCE_PATH: google/flan-t5-base
 CONVERTED_MODEL_UPLOAD_PATH: gs://intended/path/to/converted/Model
 MODEL_NAME: flan-t5-base
