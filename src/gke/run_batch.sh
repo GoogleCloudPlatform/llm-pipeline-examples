@@ -26,7 +26,7 @@ function cleanup {
   fi
 }
 
-trap cleanup EXIT
+trap cleanup 0
 
 EXIT_CODE=0
 VERIFY_PAYLOAD=0
