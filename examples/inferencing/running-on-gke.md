@@ -17,7 +17,7 @@ These commands can be run from any terminal configured for gcloud, or through [C
 Start by enabling the required APIs within your GCP project.
 
 ```
-gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com cloudresourcemanager.googleapis.com
+gcloud services enable container.googleapis.com storage.googleapis.com run.googleapis.com cloudresourcemanager.googleapis.com notebooks.googleapis.com
 ```
 
 The default compute service account in your project must also have several permissions set: Editor, Project IAM Admin, and Service Account Admin.
@@ -253,12 +253,12 @@ Sample output:
 From a machine on the same VPC as this cluster you can call http://10.128.0.29:32754/infer
 ***********
 To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:
-https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=https%3A%2F%2Fraw.githubusercontent.com%2FGoogleCloudPlatform%2Fllm-pipeline-examples%main%2Fexamples%2Ft5-gke-sample-notebook.ipynb&project=<project_id>
+https://console.cloud.google.com/vertex-ai/workbench/user-managed/deploy?download_url=https%3A%2F%2Fraw.githubusercontent.com%2FGoogleCloudPlatform%2Fllm-pipeline-examples%main%2Fexamples%2Ft5-gke-sample-notebook.ipynb&project=$PROJECT_ID
 Set the following parameters in the variables cell of the notebook:
 host             = '10.128.0.29'
 flask_node_port  = '32754'
 triton_node_port = '31246'
-payload = '<your_payload_goes_here>'
+payload = """{"instances":["Sandwiched between a second-hand bookstore..."]}"""
 
 ***********
 ```

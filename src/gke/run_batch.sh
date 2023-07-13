@@ -238,7 +238,8 @@ printf "From a machine on the same VPC as this cluster you can call http://${INT
 
 NOTEBOOK_URL=https://raw.githubusercontent.com/GoogleCloudPlatform/llm-pipeline-examples/main/examples/t5-gke-sample-notebook.ipynb
 ENCODED_NOTEBOOK_URL=$(jq -rn --arg x $NOTEBOOK_URL  '$x|@uri')
-DEPLOY_URL="https://pantheon.corp.google.com/vertex-ai/workbench/user-managed/deploy?download_url=${ENCODED_NOTEBOOK_URL}&project=${PROJECT_ID}"
+DEPLOY_URL="https://console.cloud.google.com/vertex-ai/workbench/user-managed/deploy?download_url=${ENCODED_NOTEBOOK_URL}&project=${PROJECT_ID}"
+SAMPLE_PAYLOAD=$(cat predict_payload.json | jq -c .)
 
 printf "\n***********\n"
 printf "To deploy a sample notebook for experimenting with this deployed model, paste the following link into your browser:\n"
@@ -247,7 +248,7 @@ printf "Set the following parameters in the variables cell of the notebook:\n"
 printf "host             = '$INTERNAL_ENDPOINT'\n"
 printf "flask_node_port  = '$FLASK_PORT'\n"
 printf "triton_node_port = '$TRITON_PORT'\n"
-printf "payload = '<your_payload_goes_here>'\n"
+printf 'payload = """%s"""\n' "${SAMPLE_PAYLOAD}"
 printf "\n***********\n"
 
 if [[ $VERIFY_PAYLOAD -eq 1 ]]; then
