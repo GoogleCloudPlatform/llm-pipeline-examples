@@ -38,7 +38,7 @@ steps:
     args:
       - run
       - jobs
-      - create
+      - deploy
       - gke-test-${SHORT_SHA}
       - "--memory=4Gi"
       - "--task-timeout=60m"
@@ -61,7 +61,7 @@ steps:
       - "--set-env-vars=GKE_NODE_COUNT_PER_NODE_POOL=2"
       - "--set-env-vars=REGION=us-central1"
       - "--set-env-vars=ZONE=us-central1-a"
-      - "--set-env-vars=GPU_NUMBER=4"
+      - "--set-env-vars=GPU_COUNT_PER_MODEL=4"
       - "--args=--verify,--verify-input-payload=predict_payload.json,--verify-output-payload=predict_result_flan.json,--project=llm-containers,--cleanup"
       - "--execute-now"
       - "--wait"
