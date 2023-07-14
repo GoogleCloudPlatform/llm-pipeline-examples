@@ -80,9 +80,11 @@ def infer():
       padding=True,
       truncation=True).to(app.model.device)
   logging.info("Encoded")
-  config_overrides = request.json["config"]
-  if config_overrides is None:
-    config_overrides = {}
+  config_overrides = {}
+  try:
+    config_overrides = request.json["config"]
+  except KeyError:
+    pass
   logging.debug("Passing inferencing configuration: %s", config_overrides)
   outputs = app.model.generate(
     inputs["input_ids"],
