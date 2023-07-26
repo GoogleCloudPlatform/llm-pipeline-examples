@@ -80,7 +80,7 @@ project. Here is a summary of task and tooling we are going to use:
 1.  Install kfp and abseil packages
 
     ```bash
-    pip install kfp absl-py google-cloud-aiplatform
+    pip install "kfp>=2.0" absl-py google-cloud-aiplatform
     ```
 
 ### Instructions
