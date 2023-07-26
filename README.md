@@ -108,7 +108,7 @@ Follow these instructions To run T5 training on a GPU cluster:
 1.  Clone this repo from the repository
 
     ```bash
-    git clone https://github.com/gcp-llm-platform/llm-pipeline.git
+    git clone https://github.com/GoogleCloudPlatform/llm-pipeline-examples.git 
     cd llm-pipeline
     ```
 
