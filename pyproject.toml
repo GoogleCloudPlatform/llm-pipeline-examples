@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "llm-pipeline-examples"
+version = "0.1.0"
+description = ""
+authors = []
+license = "Apache 2.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+absl-py = "^1.4.0"
+google = "^3.0.0"
+kfp = "^1.8.19"
+google-cloud-aiplatform = "^1.23.0"
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1.301"
+pylint = "^2.17.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
