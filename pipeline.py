@@ -368,10 +368,9 @@ def _get_endpoint_id(pipeline_job):
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
 
-def _get_endpoint(pipeline_job, zone):
+def _get_endpoint(pipeline_job, region):
   """Returns the Endpoint object from a successful pipeline job."""
   endpoint_name=_get_endpoint_id(pipeline_job)
-  region = zone[:zone.rfind("-")]
   logging.info("Region is %s", region)
   return Endpoint(endpoint_name, project=FLAGS.project, location=region)
 
@@ -395,7 +394,7 @@ def main(argv: Sequence[str]) -> None:
   config["deploy_gpu_count"] = config["deploy_config"]["gpu_count"]
   config["deploy_region"] = config["deploy_config"]["region"]
 
-  zone = config["deploy_region"]
+  region = config["deploy_region"]
 
   del config["deploy_config"]
   config.update({"train_config": json.dumps(config["train_config"]),
@@ -435,7 +434,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.verify:
     job.wait()
 
-    endpoint = _get_endpoint(job, zone)
+    endpoint = _get_endpoint(job, region)
 
     with open(FLAGS.verify_payload, "r") as f:
       payload = json.load(f)
@@ -459,7 +458,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.cleanup_endpoint:
     job.wait()
     
-    endpoint = _get_endpoint(job, zone)
+    endpoint = _get_endpoint(job, region)
 
     logging.info(f"Deleting endpoint {endpoint.name}...")
     endpoint.delete(force=True)
