@@ -395,7 +395,7 @@ def main(argv: Sequence[str]) -> None:
   config["deploy_gpu_count"] = config["deploy_config"]["gpu_count"]
   config["deploy_region"] = config["deploy_config"]["region"]
 
-  zone = config["cluster_config"]["zone"]
+  zone = config["deploy_region"]
 
   del config["deploy_config"]
   config.update({"train_config": json.dumps(config["train_config"]),
