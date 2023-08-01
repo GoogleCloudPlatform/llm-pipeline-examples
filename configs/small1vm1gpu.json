@@ -5,7 +5,7 @@
   "summary_column": "highlights",
   "cluster_config": {
     "name_prefix" : "t5node",
-    "zone" : "us-central1-a",
+    "zone" : "asia-northeast3-a",
     "node_count" : 1,
     "machine_type" : "a2-highgpu-1g",
     "gpu_type" : "nvidia-tesla-a100",
@@ -17,7 +17,10 @@
     "epochs" : 1
   },
   "model_display_name" : "t5",
-  "deploy_machine_type" : "n1-standard-32",
-  "deploy_gpu_type" : "NVIDIA_TESLA_V100",
-  "deploy_gpu_count" : 4
+  "deploy_config": {
+    "region": "us-central1",
+    "machine_type" : "n1-standard-32",
+    "gpu_type" : "NVIDIA_TESLA_V100",
+    "gpu_count" : 4
+  }
 }

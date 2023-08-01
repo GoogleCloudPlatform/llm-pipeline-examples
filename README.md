@@ -77,10 +77,10 @@ project. Here is a summary of task and tooling we are going to use:
     gcloud auth application-default login
     ```
 
-1.  Install kfp and abseil packages
+1.  Install kfp and abseil packages 
 
     ```bash
-    pip install kfp absl-py google-cloud-aiplatform
+    pip install "kfp>=2.0" absl-py google-cloud-aiplatform
     ```
 
 ### Instructions
@@ -108,7 +108,7 @@ Follow these instructions To run T5 training on a GPU cluster:
 1.  Clone this repo from the repository
 
     ```bash
-    git clone https://github.com/gcp-llm-platform/llm-pipeline.git
+    git clone https://github.com/GoogleCloudPlatform/llm-pipeline-examples.git 
     cd llm-pipeline
     ```
 
@@ -208,23 +208,30 @@ configurations. Here is the details of preparing a configuration JSON:
 
 ```json
 {
- "dataset": "cnn_dailymail",
- "dataset_subset": "3.0.0",
- "document_column": "article",
- "summary_column": "highlights",
- "cluster_prefix" : "t5node",
- "zone" : "us-central1-c",
- "node_count" : 13,
- "model_checkpoint" : "google/t5-v1_1-xxl",
- "machine_type" : "a2-ultragpu-8g",
- "gpu_type" : "nvidia-a100-80gb",
- "gpu_count" : 8,
- "batch_size" : 19,
- "epochs" : 7,
- "model_display_name" : "t5",
- "deploy_machine_type" : "a2-highgpu-2g",
- "deploy_gpu_type" : "NVIDIA_TESLA_A100",
- "deploy_gpu_count" : 2
+  "dataset": "cnn_dailymail",
+  "dataset_subset": "3.0.0",
+  "document_column": "article",
+  "summary_column": "highlights",
+  "cluster_config": {
+    "name_prefix" : "t5node",
+    "zone" : "asia-northeast3-a",
+    "node_count" : 1,
+    "machine_type" : "a2-highgpu-1g",
+    "gpu_type" : "nvidia-tesla-a100",
+    "gpu_count" : 1
+  },
+  "train_config": {
+    "model_checkpoint" : "t5-small",
+    "batch_size" : 128,
+    "epochs" : 1
+  },
+  "model_display_name" : "t5",
+  "deploy_config": {
+    "region": "us-central1",
+    "machine_type" : "n1-standard-32",
+    "gpu_type" : "NVIDIA_TESLA_V100",
+    "gpu_count" : 4
+  }
 }
 ```
 
@@ -237,22 +244,26 @@ Here is a description of what each configuration parameter does:
     "default".
 *   **document_column**: The name of the document column from the dataset.
 *   **summary_column**: The name of the summary column from the dataset.
-*   **cluster_prefix**: A prefix to name VMs and Instance groups created by the
-    pipeline.
-*   **zone**: GCP zone to run the pipeline.
-*   **node_count**: Number of VM nodes to run finetuning
-*   **model_checkpoint**: Name of model checkpoint to start finetuning from.
-*   **machine_type**: GCE machine type for fine tuning VMs.
-*   **gpu_type**: GPU type to be attached to each finetuning VM.
-*   **gpu_count**: Number of GPUs per VM.
-*   **batch_size**: Fine tuning batch size.
-*   **epochs**: Fine tuning epochs.
+* **cluster_config**: Properties related to the cluster that training will be run on.
+    *   **name_prefix**: A prefix to name VMs and Instance groups created by the
+        pipeline.
+    *   **zone**: GCP zone to run the pipeline.
+    *   **node_count**: Number of VM nodes to run finetuning
+    *   **machine_type**: GCE machine type for fine tuning VMs.
+    *   **gpu_type**: GPU type to be attached to each finetuning VM.
+    *   **gpu_count**: Number of GPUs per VM.
+* **train_config**: Properties related to the training job.
+    *   **model_checkpoint**: Name of model checkpoint to start finetuning from.
+    *   **batch_size**: Fine tuning batch size.
+    *   **epochs**: Fine tuning epochs.
 *   **model_display_name**: Name of Vertex AI uploaded model and endpoint
-*   **deploy_machine_type**: Type of VM used for serving the model after
+*   **deploy_config**: Properties related to the deployment of the fine-tuned model.
+    *   **region**: Type of GPU attached to serving VM.
+    *  **machine_type**: Type of VM used for serving the model after
     deployment. It can be any machine supported by Vertex AI Prediction as
     listed here.
-*   **deploy_gpu_type**: Type of GPU attached to serving VM.
-*   **deploy_gpu_count**: Number of GPUs attached to serving VM.
+    *  **gpu_type**: Type of GPU attached to serving VM.
+    *  **gpu_count**: Number of GPUs attached to serving VM.
 
 ## How it works
 
