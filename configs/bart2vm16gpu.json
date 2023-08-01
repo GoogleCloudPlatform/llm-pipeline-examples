@@ -17,7 +17,10 @@
     "epochs" : 6
   },
   "model_display_name" : "bart",
-  "deploy_machine_type" : "n1-standard-32",
-  "deploy_gpu_type" : "NVIDIA_TESLA_V100",
-  "deploy_gpu_count" : 2
+  "deploy_config": {
+    "region": "us-central1",
+    "machine_type" : "n1-standard-32",
+    "gpu_type" : "NVIDIA_TESLA_V100",
+    "gpu_count" : 2
+  }
 }

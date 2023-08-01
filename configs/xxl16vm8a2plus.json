@@ -17,7 +17,10 @@
     "epochs" : 7
   },
   "model_display_name" : "t5",
-  "deploy_machine_type" : "a2-highgpu-2g",
-  "deploy_gpu_type" : "NVIDIA_TESLA_A100",
-  "deploy_gpu_count" : 2
+  "deploy_config": {
+    "region": "us-central1",
+    "machine_type" : "a2-highgpu-2g",
+    "gpu_type" : "NVIDIA_TESLA_A100",
+    "gpu_count" : 2
+  }
 }
