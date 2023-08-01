@@ -146,6 +146,7 @@ def deploy(
     gpu_type: str,
     gpu_count: int,
     endpoint_name: str,
+    zone: str,
 ) -> NamedTuple(
     "Outputs",
     [
@@ -175,6 +176,7 @@ def deploy(
     endpoint = aip.Endpoint.create(
         project=project,
         display_name=endpoint_name,
+        location=zone[:zone.rfind("-")]
     )
 
   existing_models = aip.Model.list(
@@ -239,7 +241,8 @@ def hf_pipeline(
     override_deploy: bool,
     train_image: str,
     predict_image: str,
-    endpoint_name: str
+    endpoint_name: str,
+    zone: str,
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -280,7 +283,8 @@ def hf_pipeline(
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
       gpu_count=deploy_gpu_count,
-      endpoint_name=endpoint_name)
+      endpoint_name=endpoint_name,
+      zone=zone)
       
 @kfp.dsl.pipeline(name="llm-pipeline")
 def triton_pipeline(
@@ -299,7 +303,8 @@ def triton_pipeline(
     override_deploy: bool,
     train_image: str,
     predict_image: str,
-    endpoint_name: str
+    endpoint_name: str,
+    zone: str
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -345,7 +350,8 @@ def triton_pipeline(
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
       gpu_count=deploy_gpu_count,
-      endpoint_name=endpoint_name)
+      endpoint_name=endpoint_name,
+      zone=zone)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
@@ -382,7 +388,8 @@ def main(argv: Sequence[str]) -> None:
   config["endpoint_name"] = FLAGS.endpoint_name
   config["train_image"] = f"gcr.io/llm-containers/train:{FLAGS.image_tag}"
   
-  zone = config["cluster_config"]["zone"]
+  config["zone"] = config["cluster_config"]["zone"]
+  zone = config["zone"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
   
