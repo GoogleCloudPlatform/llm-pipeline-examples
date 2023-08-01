@@ -164,6 +164,8 @@ def deploy(
   if not endpoint_name:
     endpoint_name = model_display_name
 
+  location = zone[:zone.rfind("-")]
+
   existing_endpoints = aip.Endpoint.list(
       project=project,
       order_by="create_time",
@@ -176,7 +178,7 @@ def deploy(
     endpoint = aip.Endpoint.create(
         project=project,
         display_name=endpoint_name,
-        location=zone[:zone.rfind("-")]
+        location=location
     )
 
   existing_models = aip.Model.list(
@@ -211,7 +213,8 @@ def deploy(
           k.lower(): str(v).replace(".", "_") for k, v in new_metrics.items()
       },
       serving_container_predict_route="/infer",
-      serving_container_health_route="/health"
+      serving_container_health_route="/health",
+      location=location
   )
 
   endpoint.deploy(
@@ -219,7 +222,8 @@ def deploy(
       deployed_model_display_name=model_display_name,
       machine_type=machine_type,
       accelerator_type=gpu_type,
-      accelerator_count=gpu_count)
+      accelerator_count=gpu_count,
+      location=location)
 
   return (deployable_model.name, endpoint.name)
 
