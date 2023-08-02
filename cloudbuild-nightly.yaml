@@ -275,7 +275,7 @@ steps:
       - 'gcr.io/llm-containers/predict:latest'
   - name: gcr.io/cloud-builders/docker
     id: push-convert-latest
-    waitFor: ['tag-triton']
+    waitFor: ['tag-convert']
     args:
       - push
       - 'gcr.io/llm-containers/convert:latest'
