@@ -15,17 +15,12 @@ FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m99
 
 WORKDIR /home/jupyter
 
-COPY scripts/clean_up_torch_xla.sh .
-COPY scripts/install.sh .
-RUN ./install.sh
+RUN pip install Flask 'datasets>=2.9.0' evaluate transformers nltk rouge_score ipywidgets accelerate scipy sentencepiece
 
 COPY src/predict.py .
-
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
-RUN pip install Flask
-
 ADD src/app ./app
 
-ENTRYPOINT [ "deepspeed", "predict.py"]
+ENTRYPOINT [ "python", "predict.py"]

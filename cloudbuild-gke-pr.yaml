@@ -13,6 +13,30 @@
 # limitations under the License.
 steps:
   - name: gcr.io/cloud-builders/docker
+    id: pull-predict
+    waitFor: ['-']
+    args:
+      - pull
+      - 'gcr.io/llm-containers/predict:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: build-predict
+    waitFor: ['pull-predict']
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+      - '--cache-from'
+      - 'gcr.io/llm-containers/predict:latest'
+      - '-f'
+      - docker/predict.Dockerfile
+      - .
+  - name: gcr.io/cloud-builders/docker
+    id: push-predict
+    waitFor: ['build-predict']
+    args:
+      - push
+      - 'gcr.io/llm-containers/predict:githubpr${_PR_NUMBER}'
+  - name: gcr.io/cloud-builders/docker
     id: build-gke
     waitFor: ['-']
     args:
@@ -50,7 +74,7 @@ steps:
       - "--set-env-vars=CONVERTED_MODEL_UPLOAD_PATH=gs://converted_models/flan-t5-base/${SHORT_SHA}"
       - "--set-env-vars=MODEL_SOURCE_PATH=google/flan-t5-base"
       - "--set-env-vars=MODEL_NAME=flan-t5-base"
-      - "--set-env-vars=INFERENCING_IMAGE_TAG=release"
+      - "--set-env-vars=INFERENCING_IMAGE_TAG=githubpr${_PR_NUMBER}"
       #- "--set-env-vars=USE_FASTER_TRANSFORMER=1"
       - "--set-env-vars=ACCELERATOR_TYPE=nvidia-tesla-v100"
       - "--set-env-vars=ORCHESTRATOR_TYPE=gke"
