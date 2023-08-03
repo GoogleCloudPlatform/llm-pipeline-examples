@@ -207,6 +207,84 @@ steps:
       - '--endpoint_name=t5-nightly-ft'
       - '--use_faster_transformer'
       - '--cleanup_endpoint'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-deploy
+    waitFor: ['run-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/deploy:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/deploy:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-batch
+    waitFor: ['run-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/batch:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/batch:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-train
+    waitFor: ['run-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/train:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/train:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-predict
+    waitFor: ['run-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/predict:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/predict:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-convert
+    waitFor: ['run-triton-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/convert:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/convert:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: tag-predict-triton
+    waitFor: ['run-triton-test']
+    args:
+      - tag
+      - 'gcr.io/llm-containers/predict-triton:github${SHORT_SHA}'
+      - 'gcr.io/llm-containers/predict-triton:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-deploy-latest
+    waitFor: ['tag-deploy']
+    args:
+      - push
+      - 'gcr.io/llm-containers/deploy:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-batch-latest
+    waitFor: ['tag-batch']
+    args:
+      - push
+      - 'gcr.io/llm-containers/batch:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-train-latest
+    waitFor: ['tag-train']
+    args:
+      - push
+      - 'gcr.io/llm-containers/train:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-predict-latest
+    waitFor: ['tag-predict']
+    args:
+      - push
+      - 'gcr.io/llm-containers/predict:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-convert-latest
+    waitFor: ['tag-convert']
+    args:
+      - push
+      - 'gcr.io/llm-containers/convert:latest'
+  - name: gcr.io/cloud-builders/docker
+    id: push-predict-triton-latest
+    waitFor: ['tag-predict-triton']
+    args:
+      - push
+      - 'gcr.io/llm-containers/predict-triton:latest'
 timeout: 86400s
 options:
   pool:
