@@ -220,3 +220,87 @@ class T5TritonProcessor(TritonProcessorBase):
         skip_special_tokens=True,
     )
     return tokens
+
+
+class GPTJTritonProcessor(TritonProcessorBase):
+  """Processor for the GPT-J model."""
+
+  def __init__(self, hf_model_path="EleutherAI/gpt-j-6B", host="localhost", port=8000):
+    super().__init__(hf_model_path, host, port)
+
+  def infer(self, task=None, text=None):
+    """Run inferencing on a series of inputs.
+
+       Returns tuple of <inferencing_result:str, metrics:Dictionary<str>>
+    """
+    if task is not None:
+      text = f"{task}: {text}"
+    start_time = time.perf_counter()
+    inputs = self._preprocess(text)
+    preprocess_end_time = time.perf_counter()
+    result = self.client.infer("fastertransformer", inputs)
+    infer_end_time = time.perf_counter()
+    processed_result = self._postprocess(result)
+    end_time = time.perf_counter()
+
+    metrics = {"preprocess": f"{(1000 * (preprocess_end_time - start_time)):0.5f}",
+               "prediction": f"{(1000 * (infer_end_time - preprocess_end_time)):0.5f}",
+               "postprocess": f"{(1000 * (end_time - infer_end_time)):0.5f}",
+               "unit": "ms"}
+    return processed_result, metrics
+
+  def _preprocess(self, string_input, beam_width=4):
+    """Implement the function that takes text, converts it into the tokens using HFtokenizer and prepares tensorts for sending to Triton."""
+    input_token = self.tokenizer(
+        string_input, return_tensors="pt", padding=True, truncation=True
+    )
+    input_ids = input_token.input_ids.numpy().astype(np.uint32)
+    # "early_stopping": True,
+    # "max_new_tokens": 128,
+    # "min_new_tokens": 30,
+
+    mem_seq_len = (
+        torch.sum(input_token.attention_mask, dim=1).numpy().astype(np.uint32)
+    )
+    mem_seq_len = mem_seq_len.reshape([mem_seq_len.shape[0], 1])
+    max_output_len = np.array([[128]], dtype=np.uint32)
+    runtime_top_k = (1.0 * np.ones([input_ids.shape[0], 1])).astype(np.uint32)
+    beam_width = np.array([[beam_width]], dtype=np.uint32)
+
+    inputs = [
+        httpclient.InferInput(
+            "input_ids", input_ids.shape, np_to_triton_dtype(input_ids.dtype)
+        ),
+        httpclient.InferInput(
+            "input_lengths",
+            mem_seq_len.shape,
+            np_to_triton_dtype(mem_seq_len.dtype),
+        ),
+        httpclient.InferInput(
+            "request_output_len",
+            max_output_len.shape,
+            np_to_triton_dtype(max_output_len.dtype),
+        ),
+        httpclient.InferInput(
+            "beam_width",
+            beam_width.shape,
+            np_to_triton_dtype(beam_width.dtype),
+        ),
+    ]
+    inputs[0].set_data_from_numpy(input_ids, False)
+    inputs[1].set_data_from_numpy(mem_seq_len, False)
+    inputs[2].set_data_from_numpy(max_output_len, False)
+    inputs[3].set_data_from_numpy(beam_width, False)
+
+    return inputs
+
+  # Implement function that takes tokens from Triton's response and converts
+  # them into text
+  def _postprocess(self, result):
+    ft_decoding_outputs = result.as_numpy("output_ids")
+    ft_decoding_seq_lens = result.as_numpy("sequence_length")
+    tokens = self.tokenizer.decode(
+        ft_decoding_outputs[0][0][: ft_decoding_seq_lens[0][0]],
+        skip_special_tokens=True,
+    )
+    return tokens

@@ -27,6 +27,7 @@ git clone --depth 1 --branch release/v5.3_tag https://github.com/NVIDIA/FasterTr
 # A100	80
 # A30	80
 # A10	86
+# H100  90
 
 # pytorch
 mkdir -p FasterTransformer/build
