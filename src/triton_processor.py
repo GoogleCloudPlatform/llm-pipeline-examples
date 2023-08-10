@@ -255,16 +255,12 @@ class GPTJTritonProcessor(TritonProcessorBase):
         string_input, return_tensors="pt", padding=True, truncation=True
     )
     input_ids = input_token.input_ids.numpy().astype(np.uint32)
-    # "early_stopping": True,
-    # "max_new_tokens": 128,
-    # "min_new_tokens": 30,
 
     mem_seq_len = (
         torch.sum(input_token.attention_mask, dim=1).numpy().astype(np.uint32)
     )
     mem_seq_len = mem_seq_len.reshape([mem_seq_len.shape[0], 1])
     max_output_len = np.array([[128]], dtype=np.uint32)
-    runtime_top_k = (1.0 * np.ones([input_ids.shape[0], 1])).astype(np.uint32)
     beam_width = np.array([[beam_width]], dtype=np.uint32)
 
     inputs = [
