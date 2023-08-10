@@ -17,6 +17,7 @@ Simple Flask prediction for a model.
 """
 import argparse
 import os
+import importlib
 from typing import List, Tuple
 
 from absl import app as absl_app
@@ -26,7 +27,7 @@ from absl.flags import argparse_flags
 from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
-from transformers import AutoModelForSeq2SeqLM
+from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
 from transformers import GenerationConfig
 
@@ -34,6 +35,7 @@ app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("model_path", None, "Path of HF model to load.")
+flags.DEFINE_string("hf_autoclass", None, "Name of the Transformers autoclass to instantiate the model with. Default is 'AutoModelForSeq2SeqLM'")
 flags.DEFINE_integer("port", 5000, "server port.")
 
 
@@ -53,12 +55,27 @@ def init_model():
   
   # now a model can be loaded.
   logging.info("Loading local model from %s", model_path)
-  app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
+  load_model(model_path, FLAGS.hf_autoclass)
   tokenizer = AutoTokenizer.from_pretrained(model_path)
   app.generation_config = GenerationConfig.from_pretrained(model_path)
   logging.info("Model ready to serve")
   app.tokenizer = tokenizer
 
+def load_model(model_path, hf_autoclass):
+  if FLAGS.hf_autoclass:
+    model_class = getattr(importlib.import_module("transformers"), FLAGS.hf_autoclass)
+    app.model = model_class.from_pretrained(model_path, device_map="auto")
+  else:
+    try:
+      print(f"Instantiating {model_path} as AutoModelForCausalLM.")
+      app.model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto")
+    except ValueError:
+      print(f"Unable to instantiate {model_path} as AutoModelForCausalLM. Trying with AutoModelForSeq2Seq.")
+      try:
+        app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
+      except ValueError as ve:
+        print(f"Unable to instantiate {model_path} as AutoModelForSeq2SeqLM. Exiting.")
+        raise ve
 
 @app.route("/health")
 def health():
