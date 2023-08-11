@@ -90,10 +90,10 @@ if [[ ${USE_COS_IMAGE} ]]; then
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   if [[ ${MACHINE_TYPE} == "a3-highgpu-8g" ]]; then
-    export DOCKER_PARAMS="${DOCKER_PARAMS} --env NCCL_TOPO_FILE=/home/llm/a3_cos.xml --env  NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION --env NCCL_TOPO_DUMP_FILE=/host/tmp/topo_dump.txt "
+    export DOCKER_PARAMS="${DOCKER_PARAMS} --env NCCL_DEBUG=DEBUG --env NCCL_TOPO_FILE=/home/llm/a3_cos.xml --env NCCL_SOCKET_IFNAME=eth0 --env  NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION --env NCCL_TOPO_DUMP_FILE=/host/tmp/topo_dump.txt "
   fi
   echo ${DOCKER_PARAMS}
-  export PRE_DOCKER_RUN="if [[ -z \$(sudo ls /var/lib/nvidia) ]]; then sudo /sbin/iptables -I INPUT -p tcp -j ACCEPT -d 192.168.0.0/16 -s 192.168.0.0/16; \
+  export PRE_DOCKER_RUN="if [[ -z \$(sudo ls /dev/nvidia0) ]]; then sudo /sbin/iptables -I INPUT -p tcp -j ACCEPT -d 192.168.0.0/16 -s 192.168.0.0/16; \
   sudo cos-extensions install gpu -- -version=525.105.17; \
   sudo mount --bind /var/lib/nvidia /var/lib/nvidia; \
   sudo mount -o remount,exec /var/lib/nvidia; fi"
