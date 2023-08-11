@@ -35,7 +35,7 @@ app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string("model_path", None, "Path of HF model to load.")
-flags.DEFINE_string("hf_autoclass", None, "Name of the Transformers autoclass to instantiate the model with. Default is 'AutoModelForSeq2SeqLM'")
+flags.DEFINE_string("hf_autoclass", None, "Optional. Name of the Transformers autoclass to instantiate the model with. Defaults to known supported classes: [ AutoModelForCausalLM, AutoModelForSeq2SeqLM ]")
 flags.DEFINE_integer("port", 5000, "server port.")
 
 
@@ -62,8 +62,8 @@ def init_model():
   app.tokenizer = tokenizer
 
 def load_model(model_path, hf_autoclass):
-  if FLAGS.hf_autoclass:
-    model_class = getattr(importlib.import_module("transformers"), FLAGS.hf_autoclass)
+  if hf_autoclass:
+    model_class = getattr(importlib.import_module("transformers"), hf_autoclass)
     app.model = model_class.from_pretrained(model_path, device_map="auto")
   else:
     try:
