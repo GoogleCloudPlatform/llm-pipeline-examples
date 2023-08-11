@@ -15,20 +15,12 @@ FROM gcr.io/deeplearning-platform-release/pytorch-gpu.2-0.py310:m109
 
 WORKDIR /home/jupyter
 
-COPY scripts/clean_up_torch_xla.sh .
-
-RUN pip3 uninstall -y torch torchvision
-RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-COPY scripts/install.sh .
-RUN ./install.sh
+RUN pip install Flask 'datasets>=2.9.0' evaluate transformers nltk rouge_score ipywidgets accelerate scipy sentencepiece
 
 COPY src/predict.py .
-
 ENV FLASK_APP=predict
 ENV SERVER_HOST=0.0.0.0
 
-RUN pip install Flask
-
 ADD src/app ./app
 
-ENTRYPOINT [ "deepspeed", "predict.py"]
+ENTRYPOINT [ "python", "predict.py"]

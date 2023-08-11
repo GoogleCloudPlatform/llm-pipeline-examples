@@ -146,6 +146,7 @@ def deploy(
     gpu_type: str,
     gpu_count: int,
     endpoint_name: str,
+    location: str,
 ) -> NamedTuple(
     "Outputs",
     [
@@ -166,7 +167,8 @@ def deploy(
   existing_endpoints = aip.Endpoint.list(
       project=project,
       order_by="create_time",
-      filter='display_name="{}"'.format(endpoint_name))
+      filter='display_name="{}"'.format(endpoint_name),
+      location=location)
 
   if existing_endpoints:
     endpoint = existing_endpoints[0]
@@ -175,12 +177,14 @@ def deploy(
     endpoint = aip.Endpoint.create(
         project=project,
         display_name=endpoint_name,
+        location=location
     )
 
   existing_models = aip.Model.list(
       project=project,
       order_by="create_time",
-      filter='display_name="{}"'.format(model_display_name))
+      filter='display_name="{}"'.format(model_display_name),
+      location=location)
 
   if existing_models:
     parent_model = existing_models[0]
@@ -209,7 +213,8 @@ def deploy(
           k.lower(): str(v).replace(".", "_") for k, v in new_metrics.items()
       },
       serving_container_predict_route="/infer",
-      serving_container_health_route="/health"
+      serving_container_health_route="/health",
+      location=location
   )
 
   endpoint.deploy(
@@ -236,10 +241,11 @@ def hf_pipeline(
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
+    deploy_region: str,
     override_deploy: bool,
     train_image: str,
     predict_image: str,
-    endpoint_name: str
+    endpoint_name: str,
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -280,7 +286,8 @@ def hf_pipeline(
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
       gpu_count=deploy_gpu_count,
-      endpoint_name=endpoint_name)
+      endpoint_name=endpoint_name,
+      location=deploy_region)
       
 @kfp.dsl.pipeline(name="llm-pipeline")
 def triton_pipeline(
@@ -296,10 +303,11 @@ def triton_pipeline(
     deploy_machine_type: str,
     deploy_gpu_type: str,
     deploy_gpu_count: int,
+    deploy_region: str,
     override_deploy: bool,
     train_image: str,
     predict_image: str,
-    endpoint_name: str
+    endpoint_name: str,
 ):
   """Pipeline defintion function."""
 # pylint: disable=unused-variable
@@ -345,7 +353,8 @@ def triton_pipeline(
       machine_type=deploy_machine_type,
       gpu_type=deploy_gpu_type,
       gpu_count=deploy_gpu_count,
-      endpoint_name=endpoint_name)
+      endpoint_name=endpoint_name,
+      location=deploy_region)
 
 def _get_endpoint_id(pipeline_job):
   """Returns the deploy endpoint name from a successful pipeline job."""
@@ -359,10 +368,9 @@ def _get_endpoint_id(pipeline_job):
     pipeline_job.task_details)
   raise RuntimeError("Unexpected deploy result format")
 
-def _get_endpoint(pipeline_job, zone):
+def _get_endpoint(pipeline_job, region):
   """Returns the Endpoint object from a successful pipeline job."""
   endpoint_name=_get_endpoint_id(pipeline_job)
-  region = zone[:zone.rfind("-")]
   logging.info("Region is %s", region)
   return Endpoint(endpoint_name, project=FLAGS.project, location=region)
 
@@ -381,11 +389,17 @@ def main(argv: Sequence[str]) -> None:
   config["override_deploy"] = FLAGS.override_deploy
   config["endpoint_name"] = FLAGS.endpoint_name
   config["train_image"] = f"gcr.io/llm-containers/train:{FLAGS.image_tag}"
-  
-  zone = config["cluster_config"]["zone"]
+  config["deploy_machine_type"] = config["deploy_config"]["machine_type"]
+  config["deploy_gpu_type"] = config["deploy_config"]["gpu_type"]
+  config["deploy_gpu_count"] = config["deploy_config"]["gpu_count"]
+  config["deploy_region"] = config["deploy_config"]["region"]
+
+  region = config["deploy_region"]
+
+  del config["deploy_config"]
   config.update({"train_config": json.dumps(config["train_config"]),
                  "cluster_config": json.dumps(config["cluster_config"])})
-  
+
   dest_path = "/tmp/pipeline.json"
 
   if FLAGS.use_faster_transformer:
@@ -420,7 +434,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.verify:
     job.wait()
 
-    endpoint = _get_endpoint(job, zone)
+    endpoint = _get_endpoint(job, region)
 
     with open(FLAGS.verify_payload, "r") as f:
       payload = json.load(f)
@@ -444,7 +458,7 @@ def main(argv: Sequence[str]) -> None:
   if FLAGS.cleanup_endpoint:
     job.wait()
     
-    endpoint = _get_endpoint(job, zone)
+    endpoint = _get_endpoint(job, region)
 
     logging.info(f"Deleting endpoint {endpoint.name}...")
     endpoint.delete(force=True)

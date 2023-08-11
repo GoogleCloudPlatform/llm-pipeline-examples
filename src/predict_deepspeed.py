@@ -23,12 +23,15 @@ from absl import app as absl_app
 from absl import flags
 from absl import logging
 from absl.flags import argparse_flags
+import deepspeed
 from flask import Flask, send_from_directory
 from flask import request
 import gcsfs
+import torch
+from transformers import AutoConfig
 from transformers import AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
-from transformers import GenerationConfig
+from transformers.deepspeed import HfDeepSpeedConfig
 
 app = Flask(__name__, root_path=os.path.join(os.getcwd(), "app/"))
 FLAGS = flags.FLAGS
@@ -38,26 +41,80 @@ flags.DEFINE_integer("port", 5000, "server port.")
 
 
 def init_model():
+  """Initializes the model using deep speed."""
+  os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+  # distributed setup
+  local_rank = int(os.getenv("LOCAL_RANK", "0"))
+  world_size = int(os.getenv("WORLD_SIZE", "1"))
+  torch.cuda.set_device(local_rank)
+  app.local_rank = local_rank
+  app.world_size = world_size
+
   model_path = os.environ.get("AIP_STORAGE_URI", FLAGS.model_path)
   logging.info("Model path: %s", model_path)
   if model_path.startswith("gs://"):
     src = model_path.replace("gs://", "")
     dst = src.split("/")[-1] + "/"
-    gcs = gcsfs.GCSFileSystem()
-    logging.info("Downloading model from %s", model_path)
-    for f in gcs.ls(src):
-      if gcs.isfile(f):
-        logging.info("Downloading %s", f)
-        gcs.get(f, dst)
+    if local_rank == 0:
+      gcs = gcsfs.GCSFileSystem()
+      logging.info("Downloading model from %s", model_path)
+      for f in gcs.ls(src):
+        if gcs.isfile(f):
+          logging.info("Downloading %s", f)
+          gcs.get(f, dst)
     model_path = dst
-  
+
+  deepspeed.init_distributed()
+  config = AutoConfig.from_pretrained(model_path)
+  model_hidden_size = config.d_model
+
+  train_batch_size = 1 * world_size
+
+  ds_config = {
+      "fp16": {
+          "enabled": False
+      },
+      "bf16": {
+          "enabled": False
+      },
+      "zero_optimization": {
+          "stage":
+              3,
+          "offload_param": None,
+          "overlap_comm":
+              True,
+          "contiguous_gradients":
+              True,
+          "reduce_bucket_size":
+              model_hidden_size * model_hidden_size,
+          "stage3_prefetch_bucket_size":
+              0.9 * model_hidden_size * model_hidden_size,
+          "stage3_param_persistence_threshold":
+              10 * model_hidden_size
+      },
+      "steps_per_print": 2000,
+      "train_batch_size": train_batch_size,
+      "train_micro_batch_size_per_gpu": 1,
+      "wall_clock_breakdown": False
+  }
+  # fmt: on
+
+  dschf = HfDeepSpeedConfig(ds_config)  # keep this object alive
+
   # now a model can be loaded.
   logging.info("Loading local model from %s", model_path)
-  app.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
+  model = AutoModelForSeq2SeqLM.from_pretrained(model_path, device_map="auto")
+
+  # initialise Deepspeed ZeRO and store only the engine object
+  ds_engine = deepspeed.initialize(model=model, config_params=ds_config)[0]
+  ds_engine.module.eval()  # inference
+
   tokenizer = AutoTokenizer.from_pretrained(model_path)
-  app.generation_config = GenerationConfig.from_pretrained(model_path)
   logging.info("Model ready to serve")
+  app.ds_engine = ds_engine
   app.tokenizer = tokenizer
+  app.dschf = dschf
 
 
 @app.route("/health")
@@ -78,20 +135,12 @@ def infer():
       request.json["instances"],
       return_tensors="pt",
       padding=True,
-      truncation=True).to(app.model.device)
+      truncation=True).to(device=app.local_rank)
   logging.info("Encoded")
-  config_overrides = {}
-  try:
-    config_overrides = request.json["config"]
-  except KeyError:
-    pass
-  logging.debug("Passing inferencing configuration: %s", config_overrides)
-  outputs = app.model.generate(
-    inputs["input_ids"],
-    **config_overrides
-  )
-
-  logging.info("Generated.")
+  with torch.no_grad():
+    outputs = app.ds_engine.module.generate(
+        inputs["input_ids"], synced_gpus=True)
+    logging.info("Generated.")
   text_out = map(lambda x: app.tokenizer.decode(x, skip_special_tokens=True),
                  outputs)
   logging.info("Decoded")
@@ -122,7 +171,13 @@ def main(argv):
   app.port = int(os.environ.get("AIP_HTTP_PORT", str(FLAGS.port)))
 
   init_model()
-  app.run(app.host, app.port, debug=False)
+  if app.local_rank == 0:
+    app.run(app.host, app.port, debug=False)
+  else:
+    t = app.tokenizer.encode("", return_tensors="pt").to(device=app.local_rank)
+    while True:
+      with torch.no_grad():
+        app.ds_engine.module.generate(t, synced_gpus=True)
 
 
 if __name__ == "__main__":
