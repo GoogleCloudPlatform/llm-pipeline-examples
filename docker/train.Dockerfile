@@ -48,8 +48,6 @@ COPY src/prepare.py .
 COPY src/download.py .
 COPY src/utils.py .
 
-COPY configs/nccl_topo/a3_cos.xml .
-
 COPY scripts/train/deepspeed-fluentd.conf /etc/google-fluentd/config.d/
 
 

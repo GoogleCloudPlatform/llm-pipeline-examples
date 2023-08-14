@@ -87,17 +87,14 @@ if [[ ${USE_COS_IMAGE} ]]; then
    --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
    --device /dev/nvidiactl:/dev/nvidiactl \
+   --cap-add=IPC_LOCK \
+   --volume /run/tcpx:/tmp \
+   --volume /var/lib/tcpx:/usr/local/tcpx \
+   -u 0 \
+   -userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
-  if [[ ${MACHINE_TYPE} == "a3-highgpu-8g" ]]; then
-    export DOCKER_PARAMS="${DOCKER_PARAMS} --env NCCL_DEBUG=DEBUG --env NCCL_TOPO_FILE=/home/llm/a3_cos.xml --env NCCL_SOCKET_IFNAME=eth0 --env  NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION --env NCCL_TOPO_DUMP_FILE=/host/tmp/topo_dump.txt "
-  fi
   echo ${DOCKER_PARAMS}
-  export PRE_DOCKER_RUN="if [[ -z \$(sudo ls /dev/nvidia0) ]]; then sudo /sbin/iptables -I INPUT -p tcp -j ACCEPT -d 192.168.0.0/16 -s 192.168.0.0/16; \
-  sudo cos-extensions install gpu -- -version=525.105.17; \
-  sudo mount --bind /var/lib/nvidia /var/lib/nvidia; \
-  sudo mount -o remount,exec /var/lib/nvidia; fi"
-  export VM_IMAGE=cos-105-17412-101-17
 else
   echo "Using DLVM image"
   export DOCKER_PARAMS="--gpus all"
@@ -106,7 +103,7 @@ else
 fi
 
 export VM_IMAGE
-export TRAIN_CMD="./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
+export TRAIN_CMD="LD_LIBRARY_PATH=/usr/local/tcpx/lib64:\$LD_LIBRARY_PATH ./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN}; docker run --name train_llm \
  --security-opt \
  apparmor=unconfined \
