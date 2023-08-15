@@ -87,24 +87,26 @@ if [[ ${USE_COS_IMAGE} ]]; then
    --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
    --device /dev/nvidiactl:/dev/nvidiactl \
+   --env NCCL_DEBUG=INFO \
+   --env NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION \
+   --env NCCL_NET=GPUDirectTCPX_v7 \
    --cap-add=IPC_LOCK \
    --volume /run/tcpx:/tmp \
    --volume /var/lib/tcpx:/usr/local/tcpx \
-   -u 0 \
-   -userns=host \
+   --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   echo ${DOCKER_PARAMS}
 else
   echo "Using DLVM image"
   export DOCKER_PARAMS="--gpus all"
-  export PRE_DOCKER_RUN="nvidia-persistenced"
+  export PRE_DOCKER_RUN="nvidia-persistenced;"
   export VM_IMAGE=c0-deeplearning-common-cu113-v20221026-debian-10
 fi
 
 export VM_IMAGE
-export TRAIN_CMD="LD_LIBRARY_PATH=/usr/local/tcpx/lib64:\$LD_LIBRARY_PATH ./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
-export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN}; docker run --name train_llm \
+export TRAIN_CMD="export LD_LIBRARY_PATH=/usr/local/tcpx/lib64:\$LD_LIBRARY_PATH;./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
+export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
  --security-opt \
  apparmor=unconfined \
  --cap-add SYS_ADMIN \
@@ -115,7 +117,7 @@ export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN}; docker run --name t
  ${DOCKER_PARAMS} \
  -v /etc/ssh:/etc/ssh \
  -v /var/tmp:/host/tmp \
- ${TRAIN_IMAGE} ${TRAIN_CMD}"
+ ${TRAIN_IMAGE} bash -c \"${TRAIN_CMD}\""
 echo ${START}
 #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
 #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
