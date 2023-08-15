@@ -25,8 +25,8 @@ COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN pip3 uninstall -y torch torchvision
 RUN wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i cuda-keyring_1.0-1_all.deb \
-    apt-get update \
+    dpkg -i cuda-keyring_1.0-1_all.deb && \
+    apt-get update && \
     apt-get -y install cuda
 RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
 RUN ./install.sh
