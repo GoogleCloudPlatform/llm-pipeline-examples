@@ -25,7 +25,7 @@ COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN pip3 uninstall -y torch torchvision
 RUN wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run
-RUN sh cuda_12.0.0_525.60.13_linux.run
+RUN ./cuda_12.0.0_525.60.13_linux.run
 RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
 RUN ./install.sh
 
