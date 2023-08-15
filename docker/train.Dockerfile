@@ -24,7 +24,10 @@ RUN chmod 666 /tmp/deepspeed_output.log
 COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN pip3 uninstall -y torch torchvision
-RUN wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run && chmod +x cuda_12.0.0_525.60.13_linux.run && sudo ./cuda_12.0.0_525.60.13_linux.run
+RUN wget --progress=dot:giga https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb && \
+    sudo dpkg -i cuda-keyring_1.0-1_all.deb \
+    sudo apt-get update \
+    sudo apt-get -y install cuda
 RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
 RUN ./install.sh
 
