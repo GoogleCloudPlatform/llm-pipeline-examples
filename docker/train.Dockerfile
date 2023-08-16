@@ -31,7 +31,7 @@ RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86
     dpkg -i cuda-repo-ubuntu2204-12-0-local_12.0.0-525.60.13-1_amd64.deb && \
     cp /var/cuda-repo-ubuntu2204-12-0-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
     apt-get update && \
-    apt-get -y install cuda
+    apt-get -y install cuda=12.0.0-1
 RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
 RUN ./install.sh
 
