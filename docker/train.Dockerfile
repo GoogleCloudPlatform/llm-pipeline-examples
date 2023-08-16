@@ -33,6 +33,8 @@ RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86
     apt-get update && \
     apt-get -y install cuda=12.0.0-1
 RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
+RUN apt-get -y remove libnccl2 linccl-dev
+RUN apt-get -y install libnccl2=2.18.1-1+cuda12.1 libnccl-dev=2.18.1-1+cuda12.1
 RUN ./install.sh
 
 
