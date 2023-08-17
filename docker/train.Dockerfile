@@ -40,7 +40,7 @@ RUN git clone --recursive https://github.com/pytorch/pytorch; \
     pip install -y -r requirements.txt; \
     export _GLIBCXX_USE_CXX11_ABI=1; \
     export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}; \
-    TORCH_CUDA_ARCH_LIST="8.0 9.0 9.0a" NCCL_INCLUDE_DIR="/usr/include/" NCCL_LIB_DIR="/usr/lib/" USE_SYSTEM_NCCL=1 python setup.py install
+    TORCH_CUDA_ARCH_LIST="8.0 9.0" NCCL_INCLUDE_DIR="/usr/include/" NCCL_LIB_DIR="/usr/lib/" USE_SYSTEM_NCCL=1 python setup.py install
 RUN ./install.sh
 
 
