@@ -37,7 +37,7 @@ RUN apt-get -y install libnccl2=2.18.1-1+cuda12.1 libnccl-dev=2.18.1-1+cuda12.1
 RUN git clone --recursive https://github.com/pytorch/pytorch; \
     cd pytorch; \
     conda install cmake ninja; \
-    pip install -r requirements.txt; \
+    pip install -y -r requirements.txt; \
     export _GLIBCXX_USE_CXX11_ABI=1; \
     export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}; \
     NCCL_INCLUDE_DIR="/usr/include/" NCCL_LIB_DIR="/usr/lib/" USE_SYSTEM_NCCL=1 python setup.py install
