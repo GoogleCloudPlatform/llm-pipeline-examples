@@ -68,7 +68,7 @@ steps:
     waitFor: ['-']
     args:
       - pull
-      - 'gcr.io/llm-containers/train:latest'
+      - 'gcr.io/llm-containers/train:test'
   - name: gcr.io/cloud-builders/docker
     id: build-train
     waitFor: ['pull-train']
@@ -77,7 +77,7 @@ steps:
       - '-t'
       - 'gcr.io/llm-containers/train:githubpr${_PR_NUMBER}'
       - '--cache-from'
-      - 'gcr.io/llm-containers/train:latest'
+      - 'gcr.io/llm-containers/train:test'
       - '-f'
       - docker/train.Dockerfile
       - .

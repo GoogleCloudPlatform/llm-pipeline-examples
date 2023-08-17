@@ -32,9 +32,15 @@ RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86
     cp /var/cuda-repo-ubuntu2204-12-0-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
     apt-get update && \
     apt-get -y install cuda=12.0.0-1
-RUN pip3 install torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu121
 RUN apt-get -y --allow-change-held-packages remove libnccl2 libnccl-dev
 RUN apt-get -y install libnccl2=2.18.1-1+cuda12.1 libnccl-dev=2.18.1-1+cuda12.1
+RUN git clone --recursive https://github.com/pytorch/pytorch; \
+    cd pytorch; \
+    conda install cmake ninja; \
+    pip install -r requirements.txt; \
+    export _GLIBCXX_USE_CXX11_ABI=1; \
+    export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname $(which conda))/../"}; \
+    NCCL_INCLUDE_DIR="/usr/include/" NCCL_LIB_DIR="/usr/lib/" USE_SYSTEM_NCCL=1 python setup.py install
 RUN ./install.sh
 
 
