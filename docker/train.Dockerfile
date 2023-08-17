@@ -36,7 +36,6 @@ RUN apt-get -y --allow-change-held-packages remove libnccl2 libnccl-dev
 RUN apt-get -y install libnccl2=2.18.1-1+cuda12.1 libnccl-dev=2.18.1-1+cuda12.1
 RUN git clone --recursive https://github.com/pytorch/pytorch; \
     cd pytorch; \
-    git checkout tags/v2.0.1; \
     conda install cmake ninja; \
     pip install -y -r requirements.txt; \
     export _GLIBCXX_USE_CXX11_ABI=1; \
