@@ -13,6 +13,7 @@
 # limitations under the License.
 FROM nvcr.io/nvidia/pytorch:23.05-py3
 
+ENV TORCH_CUDA_ARCH_LIST=
 RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates \
     curl \
