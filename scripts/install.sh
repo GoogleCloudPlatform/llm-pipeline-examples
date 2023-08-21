@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if [[ -z "$(pip list | grep deepspeed)" ]]; then
-  ./clean_up_torch_xla.sh
   pip install 'datasets>=2.9.0' evaluate transformers
   pip install nltk
   pip install rouge_score
