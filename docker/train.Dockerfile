@@ -17,9 +17,9 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates \
     curl \
     gnupg \
-  && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt gcsfuse-focal main" \
+  && echo "deb http://packages.cloud.google.com/apt gcsfuse-focal main" \
     | tee /etc/apt/sources.list.d/gcsfuse.list \
-  && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+  && echo "deb https://packages.cloud.google.com/apt cloud-sdk main" \
     | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
   && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
   && apt-get update \
