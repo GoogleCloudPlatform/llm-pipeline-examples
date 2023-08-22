@@ -16,4 +16,4 @@
 
 
 sudo mkdir /run/sshd
-sudo /usr/sbin/sshd -D -p 1022
+sudo -S /usr/sbin/sshd -D -p 1022
