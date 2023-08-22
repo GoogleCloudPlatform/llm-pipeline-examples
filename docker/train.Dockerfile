@@ -36,7 +36,7 @@ RUN chmod 666 /tmp/deepspeed_output.log
 
 COPY scripts/install.sh .
 RUN ./install.sh
-
+RUN pip install gcsfs
 
 RUN chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; chmod a-w /etc/sysctl.conf
 
