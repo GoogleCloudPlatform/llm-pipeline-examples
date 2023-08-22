@@ -38,6 +38,8 @@ COPY scripts/install.sh .
 RUN ./install.sh
 
 
+RUN chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; chmod a-w /etc/sysctl.conf
+
 RUN useradd -ms /bin/bash llm
 RUN adduser llm sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
@@ -62,8 +64,6 @@ COPY configs/nccl_topo/a3_cos.xml .
 
 COPY scripts/train/deepspeed-fluentd.conf /etc/google-fluentd/config.d/
 
-
-RUN chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; chmod a-w /etc/sysctl.conf
 
 EXPOSE 50000-51000
 EXPOSE 29500
