@@ -63,7 +63,7 @@ COPY configs/nccl_topo/a3_cos.xml .
 COPY scripts/train/deepspeed-fluentd.conf /etc/google-fluentd/config.d/
 
 
-RUN sudo chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; sudo chmod a-w /etc/sysctl.conf
+RUN chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; chmod a-w /etc/sysctl.conf
 
 EXPOSE 50000-51000
 EXPOSE 29500
