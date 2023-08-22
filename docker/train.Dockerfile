@@ -43,7 +43,7 @@ RUN chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000
 
 RUN useradd -ms /bin/bash llm
 RUN adduser llm sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN echo '%sudo ALL=(ALL:ALL) NOPASSWD:ALL' >> /etc/sudoers
 WORKDIR /home/llm
 USER llm
 
