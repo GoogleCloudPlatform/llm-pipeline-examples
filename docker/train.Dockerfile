@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates \
     curl \
     gnupg \
+    sudo \
   && echo "deb http://packages.cloud.google.com/apt gcsfuse-focal main" \
     | tee /etc/apt/sources.list.d/gcsfuse.list \
   && echo "deb https://packages.cloud.google.com/apt cloud-sdk main" \
