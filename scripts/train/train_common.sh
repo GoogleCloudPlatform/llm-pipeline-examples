@@ -28,9 +28,9 @@ echo "Head node found as ${HEAD}"
 if [[ "$HEAD" == "$HOSTNAME" ]]; then
   sudo /usr/sbin/google-fluentd & 
   echo "Running ssh server..." >> ${HOME_DIR}/deepspeed_output.log
-  ./ssh_server.sh &
-
   ./update_env.sh >> ${HOME_DIR}/deepspeed_output.log
+  
+  ./ssh_server.sh &
   
   if [[ ! -d .ssh ]];
   then mkdir .ssh;
