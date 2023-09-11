@@ -83,16 +83,17 @@ if [[ ${USE_COS_IMAGE} ]]; then
    export DOCKER_PARAMS="${DOCKER_PARAMS} --device /dev/nvidia${i}:/dev/nvidia${i}"
   done
   
-  export DOCKER_PARAMS="${DOCKER_PARAMS} --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
+  export DOCKER_PARAMS="${DOCKER_PARAMS} \
+   --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
    --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
+   --volume /run/tcpx:/tmp \
+   --volume /var/lib/tcpx:/usr/local/tcpx \
    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
    --device /dev/nvidiactl:/dev/nvidiactl \
    --env NCCL_DEBUG=INFO \
    --env NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION \
-   --env NCCL_NET=GPUDirectTCPX_v7 \
+   --env LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:/usr/local/nvidia/lib64 \
    --cap-add=IPC_LOCK \
-   --volume /run/tcpx:/tmp \
-   --volume /var/lib/tcpx:/usr/local/tcpx \
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
@@ -105,7 +106,22 @@ else
 fi
 
 export VM_IMAGE
-export TRAIN_CMD="export LD_LIBRARY_PATH=/usr/local/tcpx/lib64:\$LD_LIBRARY_PATH;./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
+export TRAIN_CMD="./train.sh ${DATA_DIR} ${DATA} ${WORKSPACE_PATH}"
+if [[ ${TCPX} ]]; then
+  export TRAIN_CMD="\
+    sudo mkdir /usr/local/tcpx_exec; \
+    sudo mount --bind /usr/local/tcpx_exec /usr/local/tcpx_exec; \
+    sudo mount -o remount,exec /usr/local/tcpx_exec; \
+    sudo cp -r /usr/local/tcpx/lib64 /usr/local/tcpx_exec; \
+    sudo rm /lib/x86_64-linux-gnu/libnccl.so.2.18.1; \
+    sudo rm /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so.0.0.0; \
+    sudo rm /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so.0; \
+    sudo chmod go+w /etc/ld.so.conf.d/nvidia.conf; \
+    sudo echo /usr/local/tcpx_exec/lib64 >> /etc/ld.so.conf.d/nvidia.conf; \
+    export NCCL_NET=GPUDirectTCPX_v7; \
+    export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:/usr/local/tcpx_exec/lib64; \
+    ${TRAIN_CMD}"
+fi
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
  --security-opt \
  apparmor=unconfined \
