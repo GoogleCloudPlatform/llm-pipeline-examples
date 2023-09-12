@@ -133,7 +133,7 @@ export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name tr
  ${DOCKER_PARAMS} \
  -v /etc/ssh:/etc/ssh \
  -v /var/tmp:/host/tmp \
- ${TRAIN_IMAGE} bash -c \"${TRAIN_CMD}\""
+ ${TRAIN_IMAGE} bash -c '${TRAIN_CMD}'"
 echo ${START}
 #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
 #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
@@ -163,7 +163,7 @@ if [[ -n "${JOB_FOUND}" ]]; then
     do
       echo $machine
       (gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
-      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; $START ' >> log.txt 2>&1 &" -- -n) &
+      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START:\':\\\"} ' >> log.txt 2>&1 &" -- -n) &
     done < machines.txt
     echo "Training initiated on all machines!"
   else
