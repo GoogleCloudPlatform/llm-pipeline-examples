@@ -196,7 +196,7 @@ def train(argv):
       dst, gcs = utils.gcs_path(FLAGS.gcs_output)
       logging.info('Uploading model from %s to %s...', src, dst)
       gcs.put(src, dst, recursive=True)
-      gcs.rename(os.path.join(dst, output_dir), dst, recursive=True)
+      gcs.rename(os.path.join(dst, output_dir, '*'), dst, recursive=True)
 
 
 if __name__ == '__main__':

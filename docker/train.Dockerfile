@@ -11,27 +11,39 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/deeplearning-platform-release/pytorch-gpu.1-12:m108
+FROM nvcr.io/nvidia/pytorch:23.05-py3
 
+ENV TORCH_CUDA_ARCH_LIST="7.0"
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+    sudo \
+  && echo "deb http://packages.cloud.google.com/apt gcsfuse-focal main" \
+    | tee /etc/apt/sources.list.d/gcsfuse.list \
+  && echo "deb https://packages.cloud.google.com/apt cloud-sdk main" \
+    | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+  && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+  && apt-get update \
+  && apt-get install --yes gcsfuse google-cloud-cli
+  
 RUN apt-get update
 RUN apt install -yq openssh-server openssh-client ninja-build libaio-dev
 RUN apt install -yq google-compute-engine-oslogin
 RUN apt-get install -yq pdsh
-
 
 RUN wget https://dl.google.com/cloudagents/add-logging-agent-repo.sh
 RUN bash add-logging-agent-repo.sh --also-install
 RUN touch /tmp/deepspeed_output.log
 RUN chmod 666 /tmp/deepspeed_output.log
 
-COPY scripts/clean_up_torch_xla.sh .
 COPY scripts/install.sh .
 RUN ./install.sh
-
+RUN pip install gcsfs
 
 RUN useradd -ms /bin/bash llm
 RUN adduser llm sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN echo 'ALL ALL=(ALL:ALL) NOPASSWD:ALL' >> /etc/sudoers
 WORKDIR /home/llm
 USER llm
 
@@ -50,7 +62,6 @@ COPY src/download.py .
 COPY src/utils.py .
 
 COPY scripts/train/deepspeed-fluentd.conf /etc/google-fluentd/config.d/
-
 
 RUN sudo chmod a+w /etc/sysctl.conf; echo "net.ipv4.ip_local_port_range = 50000 51000" >> /etc/sysctl.conf; sudo chmod a-w /etc/sysctl.conf
 
