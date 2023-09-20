@@ -83,6 +83,7 @@ else
   export PRE_DOCKER_RUN="nvidia-persistenced;"
   export VM_IMAGE=\"c0-deeplearning-common-cu113-v20221026-debian-10\"
   export IMAGE_FAMILY=null
+  export IMAGE_PROJECT=\"ml-images\"
 fi
 
 export VM_IMAGE
