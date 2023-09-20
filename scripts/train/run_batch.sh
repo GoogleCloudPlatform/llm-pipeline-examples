@@ -83,7 +83,6 @@ else
   export PRE_DOCKER_RUN="nvidia-persistenced;"
   export VM_IMAGE=\"c0-deeplearning-common-cu113-v20221026-debian-10\"
   export IMAGE_FAMILY=null
-  export IMAGE_PROJECT=null
 fi
 
 export VM_IMAGE
@@ -143,7 +142,7 @@ if [[ -n "${JOB_FOUND}" ]]; then
     do
       echo $machine
       (gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
-      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START:\':\\\"} ' >> log.txt 2>&1 &" -- -n) &
+      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START//\'/\"} ' >> log.txt 2>&1 &" -- -n)
     done < machines.txt
     echo "Training initiated on all machines!"
   else
@@ -177,6 +176,8 @@ else
   echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
 
   cat /root/aiinfra/input/terraform.tfvars
+
+  sed -i "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
 
   ./scripts/entrypoint.sh create a3 mig-cos -b ${DATA_DIR}/deployment -q 
   
