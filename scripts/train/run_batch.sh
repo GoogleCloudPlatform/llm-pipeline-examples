@@ -171,6 +171,7 @@ else
     -e "s/{image_name}/${VM_IMAGE}/g" \
     -e "s/{node_count}/\"${NODE_COUNT}\"/g" \
     -e "s/{nodes_zone}/\"${ZONE}\"/g" \
+    -e "s/{disk_size_gb}/2000/g" \
     /root/aiinfra/input/terraform.tfvars
 
   if [[ ${USE_COS_IMAGE} ]]; then
@@ -180,7 +181,7 @@ else
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
-    sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR}\/start.sh\"}/g" \
+    sed -i 's/{metadata}/{install-unattended-upgrades="false",enable-oslogin="TRUE",jupyter-user="${OS_LOGIN_USER}",install-nvidia-driver="True",startup-script-url=\${DATA_DIR}\/start.sh"}/g' \
     /root/aiinfra/input/terraform.tfvars
   fi
 

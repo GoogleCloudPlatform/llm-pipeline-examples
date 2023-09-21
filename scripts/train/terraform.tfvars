@@ -3,6 +3,7 @@ region          = {region}
 resource_prefix = {cluster_prefix}
 metadata        = {metadata}
 labels          = {labels}
+disk_size_gb    = {disk_size_gb}
 machine_image   = {
   "family": {image_family},
   "name": {image_name},

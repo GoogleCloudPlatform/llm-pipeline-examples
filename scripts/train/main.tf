@@ -6,6 +6,7 @@ variable "metadata" {}
 variable "labels" {}
 variable "startup_script" {}
 variable "machine_image" {}
+variable "disk_size_gb" {}
 
 
 module "mig-cos" {
@@ -19,4 +20,5 @@ module "mig-cos" {
   labels          = var.labels
   startup_script  = var.startup_script
   machine_image   = var.machine_image
+  disk_size_gb    = var.disk_size_gb
 }
