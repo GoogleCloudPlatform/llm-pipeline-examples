@@ -176,6 +176,7 @@ else
   if [[ ${USE_COS_IMAGE} ]]; then
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     sed -i "s/{metadata}/{}/g" \
+    /root/aiinfra/input/terraform.tfvars
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
