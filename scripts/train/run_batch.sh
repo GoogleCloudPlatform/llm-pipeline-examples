@@ -175,10 +175,11 @@ else
 
   if [[ ${USE_COS_IMAGE} ]]; then
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
+    sed -i "s/{metadata}/{}/g" \
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
-    sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR}/start.sh\"}/g" \
+    sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR}\/start.sh\"}/g" \
     /root/aiinfra/input/terraform.tfvars
   fi
 
