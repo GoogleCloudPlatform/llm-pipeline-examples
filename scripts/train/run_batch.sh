@@ -75,7 +75,7 @@ if [[ ${USE_COS_IMAGE} ]]; then
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   export VM_IMAGE=null
-  export IMAGE_FAMILY=\"cos-stable\"
+  export IMAGE_FAMILY=\"cos-105-17412-156-49\"
   export IMAGE_PROJECT=\"cos-cloud\"
 else
   echo "Using DLVM image"
@@ -178,7 +178,10 @@ else
 
   cat /root/aiinfra/input/terraform.tfvars
 
-  sed -i "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
+  sed -i "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
+    -i "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.5/g" \
+  
+    a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
 
   ./scripts/entrypoint.sh create a3 mig-cos -b ${DATA_DIR}/deployment -q 
   
