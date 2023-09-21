@@ -165,7 +165,6 @@ else
     -e "s/{region}/\"${REGION}\"/g" \
     -e "s/{cluster_prefix}/\"${JOB_ID}\"/g" \
     -e "s/{machine_type}/\"${MACHINE_TYPE}\"/g" \
-    -e "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}/g" \
     -e "s/{labels}/{gcpllm=\"$NAME_PREFIX\"}/g" \
     -e "s/{image_family}/${IMAGE_FAMILY}/g" \
     -e "s/{image_project}/${IMAGE_PROJECT}/g" \
@@ -174,12 +173,19 @@ else
     -e "s/{nodes_zone}/\"${ZONE}\"/g" \
     /root/aiinfra/input/terraform.tfvars
 
-  echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
+  if [[ ${USE_COS_IMAGE} ]]; then
+    echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
+  else
+    echo ${START} > start.sh
+    gsutil cp start.sh ${DATA_DIR}/start.sh
+    sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR}/start.sh\"}/g" \
+    /root/aiinfra/input/terraform.tfvars
+  fi
 
   cat /root/aiinfra/input/terraform.tfvars
 
   sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
-    -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.5/g" \
+    -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.2/g" \
     a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
 
   ./scripts/entrypoint.sh create a3 mig-cos -b ${DATA_DIR}/deployment -q 
