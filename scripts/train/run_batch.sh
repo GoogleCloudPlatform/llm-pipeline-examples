@@ -175,23 +175,20 @@ else
     /root/aiinfra/input/terraform.tfvars
 
   if [[ ${USE_COS_IMAGE} ]]; then
+    sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
-    sed -i "s/{metadata}/{}/g" \
-    /root/aiinfra/input/terraform.tfvars
+    export CLUSTER_TYPE=mig-cos
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
     sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR//\//\\\/}\\/start.sh\"}/g" \
     /root/aiinfra/input/terraform.tfvars
+    export CLUSTER_TYPE=mig
   fi
 
   cat /root/aiinfra/input/terraform.tfvars
 
-  sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
-    -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.2/g" \
-    a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
-
-  ./scripts/entrypoint.sh create a3 mig-cos -b ${DATA_DIR}/deployment -q 
+  ./scripts/entrypoint.sh create a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
   
   gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
@@ -245,7 +242,7 @@ done
 if [[ "${EXIT_CODE}" == "0"  && -z "${CLUSTER_PROVISIONED}" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
-  /usr/entrypoint.sh destroy a3 mig-cos -b ${DATA_DIR}/deployment -q
+  /usr/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
 fi
 
 exit $EXIT_CODE
