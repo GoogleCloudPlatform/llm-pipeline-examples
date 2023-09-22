@@ -134,7 +134,7 @@ def train(argv):
       half_precision_backend=FLAGS.fp16_backend,
       fp16_opt_level=FLAGS.fp16_opt_level,
       logging_first_step=True,
-      logging_steps=logging_steps,
+      logging_steps=int(logging_steps),
       dataloader_num_workers=1,
       dataloader_drop_last=True,
       dataloader_pin_memory=True,
