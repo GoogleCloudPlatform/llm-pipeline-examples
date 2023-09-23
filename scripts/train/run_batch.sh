@@ -74,6 +74,7 @@ if [[ ${USE_COS_IMAGE} ]]; then
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
+  export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
   export VM_IMAGE=null
   export IMAGE_FAMILY=\"cos-stable\"
   export IMAGE_PROJECT=\"cos-cloud\"

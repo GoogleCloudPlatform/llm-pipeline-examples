@@ -114,7 +114,7 @@ def train(argv):
   model = AutoModelForSeq2SeqLM.from_pretrained(
       model_checkpoint, torch_dtype=float32)
   # Show the training loss with every epoch
-  logging_steps = len(tokenized_datasets['train']) // FLAGS.batch_size
+  logging_steps = 5 * FLAGS.batch_size
   logging.info(f'Logging every {logging_steps}')
 
   output_dir = f'{model_name}_checkpoints'
