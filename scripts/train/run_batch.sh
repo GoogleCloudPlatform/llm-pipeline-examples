@@ -179,6 +179,10 @@ else
     sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
+    sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
+        a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
+    #  -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.5/g" \
+    
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
