@@ -75,8 +75,8 @@ if [[ ${USE_COS_IMAGE} ]]; then
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
-  export VM_IMAGE=null
-  export IMAGE_FAMILY=\"cos-stable\"
+  export VM_IMAGE=\"cos-105-17412-156-59\"
+  export IMAGE_FAMILY=null
   export IMAGE_PROJECT=\"cos-cloud\"
 else
   echo "Using DLVM image"
@@ -100,7 +100,31 @@ if [[ ${TCPX} ]]; then
     sudo rm /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so.0; \
     sudo chmod go+w /etc/ld.so.conf.d/nvidia.conf; \
     sudo echo /usr/local/tcpx_exec/lib64 >> /etc/ld.so.conf.d/nvidia.conf; \
-    export NCCL_NET=GPUDirectTCPX_v7; \
+    export NCCL_P2P_NET_CHUNKSIZE=524288; \
+    export NCCL_P2P_PCI_CHUNKSIZE=524288; \
+    export NCCL_P2P_NVL_CHUNKSIZE=1048576; \
+    export NCCL_CHECK_POINTERS=0; \
+    export NCCL_GRAPH_MIXING_SUPPORT=0; \
+    export NCCL_PROTO=simple; \
+    export NCCL_SOCKET_IFNAME=eth0; \
+    export NCCL_CROSS_NIC=0; \
+    export NCCL_ALGO=Ring; \
+    export NCCL_NSOCKS_PERTHREAD=4; \
+    export NCCL_SOCKET_NTHREADS=1; \
+    export NCCL_MAX_NCHANNELS=8; \
+    export NCCL_MIN_NCHANNELS=8; \
+    export NCCL_DYNAMIC_CHUNK_SIZE=524288; \
+    export NCCL_GPUDIRECTTCPX_SOCKET_IFNAME=eth1,eth2,eth3,eth4; \
+    export NCCL_GPUDIRECTTCPX_CTRL_DEV=eth0; \
+    export NCCL_NET_GDR_LEVEL=PIX; \
+    export NCCL_P2P_PXN_LEVEL=0; \
+    export NCCL_DEBUG=INFO; \
+    export NCCL_DEBUG_SUBSYS=ENV; \
+    export NCCL_GPUDIRECTTCPX_PROGRAM_FLOW_STEERING_WAIT_MICROS=1000000; \
+    export N_OP_SHARDS=8; \
+    export CYCLIC=false; \
+    export ACCELERATORS_PER_POD=8; \
+    export NCCL_GPUDIRECTTCPX_FORCE_ACK=1; \
     ${TRAIN_CMD}"
 fi
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
@@ -123,7 +147,7 @@ echo "startup command = ${START}"
 export JOB_FOUND=$(gsutil ls ${DATA_DIR}/machines.txt)
 
 if [[ -z "${JOB_FOUND}" ]]; then
-  echo "No machines.txt found. Trying to find a cluster with the spified prefix ${JOB_ID}"
+  echo "No machines.txt found. Trying to find a cluster with the spicified prefix ${JOB_ID}"
   export JOB_FOUND=$(gcloud compute instances list | grep ${JOB_ID})
   if [[ -n "${JOB_FOUND}" ]]; then
     echo "Cluster found! Exporting machine list..."
@@ -173,15 +197,20 @@ else
     -e "s/{node_count}/\"${NODE_COUNT}\"/g" \
     -e "s/{nodes_zone}/\"${ZONE}\"/g" \
     -e "s/{disk_size_gb}/2000/g" \
+    -e "s/{maintenance_interval}/\"PERIODIC\"/g" \
+    -e "s/{use_compact_placement_policy}/true/g" \
     /root/aiinfra/input/terraform.tfvars
+    
+    
 
   if [[ ${USE_COS_IMAGE} ]]; then
     sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
     sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
-        -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.3/g" \
-        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx:v3.1.5-v3-ns/g" \
+        -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.6/g" \
+        -e "s/a3vm/a3vm --disable_quickack/g" \
+        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.5-v3-ns/g" \
         a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
     
   else
@@ -245,7 +274,7 @@ while [[ -z "$EXIT_CODE" ]]; do
 done
 
 # Only delete cluster when training succeeds. Otherwise, keep the cluster for investigation
-if [[ "${EXIT_CODE}" == "0"  && -z "${CLUSTER_PROVISIONED}" ]]; then
+if [[ "${EXIT_CODE}" == "0"  && -n "${CLUSTER_PROVISIONED}" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
   /usr/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
