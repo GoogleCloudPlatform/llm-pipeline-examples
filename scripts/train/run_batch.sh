@@ -148,10 +148,10 @@ export JOB_FOUND=$(gsutil ls ${DATA_DIR}/machines.txt)
 
 if [[ -z "${JOB_FOUND}" ]]; then
   echo "No machines.txt found. Trying to find a cluster with the spicified prefix ${JOB_ID}"
-  export JOB_FOUND=$(gcloud compute instances list | grep ${JOB_ID})
+  export JOB_FOUND=$(gcloud compute instances list --project ${PROJECT}| grep ${JOB_ID})
   if [[ -n "${JOB_FOUND}" ]]; then
     echo "Cluster found! Exporting machine list..."
-    gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort | head -n ${NODE_COUNT} > machines.txt
+    gcloud compute instances list --project ${PROJECT}| grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort | head -n ${NODE_COUNT} > machines.txt
     gsutil cp machines.txt ${DATA_DIR}/
   fi
 fi
@@ -162,13 +162,13 @@ if [[ -n "${JOB_FOUND}" ]]; then
     gsutil rm ${DATA_DIR}/progress.txt || true
     gsutil cp ${DATA_DIR}/machines.txt .
     mkdir ~/.ssh
-    gcloud compute ssh $(head -n 1 machines.txt | sed 's/\(\S\+\) .*/\1/') --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="echo 'ssh is available'"
+    gcloud compute ssh $(head -n 1 machines.txt | sed 's/\(\S\+\) .*/\1/') --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="echo 'ssh is available'"
 
     while read -r machine ip;
     do
       echo $machine
-      (gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
-      gcloud compute ssh $machine --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START//\'/\"} ' >> log.txt 2>&1 &" -- -n)
+      (gcloud compute ssh $machine --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
+      gcloud compute ssh $machine --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START//\'/\"} ' >> log.txt 2>&1 &" -- -n)
     done < machines.txt
     echo "Training initiated on all machines!"
   else
@@ -225,7 +225,7 @@ else
 
   ./scripts/entrypoint.sh create a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
   
-  gcloud compute instances list | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
+  gcloud compute instances list --project ${PROJECT} | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
   export CLUSTER_PROVISIONED=1
 fi
