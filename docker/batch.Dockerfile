@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v0.3.0
+FROM us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:v1.2.1
 
 RUN apt-get -yq install jq python3-distutils python3-pip
 
@@ -20,5 +20,7 @@ RUN pip3 install yq google-cloud-storage absl-py
 COPY scripts/train/run_batch.sh .
 COPY scripts/json_to_env.sh .
 COPY src/orchestration/training_cluster_monitor.py .
+COPY scripts/train/terraform.tfvars /root/aiinfra/input/
+COPY scripts/train/main.tf /root/aiinfra/input/
 
 ENTRYPOINT [ "./run_batch.sh" ]

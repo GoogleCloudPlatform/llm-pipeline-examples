@@ -13,34 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_invoke_cluster_tool () {
-  echo "Invoking cluster tool"
-  echo PROJECT_ID $PROJECT_ID
-  echo NAME_PREFIX $NAME_PREFIX
-  echo ZONE $ZONE
-  echo INSTANCE_COUNT $INSTANCE_COUNT
-  echo GPU_COUNT $GPU_COUNT
-  echo VM_TYPE $VM_TYPE
-  echo ACCELERATOR_TYPE $ACCELERATOR_TYPE
-  echo IMAGE_FAMILY_NAME $IMAGE_FAMILY_NAME
-  echo IMAGE_NAME $IMAGE_NAME
-  echo DISK_SIZE_GB $DISK_SIZE_GB
-  echo DISK_TYPE $DISK_TYPE
-  echo TERRAFORM_GCS_PATH $TERRAFORM_GCS_PATH
-  echo VM_LOCALFILE_DEST_PATH $VM_LOCALFILE_DEST_PATH
-  echo METADATA $METADATA
-  echo LABELS $LABELS
-  echo STARTUP_COMMAND $STARTUP_COMMAND
-  echo ORCHESTRATOR_TYPE $ORCHESTRATOR_TYPE
-  echo GCS_MOUNT_LIST $GCS_MOUNT_LIST
-  echo NFS_FILESHARE_LIST $NFS_FILESHARE_LIST
-  echo SHOW_PROXY_URL $SHOW_PROXY_URL
-  echo MINIMIZE_TERRAFORM_LOGGING $MINIMIZE_TERRAFORM_LOGGING
-  echo NETWORK_CONFIG $NETWORK_CONFIG
-  echo ACTION $ACTION
-  /usr/entrypoint.sh
-}
-
 export PROJECT=$1
 export TRAIN_IMAGE=$2
 export DATA_DIR=${3/\/gcs\//gs:\/\/}
@@ -77,6 +49,11 @@ fi
 shopt -s extglob
 export REGION=${ZONE/%-+([a-z0-9])/}
 
+if [[ ${GPU_TYPE} == "nvidia-h100-80gb" ]]; then
+  export USE_COS_IMAGE=1
+  export TCPX=1
+fi
+
 if [[ ${USE_COS_IMAGE} ]]; then
   echo "Using COS image"
   for (( i=0; i < ${GPU_COUNT}; i++ )); do
@@ -97,12 +74,17 @@ if [[ ${USE_COS_IMAGE} ]]; then
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
-  echo ${DOCKER_PARAMS}
+  export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
+  export VM_IMAGE=\"cos-105-17412-156-59\"
+  export IMAGE_FAMILY=null
+  export IMAGE_PROJECT=\"cos-cloud\"
 else
   echo "Using DLVM image"
   export DOCKER_PARAMS="--gpus all"
   export PRE_DOCKER_RUN="nvidia-persistenced;"
-  export VM_IMAGE=c0-deeplearning-common-cu113-v20221026-debian-10
+  export VM_IMAGE=\"c0-deeplearning-common-cu113-v20221026-debian-10\"
+  export IMAGE_FAMILY=null
+  export IMAGE_PROJECT=\"ml-images\"
 fi
 
 export VM_IMAGE
@@ -118,8 +100,31 @@ if [[ ${TCPX} ]]; then
     sudo rm /opt/hpcx/nccl_rdma_sharp_plugin/lib/libnccl-net.so.0; \
     sudo chmod go+w /etc/ld.so.conf.d/nvidia.conf; \
     sudo echo /usr/local/tcpx_exec/lib64 >> /etc/ld.so.conf.d/nvidia.conf; \
-    export NCCL_NET=GPUDirectTCPX_v7; \
-    export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:/usr/local/tcpx_exec/lib64; \
+    export NCCL_P2P_NET_CHUNKSIZE=524288; \
+    export NCCL_P2P_PCI_CHUNKSIZE=524288; \
+    export NCCL_P2P_NVL_CHUNKSIZE=1048576; \
+    export NCCL_CHECK_POINTERS=0; \
+    export NCCL_GRAPH_MIXING_SUPPORT=0; \
+    export NCCL_PROTO=simple; \
+    export NCCL_SOCKET_IFNAME=eth0; \
+    export NCCL_CROSS_NIC=0; \
+    export NCCL_ALGO=Ring; \
+    export NCCL_NSOCKS_PERTHREAD=4; \
+    export NCCL_SOCKET_NTHREADS=1; \
+    export NCCL_MAX_NCHANNELS=8; \
+    export NCCL_MIN_NCHANNELS=8; \
+    export NCCL_DYNAMIC_CHUNK_SIZE=524288; \
+    export NCCL_GPUDIRECTTCPX_SOCKET_IFNAME=eth1,eth2,eth3,eth4; \
+    export NCCL_GPUDIRECTTCPX_CTRL_DEV=eth0; \
+    export NCCL_NET_GDR_LEVEL=PIX; \
+    export NCCL_P2P_PXN_LEVEL=0; \
+    export NCCL_DEBUG=INFO; \
+    export NCCL_DEBUG_SUBSYS=ENV; \
+    export NCCL_GPUDIRECTTCPX_PROGRAM_FLOW_STEERING_WAIT_MICROS=1000000; \
+    export N_OP_SHARDS=8; \
+    export CYCLIC=false; \
+    export ACCELERATORS_PER_POD=8; \
+    export NCCL_GPUDIRECTTCPX_FORCE_ACK=1; \
     ${TRAIN_CMD}"
 fi
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
@@ -134,7 +139,7 @@ export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name tr
  -v /etc/ssh:/etc/ssh \
  -v /var/tmp:/host/tmp \
  ${TRAIN_IMAGE} bash -c '${TRAIN_CMD}'"
-echo ${START}
+echo "startup command = ${START}"
 #gcloud compute resource-policies create group-placement ${JOB_ID}  --collocation COLLOCATED  --region ${REGION}  --project ${PROJECT}
 #gcloud compute instance-templates create ${JOB_ID} --project=${PROJECT} --machine-type=${MACHINE_TYPE} --network-interface=network-tier=PREMIUM,network=default,address= --metadata=install-unattended-upgrades=false,enable-oslogin=TRUE,jupyter-user=${OS_LOGIN_USER},install-nvidia-driver=True,startup-script="${START}" --maintenance-policy=TERMINATE --provisioning-model=STANDARD --scopes=https://www.googleapis.com/auth/cloud-platform --accelerator=count=${GPU_COUNT},type=${GPU_TYPE} --create-disk=auto-delete=yes,boot=yes,device-name=gpu1,image=projects/ml-images/global/images/c2-deeplearning-pytorch-1-11-cu113-v20220701-debian-10,mode=rw,size=2000,type=pd-ssd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any --resource-policies=${JOB_ID} --no-restart-on-failure
 #gcloud compute instance-groups managed create ${JOB_ID} --project=${PROJECT} --base-instance-name=${JOB_ID} --size=${NODE_COUNT} --template=${JOB_ID} --zone=${ZONE} --list-managed-instances-results=PAGELESS
@@ -142,7 +147,7 @@ echo ${START}
 export JOB_FOUND=$(gsutil ls ${DATA_DIR}/machines.txt)
 
 if [[ -z "${JOB_FOUND}" ]]; then
-  echo "No machines.txt found. Trying to find a cluster with the spified prefix ${JOB_ID}"
+  echo "No machines.txt found. Trying to find a cluster with the spicified prefix ${JOB_ID}"
   export JOB_FOUND=$(gcloud compute instances list --project ${PROJECT}| grep ${JOB_ID})
   if [[ -n "${JOB_FOUND}" ]]; then
     echo "Cluster found! Exporting machine list..."
@@ -163,7 +168,7 @@ if [[ -n "${JOB_FOUND}" ]]; then
     do
       echo $machine
       (gcloud compute ssh $machine --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'sudo groupadd docker;sudo usermod -aG docker \$USER'" -- -n
-      gcloud compute ssh $machine --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START:\':\\\"} ' >> log.txt 2>&1 &" -- -n) &
+      gcloud compute ssh $machine --project ${PROJECT} --zone=$ZONE --internal-ip --ssh-key-expire-after=1d --strict-host-key-checking=no --command="bash -c -l 'docker kill train_llm || true; docker container prune -f || true; ${START//\'/\"} ' >> log.txt 2>&1 &" -- -n)
     done < machines.txt
     echo "Training initiated on all machines!"
   else
@@ -181,25 +186,48 @@ else
   export OS_LOGIN_USER=$(gcloud iam service-accounts describe ${SERVICE_ACCOUNT} | grep uniqueId | sed -e "s/.* '\(.*\)'/sa_\1/")
   echo User is ${OS_LOGIN_USER}
 
-  export ACTION=CREATE
-  export NAME_PREFIX=${JOB_ID}
-  export INSTANCE_COUNT=${NODE_COUNT}
-  export VM_TYPE=${MACHINE_TYPE}
-  export ACCELERATOR_TYPE=${GPU_TYPE}
-  export IMAGE_NAME=${VM_IMAGE}
-  export TERRAFORM_GCS_PATH=${DATA_DIR}/deployment
-  export METADATA="{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\"}"
-  export STARTUP_COMMAND=${START}
-  export PROJECT_ID=${PROJECT}
-  export SHOW_PROXY_URL=no
-  export LABELS="{gcpllm=\"$NAME_PREFIX\"}"
-  export MINIMIZE_TERRAFORM_LOGGING=true
-  #export DISK_SIZE_GB=1000
+  sed -i -e "s/{project_id}/\"${PROJECT}\"/g" \
+    -e "s/{region}/\"${REGION}\"/g" \
+    -e "s/{cluster_prefix}/\"${JOB_ID}\"/g" \
+    -e "s/{machine_type}/\"${MACHINE_TYPE}\"/g" \
+    -e "s/{labels}/{gcpllm=\"$NAME_PREFIX\"}/g" \
+    -e "s/{image_family}/${IMAGE_FAMILY}/g" \
+    -e "s/{image_project}/${IMAGE_PROJECT}/g" \
+    -e "s/{image_name}/${VM_IMAGE}/g" \
+    -e "s/{node_count}/\"${NODE_COUNT}\"/g" \
+    -e "s/{nodes_zone}/\"${ZONE}\"/g" \
+    -e "s/{disk_size_gb}/2000/g" \
+    -e "s/{maintenance_interval}/\"PERIODIC\"/g" \
+    -e "s/{use_compact_placement_policy}/true/g" \
+    /root/aiinfra/input/terraform.tfvars
+    
+    
 
-  _invoke_cluster_tool
+  if [[ ${USE_COS_IMAGE} ]]; then
+    sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
+    echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
+    export CLUSTER_TYPE=mig-cos
+    sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
+        -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.6/g" \
+        -e "s/a3vm/a3vm --disable_quickack/g" \
+        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.5-v3-ns/g" \
+        a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
+    
+  else
+    echo ${START} > start.sh
+    gsutil cp start.sh ${DATA_DIR}/start.sh
+    sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR//\//\\\/}\\/start.sh\"}/g" \
+    /root/aiinfra/input/terraform.tfvars
+    export CLUSTER_TYPE=mig
+  fi
 
+  cat /root/aiinfra/input/terraform.tfvars
+
+  ./scripts/entrypoint.sh create a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
+  
   gcloud compute instances list --project ${PROJECT} | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
+  export CLUSTER_PROVISIONED=1
 fi
 
 echo "Waiting for training to start..."
@@ -232,8 +260,9 @@ while [[ -z "$EXIT_CODE" ]]; do
   fi
 
   if [[ "${RESULT}" == "started" && "$monitoring_started" != true  ]]; then
-    echo "Training started, start monitoring."
-    (python3 training_cluster_monitor.py --project_id=${PROJECT} --model_output=${DATA_DIR}/model) &
+    echo "Training started!"
+    #echo "Training started, start monitoring."
+    #(python3 training_cluster_monitor.py --project_id=${PROJECT} --model_output=${DATA_DIR}/model) &
     monitoring_started=true
   fi
 
@@ -246,11 +275,10 @@ while [[ -z "$EXIT_CODE" ]]; do
 done
 
 # Only delete cluster when training succeeds. Otherwise, keep the cluster for investigation
-if [[ "${EXIT_CODE}" == "0" ]]; then
+if [[ "${EXIT_CODE}" == "0"  && -n "${CLUSTER_PROVISIONED}" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
-  export ACTION=DESTROY
-  _invoke_cluster_tool
+  ./scripts/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
 fi
 
 exit $EXIT_CODE
