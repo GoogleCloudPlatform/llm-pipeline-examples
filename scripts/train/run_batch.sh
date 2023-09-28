@@ -278,7 +278,7 @@ done
 if [[ "${EXIT_CODE}" == "0"  && -n "${CLUSTER_PROVISIONED}" ]]; then
   #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
   #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
-  /usr/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
+  /scripts/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
 fi
 
 exit $EXIT_CODE
