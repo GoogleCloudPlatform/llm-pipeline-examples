@@ -13,7 +13,7 @@
     },
     "train_config": {
       "model_checkpoint" : "google/t5-v1_1-xxl",
-      "batch_size" : 19,
+      "batch_size" : 16,
       "epochs" : 7
     },
     "model_display_name" : "t5",
