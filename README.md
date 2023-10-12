@@ -1,20 +1,5 @@
 # Training Large Language Models on Google Cloud
 
-Large language models are one of the most popular machine learning models. They
-have been shown to achieve high scores in benchmarks on different NLP tasks.
-There is a tendency of noticeable improvements which have been recorded as the
-model size grows. For example, the T5 model comes in various sizes:
-
-* T5 small : 60 million parameters
-* T5 base: 220 million parameters
-* T5 large: 770 million parameters
-* T5 XL: 3 billion parameters
-* T5 XXL: 11 billions parameters
-
-The T5 XXL achieves higher benchmark scores on multiple NLP tasks in comparison
-to smaller T5 models. When we fine tune it for summarization, we get better
-output quality as you can see some of our [sample results](#expected-output)
-
 The challenges of training large language models are multiple. To start with, it
 needs a large infrastructure of compute resources. Multiple machines with
 multiple hardware accelerators such as GPUs and TPUs are needed to train a
@@ -39,12 +24,10 @@ machine learning framework that enables the training and finetuning of models
 across multiple GPUs and multiple nodes.
 
 Google Cloud Platform is one of the largest cloud providers which provides
-compute infrastructure suitable for training large language models.
-[Accelerator-optimized machines](https://cloud.google.com/compute/docs/accelerator-optimized-machines)
-equipped with NVidia A100 GPU cards, available on GCP, are very capable hardware
-VMs that can produce performance when used for training machine learning models.
+compute infrastructure suitable for training large language models. GCP is offering [A3](https://cloud.google.com/blog/products/compute/announcing-cloud-tpu-v5e-and-a3-gpus-in-ga)
+ VMs, which are powered by NVidia's latest [H100](https://www.nvidia.com/en-us/data-center/h100/) GPU.
 In addition to the compute infrastructure, GCP offers ML Ops automation services
-via [Vertex AI](https://www.nvidia.com/en-us/data-center/a100/). We use Vertex
+via [Vertex AI](https://cloud.google.com/vertex-ai). We use Vertex
 AI Pipelines to run our fine tuning pipeline. We use Vertex AI Endpoints to
 serve our model.
 
@@ -115,25 +98,10 @@ Follow these instructions To run T5 training on a GPU cluster:
 1.  Run the following command:
 
     ```bash
-    python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/<config>
+    python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/xxl16vma3.json
     ```
 
-    Replace **\<config>** with one of the precreated configs below or create
-    your own config as described in [here](#customize-my-pipeline):
-
-    *   **small1vm1gpu.json** To create a single VM cluster with 1 A100 GPU and
-        finetune T5 small on it.
-
-    *   **small2vm16gpu.json** To create a 2 VM cluster with 16 A100 GPU each
-        and finetune T5 small on it.
-
-    *   **xxl2vm16gpu.json** To create a 2 VM cluster with 16 A100 GPU each and
-        finetune T5 XXL on it. Caution: takes multiple days
-
-    *   **xxl8vm16gpu.json** To create a 2 VM cluster with 16 A100 GPU each and
-        finetune T5 XXL on it. Caution: takes multiple days
-
-    Make sure you have enough Quota for the number of A2 VMs and A100 GPUs you
+    Make sure you have enough Quota for the number of A3 VMs and H100 GPUs you
     select. You can learn more about Google Cloud quota from
     [here](https://cloud.google.com/compute/resource-usage#gpu_quota)
 
@@ -214,23 +182,23 @@ configurations. Here is the details of preparing a configuration JSON:
   "summary_column": "highlights",
   "cluster_config": {
     "name_prefix" : "t5node",
-    "zone" : "asia-northeast3-a",
-    "node_count" : 1,
-    "machine_type" : "a2-highgpu-1g",
-    "gpu_type" : "nvidia-tesla-a100",
-    "gpu_count" : 1
+    "zone" : "us-east4-a",
+    "node_count" : 16,
+    "machine_type" : "a3-highgpu-8g",
+    "gpu_type" : "nvidia-h100-80gb",
+    "gpu_count" : 8
   },
   "train_config": {
-    "model_checkpoint" : "t5-small",
-    "batch_size" : 128,
-    "epochs" : 1
+    "model_checkpoint" : "google/t5-v1_1-xxl",
+    "batch_size" : 16,
+    "epochs" : 7
   },
   "model_display_name" : "t5",
   "deploy_config": {
     "region": "us-central1",
-    "machine_type" : "n1-standard-32",
-    "gpu_type" : "NVIDIA_TESLA_V100",
-    "gpu_count" : 4
+    "machine_type" : "a2-highgpu-2g",
+    "gpu_type" : "NVIDIA_TESLA_A100",
+    "gpu_count" : 2
   }
 }
 ```
