@@ -25,7 +25,8 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
   && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
   && apt-get update \
-  && apt-get install --yes gcsfuse google-cloud-cli
+  && apt-get install --yes \
+  gcsfuse google-cloud-cli
   
 RUN apt-get update
 RUN apt install -yq openssh-server openssh-client ninja-build libaio-dev
