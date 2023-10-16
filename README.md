@@ -96,13 +96,23 @@ Follow these instructions To run T5 training on a GPU cluster:
     cd llm-pipeline
     ```
 
-1.  Run the following command:
+1.  Run one of the following commands:
 
-    ```bash
-    python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/xxl16vma3.json
-    ```
+    1. To run a T5 XXL on A3 VMs with H100 GPUs
+    
+        ```bash
+        python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/xxl16vma3.json
+        ```
 
-    Make sure you have enough Quota for the number of A3 VMs and H100 GPUs you
+    1. To run a T5 small on a single A100 GPU:
+
+        ```bash
+        python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/small1vm1gpu.json
+        ```
+
+    1. Check the ```configs``` directory for other configurations
+
+    Make sure you have enough Quota for the VM and GPU types you
     select. You can learn more about Google Cloud quota from
     [here](https://cloud.google.com/compute/resource-usage#gpu_quota)
 
