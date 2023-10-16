@@ -14,6 +14,8 @@
 FROM nvcr.io/nvidia/pytorch:23.05-py3
 
 ENV TORCH_CUDA_ARCH_LIST="8.0 8.6 9.0+PTX"
+ENV GCSFUSE_VERSION=1.2.0
+
 RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates \
     curl \
@@ -25,7 +27,11 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
   && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
   && apt-get update \
-  && apt-get install --yes gcsfuse google-cloud-cli
+  && apt-get install --yes google-cloud-cli \
+  && curl -LJO "https://github.com/GoogleCloudPlatform/gcsfuse/releases/download/v${GCSFUSE_VERSION}/gcsfuse_${GCSFUSE_VERSION}_amd64.deb" && \
+    apt-get -y install fuse && \
+    apt-get clean && \
+    dpkg -i "gcsfuse_${GCSFUSE_VERSION}_amd64.deb"
   
 RUN apt-get update
 RUN apt install -yq openssh-server openssh-client ninja-build libaio-dev

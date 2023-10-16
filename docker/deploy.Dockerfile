@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM python:slim
+FROM python:3.11-slim
 
 RUN pip install google-cloud-aiplatform
 RUN pip install gcsfs
