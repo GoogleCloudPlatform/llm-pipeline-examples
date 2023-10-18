@@ -52,6 +52,7 @@ export REGION=${ZONE/%-+([a-z0-9])/}
 if [[ ${GPU_TYPE} == "nvidia-h100-80gb" ]]; then
   export USE_COS_IMAGE=1
   export TCPX=1
+  export A3=1
 fi
 
 if [[ ${USE_COS_IMAGE} ]]; then
@@ -203,27 +204,28 @@ else
     
     
 
-  if [[ ${USE_COS_IMAGE} ]]; then
+  if [[ ${A3} ]]; then
     sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
+    export CPT_TEMPLATE=a3
     sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
         -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.6/g" \
         -e "s/a3vm/a3vm --disable_quickack/g" \
         -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.5-v3-ns/g" \
         a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
-    
   else
     echo ${START} > start.sh
     gsutil cp start.sh ${DATA_DIR}/start.sh
     sed -i "s/{metadata}/{install-unattended-upgrades=\"false\",enable-oslogin=\"TRUE\",jupyter-user=\"${OS_LOGIN_USER}\",install-nvidia-driver=\"True\",startup-script-url=\"${DATA_DIR//\//\\\/}\\/start.sh\"}/g" \
     /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig
+    export CPT_TEMPLATE=a2
   fi
 
   cat /root/aiinfra/input/terraform.tfvars
 
-  ./scripts/entrypoint.sh create a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
+  ./scripts/entrypoint.sh create ${CPT_TEMPLATE} ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
   
   gcloud compute instances list --project ${PROJECT} | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/

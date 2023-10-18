@@ -18,15 +18,15 @@ The
 [Hugging Face transformer library](https://huggingface.co/docs/transformers/index)
 is a very popular machine learning library that has made the most popular
 machine learning models available to a wide range of users. It provides a simple
-and standard approach to perform, data preprocessing, training, fine tuning and
-inference. In addition, it provided support for deepspeed which is a distributed
+and standard approach to perform data preprocessing, training, fine tuning and
+inference. In addition, it provides support for deepspeed, which is a distributed
 machine learning framework that enables the training and finetuning of models
 across multiple GPUs and multiple nodes.
 
 Google Cloud Platform is one of the largest cloud providers which provides
 compute infrastructure suitable for training large language models. GCP is offering
  [A3](https://cloud.google.com/blog/products/compute/announcing-cloud-tpu-v5e-and-a3-gpus-in-ga)
- VMs, which are powered by NVidia's latest [H100](https://www.nvidia.com/en-us/data-center/h100/)
+ VMs, which are powered by Nvidia's latest [H100](https://www.nvidia.com/en-us/data-center/h100/)
   GPU. In addition to the compute infrastructure, GCP offers ML Ops automation
   services via [Vertex AI](https://cloud.google.com/vertex-ai). We use Vertex
 AI Pipelines to run our fine tuning pipeline. We use Vertex AI Endpoints to
