@@ -231,7 +231,7 @@ else
 fi
 
 echo "Waiting for training to start..."
-(sleep 2400;echo check > check.txt) &
+(sleep 3600;echo check > check.txt) &
 
 monitoring_started=false
 export EXIT_CODE=
@@ -253,7 +253,7 @@ while [[ -z "$EXIT_CODE" ]]; do
     rm check.txt
     
     if [[ "${RESULT}" != "started" ]]; then
-      echo "Timeout! Training not started in 20 minutes"
+      echo "Timeout! Training not started in 60 minutes"
       export EXIT_CODE=2
       break
     fi
