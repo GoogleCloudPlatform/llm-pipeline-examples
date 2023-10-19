@@ -223,7 +223,7 @@ else
 
   cat /root/aiinfra/input/terraform.tfvars
 
-  ./scripts/entrypoint.sh create ${CPT_TEMPLATE} ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
+  ./scripts/entrypoint.sh create ${CPT_TEMPLATE} ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment 
   
   gcloud compute instances list --project ${PROJECT} | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
@@ -288,7 +288,7 @@ if [[ -n "${CLUSTER_PROVISIONED}" ]]; then
     echo "  gsutil cp ${DATA_DIR}/deployment/${JOB_ID}-deployment/terraform.tfvars ."
     echo "  docker run --rm -v \"\${HOME}/.config/gcloud:/root/.config/gcloud\"  -v \"\$(pwd):/root/aiinfra/input\" \
 us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:latest \
-destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q"
+destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment"
   fi
 fi
 
