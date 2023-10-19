@@ -285,8 +285,8 @@ if [[ -n "${CLUSTER_PROVISIONED}" ]]; then
     echo "Training has failed but we kept the cluster for further investigation."
     echo "You can check the serial port logs on the head node ${HEAD_NODE}."
     echo "If you want to delete the cluster, please use the following commands:"
-    echo "  gsutil cp ${DATA_DIR}/deployment/${JOB_ID}-deployment/terraform.tfvar ."
-    echo "  docker run --rm -v \"${HOME}/.config/gcloud:/root/.config/gcloud\"  -v \"$(pwd):/root/aiinfra/input\" \
+    echo "  gsutil cp ${DATA_DIR}/deployment/${JOB_ID}-deployment/terraform.tfvars ."
+    echo "  docker run --rm -v \"\${HOME}/.config/gcloud:/root/.config/gcloud\"  -v \"\$(pwd):/root/aiinfra/input\" \
 us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:latest \
 destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q"
   fi
