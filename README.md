@@ -267,7 +267,7 @@ more about loading datasets here:
 
 In the example, we use the
 [CNN Dailymail dataset](https://huggingface.co/datasets/cnn_dailymail). The code
-is packaged in a container available [here](gcr.io/llm-containers/train).
+is packaged in a container available [here](https://gcr.io/llm-containers/train).
 
 ## Preprocessing
 
@@ -314,9 +314,9 @@ Let’s look at the implementation of some of these parts:
 #### Cluster Provisioning
 
 To provision the cluster of VMs, we use a pre created container we call ‘batch
-container’ . The container is available [here](gcr.io/llm-containers/batch). It
+container’ . The container is available [here](https://gcr.io/llm-containers/batch). It
 is based on the cluster provisioning tool container available
-[here](gcr.io/llm-containers/cluster-provision-image). Creating VMs using the
+[here](https://gcr.io/llm-containers/cluster-provision-image). Creating VMs using the
 tool is as simple as filling a few environment variables and calling an entry
 point. It will automatically create the cluster with an image of choice and run
 a starting command on all VMs.
@@ -329,8 +329,10 @@ the destruction of the cluster.
 All the VMs will be provisioned with the DLVM image with NVidia drivers
 preinstalled. The VMs will download the training docker image and invoke the
 training start command. The training container is available
-[here](gcr.io/llm-containers/train) . And you can find the fine tuning scripts
+[here](https://gcr.io/llm-containers/train) . And you can find the fine tuning scripts
 [here](src/finetune.py).
+
+
 
 The container image has some pre-installed packages and configuration. This
 includes:
@@ -349,8 +351,16 @@ The head node will invoke the head script which:
 *   Invokes deepspeed with correct config to run the training script using ZeRO
     stage 3
 
-In turn, deep speed would use its default ssh launcher to launch the training
+In turn, deepspeed would use its default ssh launcher to launch the training
 scripts on all cluster containers.
+
+After the training container provisions the cluster, it will start downloading 
+the model weights and dataset and will kick off training after. It will show 
+the following message:
+
+```Waiting for training to start...```
+
+This could take up to 20 minutes depending on the size of your model and data.
 
 #### Saving to GCS
 
@@ -410,7 +420,7 @@ which provides us with the quickest path to serve our model.
 ![Deployment Parameters](img/deploy_params.png)
 
 We package the model serving code in a simple prediction container which is
-available [here](httpgcr.io/llm-containers/predict). The container packs a Flask
+available [here](https://gcr.io/llm-containers/predict). The container packs a Flask
 server with a simple python script that uses deepspeed to perform prediction
 from the model. It implements the necessary REST APIs required by Vertex AI
 Prediction.
@@ -461,37 +471,3 @@ GPUs, etc ..) can make the model fit into the compute cluster.
 Currently we support SKUs that are available for Vertex AI Prediction which can
 be found
 [here](https://cloud.google.com/vertex-ai/docs/predictions/configure-compute#machine-types).
-
-## Future Work
-
-### Dataflow Processing
-
-To process larger datasets, preprocessing can’t happen on a single node. It
-needs to be done in parallel using Dataflow. We will add support to processing
-large datasets using Dataflow. This will allow training on large corpuses (e.g
-C4) .
-
-### NVidia Megatron
-
-Currently, the pipeline uses deepspeed ZeRO for model partitioning which uses
-distributed data parallel processing of the model. To allow even larger models
-(e.g. GPT3) and use Model Parallel , we will add support to NVidia Megatron.
-
-### More Tasks
-
-We currently only implement a summarization task. We can add support to more
-tasks that support different classes of models (e.g. encoder only and decoder
-only models).
-
-### Integration with DGCM monitoring
-
-With the new
-[release](https://cloud.google.com/blog/products/containers-kubernetes/monitoring-gpu-workloads-on-gke-with-nvidia-data-center-gpu-manager)
-of the DGCM monitoring plugin for GKE, we will be able to view GPU metrics in
-the cluster as the training makes progress. This will allow for better
-visibility and profiling.
-
-### Automatic restart from a check point  of failure
-
-Currently restart is done manually from a checkpoint. We need to have failure
-detection and automatic restart from the last checkpoint if a failure occurs.
