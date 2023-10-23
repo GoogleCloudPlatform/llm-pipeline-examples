@@ -214,7 +214,8 @@ def deploy(
       },
       serving_container_predict_route="/infer",
       serving_container_health_route="/health",
-      location=location
+      location=location,
+      upload_request_timeout=1200
   )
 
   endpoint.deploy(

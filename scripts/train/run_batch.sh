@@ -202,8 +202,6 @@ else
     -e "s/{use_compact_placement_policy}/true/g" \
     /root/aiinfra/input/terraform.tfvars
     
-    
-
   if [[ ${A3} ]]; then
     sed -i "s/{metadata}/{}/g" /root/aiinfra/input/terraform.tfvars
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
@@ -225,7 +223,7 @@ else
 
   cat /root/aiinfra/input/terraform.tfvars
 
-  ./scripts/entrypoint.sh create ${CPT_TEMPLATE} ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q 
+  ./scripts/entrypoint.sh create ${CPT_TEMPLATE} ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment 
   
   gcloud compute instances list --project ${PROJECT} | grep ${JOB_ID} | sed 's/\(\S\+\) .* \([0-9\.]\+\)[0-9\.,]* \+\([0-9\.]\+\) \+RUNNING/\1 \2/' | sort > machines.txt
   gsutil cp machines.txt ${DATA_DIR}/
@@ -276,11 +274,22 @@ while [[ -z "$EXIT_CODE" ]]; do
   
 done
 
-# Only delete cluster when training succeeds. Otherwise, keep the cluster for investigation
-if [[ "${EXIT_CODE}" == "0"  && -n "${CLUSTER_PROVISIONED}" ]]; then
-  #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
-  #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
-  ./scripts/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
+if [[ -n "${CLUSTER_PROVISIONED}" ]]; then
+  # Only delete cluster when training succeeds. Otherwise, keep the cluster for investigation
+  if [[ "${EXIT_CODE}" == "0" ]]; then
+    #gcloud compute instance-groups managed delete ${JOB_ID} --quiet --project=${PROJECT} --zone=${ZONE}
+    #gcloud compute instance-templates delete ${JOB_ID} --quiet --project=${PROJECT}
+    ./scripts/entrypoint.sh destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment -q
+  else
+    export HEAD_NODE=$(head -n 1 machines.txt | sed 's/\(\S\+\) .*/\1/')
+    echo "Training has failed but we kept the cluster for further investigation."
+    echo "You can check the serial port logs on the head node ${HEAD_NODE}."
+    echo "If you want to delete the cluster, please use the following commands:"
+    echo "  gsutil cp ${DATA_DIR}/deployment/${JOB_ID}-deployment/terraform.tfvars ."
+    echo "  docker run --rm -v \"\${HOME}/.config/gcloud:/root/.config/gcloud\"  -v \"\$(pwd):/root/aiinfra/input\" \
+us-docker.pkg.dev/gce-ai-infra/cluster-provision-dev/cluster-provision-image:latest \
+destroy a3 ${CLUSTER_TYPE} -b ${DATA_DIR}/deployment"
+  fi
 fi
 
 exit $EXIT_CODE
