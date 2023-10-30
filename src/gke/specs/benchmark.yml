@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: benchmark-flask
+spec:
+  template:
+    spec:
+      containers:
+      - name: benchmark
+        image: gcr.io/llm-containers/benchmark:latest
+        args:
+        - "--hf_dataset_id=$HF_DATASET_ID"
+        - "--dataset_split_id=$DATASET_SPLIT_ID"
+        - "--dataset_row_text_key=$DATASET_ROW_TEXT_KEY"
+        - "--dataset_config_id=$DATASET_CONFIG_ID"
+        - "--num_rows=$NUM_ROWS"
+        - "--total_requests=$TOTAL_REQUESTS"
+        - "--batch_size=$BATCH_SIZE"
+        - "--target_url=$TARGET_URL"
+        resources:
+          limits:
+            memory: "$POD_MEMORY_LIMIT"
+      restartPolicy: Never
