@@ -385,7 +385,7 @@ For larger models or
 production class deployment, we can deploy directly to GKE and use
 [Triton Inference Server](https://developer.nvidia.com/nvidia-triton-inference-server). See an [example with T5](examples/inferencing/running-on-gke.md).
 
-## Current Pipeline Supporte4d configurations
+## Current Pipeline Supported configurations
 
 ### Data
 
