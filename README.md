@@ -131,12 +131,12 @@ and launch training:
 
     For the T5 small:
     ```bash
-    sudo docker run -it gcr.io/llm-containers/deploy:test python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
     ```
 
     For the T5 XXL:
     ```bash
-    sudo docker run -it gcr.io/llm-containers/deploy:test python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
     ```
 
     When it finishes deployment, it will output the following line:
