@@ -17,3 +17,6 @@ FROM python:3.11-slim
 
 RUN pip install google-cloud-aiplatform
 RUN pip install gcsfs
+RUN pip install absl-py
+
+COPY src/deploy.py .
