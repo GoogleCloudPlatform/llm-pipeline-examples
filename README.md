@@ -61,7 +61,7 @@ The following instructions show how to train a T5 on a GPU cluster. The intructi
 are simplified to use Goolge Cloud Compute Engine APIs only. In addition they use 
 Google Cloud Strorage for storing the data.:
 
-1.  In your project, enable services needed to run the pipeline. You can do this
+1.  **Enable Services** In your project, enable services needed to run the pipeline. You can do this
     by issuing the following command:
 
     ```bash
@@ -69,21 +69,21 @@ Google Cloud Strorage for storing the data.:
         gcloud services enable cloudfunctions compute.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com --project=${PROJECT_ID}
     ```
 
-1.  Create our workspace VM which we will use to process the data, create cluster
+1.  **Create Workspace** Create our workspace VM which we will use to process the data, create cluster
 and launch training:
 
     ```bash
     gcloud compute instances create llm-processor     --project=${PROJECT_ID}     --zone=us-east4-c     --machine-type=e2-standard-4     --metadata=enable-oslogin=true     --scopes=https://www.googleapis.com/auth/cloud-platform     --create-disk=auto-delete=yes,boot=yes,device-name=llm-processor,image-project=cos-cloud,image-family=cos-stable,mode=rw,size=250,type=projects/${PROJECT_ID}/zones/us-central1-a/diskTypes/pd-balanced 
     ```
 
-1. Connect to the VM using SSH:
+1. **Connect** Connect to the VM using SSH:
    
    ```bash
    gcloud compute ssh llm-processor --zone=us-east4-c --project=${PROJECT_ID}
    ```
 
 
-1.  Create a regional bucket in the same project. Make sure you choose to make
+1.  **Create Storage Bucket** Create a regional bucket in the same project. Make sure you choose to make
     it a regional bucket and choose the same region as where your pipeline will
     run. us-central1 recommended.
 
@@ -93,21 +93,26 @@ and launch training:
         gcloud alpha storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=us-central1 --uniform-bucket-level-access
     ```
 
-1.  Copy data and model checkpoint to GCS bucket.
-
-    1.   If you want to finetune the XXL T5 model (11B parameters), this can take up to 30 minutes to copy, you can use the following command:
+1.  **Copy Data** Copy data and model checkpoint to GCS bucket.
     
+    1. If you want to finetune the XXL T5 model (11B parameters), this can take up to 30 minutes to copy, you can use the following command:
+    
+        ```bash
+            sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=google/t5-v1_1-xxl --workspace_path=gs://$BUCKET_NAME/workspace
+        ```
+    1. If you want to quickly test finetuning a small T5 model (50M parameters), you can use the following command:
+    
+        ```bash
+            sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=t5-small --workspace_path=gs://$BUCKET_NAME/workspace
+        ```
+
+1.  **Preproces Data** Kick off data preprocessing:
+
     ```bash
-        sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=google/t5-v1_1-xxl --workspace_path=gs://$BUCKET_NAME/workspace
+    sudo docker run -it gcr.io/llm-containers/train:release python preprocess.py --model_checkpoint google/t5-v1_1-xxl --document_column article --summary_column highlights --dataset_path gs://$BUCKET_NAME/dataset --tokenized_dataset_path gs://$BUCKET_NAME/processed_dataset
     ```
 
-    1.   If you want to quickly test finetuning a small T5 model (50M parameters), you can use the following command:
-    
-    ```bash
-        sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=t5-small --workspace_path=gs://$BUCKET_NAME/workspace
-    ```
-
-1.  Run one of the following commands:
+1.  **Kick off training**
 
     1. To run a T5 XXL on 8 A3 VMs with H100 GPUs
     
@@ -129,15 +134,15 @@ and launch training:
 
 1. Run one of the following command to deploy your model to Vertex AI:
 
-    For the T5 small:
-    ```bash
-    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
-    ```
+    1. For the T5 small:
+        ```bash
+        sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+        ```
 
-    For the T5 XXL:
-    ```bash
-    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
-    ```
+    1. For the T5 XXL:
+        ```bash
+        sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+        ```
 
     When it finishes deployment, it will output the following line:
     ```
