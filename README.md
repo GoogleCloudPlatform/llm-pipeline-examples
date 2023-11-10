@@ -27,16 +27,13 @@ Google Cloud Platform is one of the largest cloud providers which provides
 compute infrastructure suitable for training large language models. GCP is offering
  [A3](https://cloud.google.com/blog/products/compute/announcing-cloud-tpu-v5e-and-a3-gpus-in-ga)
  VMs, which are powered by Nvidia's latest [H100](https://www.nvidia.com/en-us/data-center/h100/)
-  GPU. In addition to the compute infrastructure, GCP offers ML Ops automation
-  services via [Vertex AI](https://cloud.google.com/vertex-ai). We use Vertex
-AI Pipelines to run our fine tuning pipeline. We use Vertex AI Endpoints to
-serve our model.
+  GPU.
 
 In this effort, we provide a fully functioning example of how can we use GCP
 tools as well as the HuggingFace transformer library in conjunction with
 deepseed to finetune a large language model (T5 XXL) for a text summarization
-task in a production ready pipeline that anyone can run in their own GCP
-project. Here is a summary of task and tooling we are going to use:
+task. We encapsulate the code in container images that you can easily run on GCP.
+Here is a summary of task and tooling we are going to use:
 
 
 * **Task**: Text Summarization
@@ -44,11 +41,7 @@ project. Here is a summary of task and tooling we are going to use:
 * **Distributed Framework**: Deepspeed (ZeRO stage 3)
 * **Infrastructure**: Google Cloud
  * **Cluster Management**: AI Infra cluster provisioning tool
- * **Production Pipeline**: Vertex AI Pipelines
- * **Model Management**: Vertex AI Models
- * **Deployment for Inference**: Vertex AI Endpoints
- * **Model Storage**: Google Cloud Storage
- * **Data Storage**: Google Cloud Storage
+ * **Storage**: Google Cloud Storage
 
 ## Quick Start Guide
 ### Prerequisites
@@ -61,72 +54,94 @@ project. Here is a summary of task and tooling we are going to use:
     gcloud auth application-default login
     ```
 
-1.  Install kfp and abseil packages 
-
-    ```bash
-    pip install "kfp>=2.0" absl-py google-cloud-aiplatform
-    ```
-
 ### Instructions
 
     
-Follow these instructions To run T5 training on a GPU cluster:
+The following instructions show how to train a T5 on a GPU cluster. The intruction 
+are simplified to use Goolge Cloud Compute Engine APIs only. In addition they use 
+Google Cloud Strorage for storing the data.:
 
 1.  In your project, enable services needed to run the pipeline. You can do this
     by issuing the following command:
 
     ```bash
         export PROJECT_ID=<your project ID>
-        gcloud services enable aiplatform.googleapis.com cloudfunctions compute.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com --project=${PROJECT_ID}
+        gcloud services enable cloudfunctions compute.googleapis.com iam.googleapis.com cloudresourcemanager.googleapis.com --project=${PROJECT_ID}
     ```
+
+1.  Create our workspace VM which we will use to process the data, create cluster
+and launch training:
+
+    ```bash
+    gcloud compute instances create llm-processor     --project=${PROJECT_ID}     --zone=us-east4-c     --machine-type=e2-standard-4     --metadata=enable-oslogin=true     --scopes=https://www.googleapis.com/auth/cloud-platform     --create-disk=auto-delete=yes,boot=yes,device-name=llm-processor,image-project=cos-cloud,image-family=cos-stable,mode=rw,size=250,type=projects/${PROJECT_ID}/zones/us-central1-a/diskTypes/pd-balanced 
+    ```
+
+1. Connect to the VM using SSH:
+   
+   ```bash
+   gcloud compute ssh llm-processor --zone=us-east4-c --project=${PROJECT_ID}
+   ```
+
 
 1.  Create a regional bucket in the same project. Make sure you choose to make
     it a regional bucket and choose the same region as where your pipeline will
     run. us-central1 recommended.
 
     ```bash
+        export PROJECT_ID=<your project ID>
         export BUCKET_NAME=<your choice of a globally unique bucket ID>
         gcloud alpha storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=us-central1 --uniform-bucket-level-access
     ```
 
-1.  Clone this repo from the repository
+1.  Copy data and model checkpoint to GCS bucket.
 
+    1.   If you want to finetune the XXL T5 model (11B parameters), this can take up to 30 minutes to copy, you can use the following command:
+    
     ```bash
-    git clone https://github.com/GoogleCloudPlatform/llm-pipeline-examples.git 
-    cd llm-pipeline
+        sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=google/t5-v1_1-xxl --workspace_path=gs://$BUCKET_NAME/workspace
+    ```
+
+    1.   If you want to quickly test finetuning a small T5 model (50M parameters), you can use the following command:
+    
+    ```bash
+        sudo docker run -it gcr.io/llm-containers/train:release python download.py --dataset=cnn_dailymail --subset=3.0.0 --dataset_path=gs://$BUCKET_NAME/dataset --model_checkpoint=t5-small --workspace_path=gs://$BUCKET_NAME/workspace
     ```
 
 1.  Run one of the following commands:
 
-    1. To run a T5 XXL on A3 VMs with H100 GPUs
+    1. To run a T5 XXL on 8 A3 VMs with H100 GPUs
     
         ```bash
-        python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/xxl16vma3.json
+        sudo docker run -it gcr.io/llm-containers/batch:release $PROJECT_ID gcr.io/llm-containers/train:release gs://$BUCKET_NAME/model 0 gs://$BUCKET_NAME/processed_dataset gs://$BUCKET_NAME/workspace '{ "model_checkpoint" : "google/t5-v1_1-xxl",  "batch_size" : 16,  "epochs" : 7}' ' { "name_prefix" : "t5node", "zone" : "us-east4-a",  "node_count" : 8,  "machine_type" : "a3-highgpu-8g", "gpu_type" : "nvidia-h100-80gb", "gpu_count" : 8 }'
         ```
 
     1. To run a T5 small on a single A100 GPU:
 
         ```bash
-        python3 pipeline.py --project=$PROJECT_ID --pipeline_root=gs://$BUCKET_NAME/pipeline_runs/ --config=configs/small1vm1gpu.json
+        sudo docker run -it gcr.io/llm-containers/batch:release $PROJECT_ID gcr.io/llm-containers/train:release gs://$BUCKET_NAME/model 0 gs://$BUCKET_NAME/processed_dataset gs://$BUCKET_NAME/workspace '{ "model_checkpoint" : "t5-small",  "batch_size" : 128,  "epochs" : 1}' ' { "name_prefix" : "t5node", "zone" : "us-east4-a",  "node_count" : 1,  "machine_type" : "a3-highgpu-8g", "gpu_type" : "nvidia-h100-80gb", "gpu_count" : 8 }'
         ```
-
-    1. Check the ```configs``` directory for other configurations
 
     Make sure you have enough Quota for the VM and GPU types you
     select. You can learn more about Google Cloud quota from
     [here](https://cloud.google.com/compute/resource-usage#gpu_quota)
 
-    The tool displays a link to the pipeline after it finishes. Go to the link
-    to watch the pipeline progress. The pipeline looks like:
-
-    ![pipeline](img/pipeline.png)
-
 ### Test your pipeline
 
-1. After your pipeline completes successfully, expand the 'condition' node and click on the 'deploy' node inside. Under 'Output Parameters', copy the Value of 'endpoint'. Create an environment variable with the value:
+1. Run one of the following command to deploy your model to Vertex AI:
 
+    For the T5 small:
     ```bash
-    export ENDPOINT_ID="<The value you copied>"
+    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+    ```
+
+    For the T5 XXL:
+    ```bash
+    sudo docker run -it gcr.io/llm-containers/deploy:release python deploy.py --project=${PROJECT_ID} --model_display_name=t5 --serving_container_image_uri=gcr.io/llm-containers/predict:release --model_path=gs://${BUCKET_NAME}/model --machine_type=n1-standard-32 --gpu_type=NVIDIA_TESLA_V100 --gpu_count=1 --region=us-central1
+    ```
+
+    When it finishes deployment, it will output the following line:
+    ```
+    Endpoint model deployed. Resource name: projects/<project numbre>/locations/us-central1/endpoints/<endpoint id>
     ```
 
 1. Create a json file with the following content or any article of your choice:
@@ -147,7 +162,7 @@ Follow these instructions To run T5 training on a GPU cluster:
         -X POST \
         -H "Authorization: Bearer $(gcloud auth print-access-token)" \
         -H "Content-Type: application/json" \
-        https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/endpoints/${ENDPOINT_ID}:predict \
+        https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/endpoints/432544312:predict \
         -d "@prediction.json"
     ```
 
@@ -178,71 +193,6 @@ Follow these instructions To run T5 training on a GPU cluster:
   "modelVersionId": "12"
 }
 ```
-
-### Customize your pipeline
-
-Aside from those standard configurations. You can configure your pipeline to run
-on any dataset, use any supported model, using any GCP hardware as well as other
-configurations. Here is the details of preparing a configuration JSON:
-
-```json
-{
-  "dataset": "cnn_dailymail",
-  "dataset_subset": "3.0.0",
-  "document_column": "article",
-  "summary_column": "highlights",
-  "cluster_config": {
-    "name_prefix" : "t5node",
-    "zone" : "us-east4-a",
-    "node_count" : 16,
-    "machine_type" : "a3-highgpu-8g",
-    "gpu_type" : "nvidia-h100-80gb",
-    "gpu_count" : 8
-  },
-  "train_config": {
-    "model_checkpoint" : "google/t5-v1_1-xxl",
-    "batch_size" : 16,
-    "epochs" : 7
-  },
-  "model_display_name" : "t5",
-  "deploy_config": {
-    "region": "us-central1",
-    "machine_type" : "a2-highgpu-2g",
-    "gpu_type" : "NVIDIA_TESLA_A100",
-    "gpu_count" : 2
-  }
-}
-```
-
-Here is a description of what each configuration parameter does:
-
-*   **dataset**: Title of the dataset from huggingface.co. To use a custom
-    dataset, this can be set to a GCS path.
-*   **dataset_subset**: If the dataset has multiple subsets, this should be the
-    dataset subset name. For datasets with no subsets, this should be set to 
-    "default".
-*   **document_column**: The name of the document column from the dataset.
-*   **summary_column**: The name of the summary column from the dataset.
-* **cluster_config**: Properties related to the cluster that training will be run on.
-    *   **name_prefix**: A prefix to name VMs and Instance groups created by the
-        pipeline.
-    *   **zone**: GCP zone to run the pipeline.
-    *   **node_count**: Number of VM nodes to run finetuning
-    *   **machine_type**: GCE machine type for fine tuning VMs.
-    *   **gpu_type**: GPU type to be attached to each finetuning VM.
-    *   **gpu_count**: Number of GPUs per VM.
-* **train_config**: Properties related to the training job.
-    *   **model_checkpoint**: Name of model checkpoint to start finetuning from.
-    *   **batch_size**: Fine tuning batch size.
-    *   **epochs**: Fine tuning epochs.
-*   **model_display_name**: Name of Vertex AI uploaded model and endpoint
-*   **deploy_config**: Properties related to the deployment of the fine-tuned model.
-    *   **region**: Type of GPU attached to serving VM.
-    *  **machine_type**: Type of VM used for serving the model after
-    deployment. It can be any machine supported by Vertex AI Prediction as
-    listed here.
-    *  **gpu_type**: Type of GPU attached to serving VM.
-    *  **gpu_count**: Number of GPUs attached to serving VM.
 
 ## How it works
 
@@ -430,19 +380,7 @@ For larger models or
 production class deployment, we can deploy directly to GKE and use
 [Triton Inference Server](https://developer.nvidia.com/nvidia-triton-inference-server). See an [example with T5](examples/inferencing/running-on-gke.md).
 
-### Deciding to deploy 
-
-When we upload the model to Vertex AI, we attach the model metrics as labels to
-the model. This way we can easily look up the model accuracy just by looking at
-the model in Vertex AI. This also helps us compare metrics between newly trained
-models and previously deployed models to decide whether the new model is
-performing better than the previous model. This assures us that we are always
-improving the model performance as we run the training pipeline in consecutive
-iterations.
-
-![Should deploy component](img/should_deploy.png)
-
-## Current Pipeline Limitations
+## Current Pipeline Supported configurations
 
 ### Data
 
