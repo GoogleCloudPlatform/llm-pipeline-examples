@@ -34,6 +34,7 @@ flags.DEFINE_string('machine_type', None, 'Deployment machine type')
 flags.DEFINE_string('gpu_type', None, 'Deployment GPU type')
 flags.DEFINE_integer('gpu_count', 1, 'Number of deployment GPUs')
 flags.DEFINE_string('endpoint_name', None, 'Name of deployment endpoint')
+flags.DEFINE_string('endpoint_id', '432544312','Endpoint ID')
 flags.DEFINE_string('region', None, 'Deployment region')
 
 def main(argv):
@@ -46,7 +47,7 @@ def main(argv):
   existing_endpoints = aip.Endpoint.list(
       project=FLAGS.project,
       order_by="create_time",
-      filter='display_name="{}"'.format(endpoint_name),
+      filter='endpoint="{}"'.format(FLAGS.endpoint_id),
       location=FLAGS.region)
 
   if existing_endpoints:
@@ -56,7 +57,8 @@ def main(argv):
     endpoint = aip.Endpoint.create(
         project=FLAGS.project,
         display_name=endpoint_name,
-        location=FLAGS.region
+        location=FLAGS.region,
+        endpoint_id=FLAGS.endpoint_id
     )
 
   existing_models = aip.Model.list(
@@ -80,7 +82,7 @@ def main(argv):
       print(f"New metrics: {new_metrics}")
   else:
     new_metrics = {}
-    print("Warning! Model doesn't have metrics.")
+    print("Model doesn't have metrics. This is expected if your training container doesn't produce metrics.json. Otherwise, review training output.")
 
   deployable_model = aip.Model.upload(
       project=FLAGS.project,

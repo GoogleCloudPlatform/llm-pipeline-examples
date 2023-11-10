@@ -144,11 +144,6 @@ and launch training:
     Endpoint model deployed. Resource name: projects/<project numbre>/locations/us-central1/endpoints/<endpoint id>
     ```
 
-    Copy the 'endpoint id' into an environment variable
-    ```bash
-    export ENDPOINT_ID="<endpoint id>"
-    ```
-
 1. Create a json file with the following content or any article of your choice:
 
     ```json
@@ -167,7 +162,7 @@ and launch training:
         -X POST \
         -H "Authorization: Bearer $(gcloud auth print-access-token)" \
         -H "Content-Type: application/json" \
-        https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/endpoints/${ENDPOINT_ID}:predict \
+        https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/us-central1/endpoints/432544312:predict \
         -d "@prediction.json"
     ```
 
