@@ -14,7 +14,7 @@
 FROM nvcr.io/nvidia/pytorch:23.05-py3
 
 ENV TORCH_CUDA_ARCH_LIST="8.0 8.6 9.0+PTX"
-ENV GCSFUSE_VERSION=1.2.1
+ENV GCSFUSE_VERSION=1.2.0
 
 RUN apt-get update && apt-get install --yes --no-install-recommends \
     ca-certificates \

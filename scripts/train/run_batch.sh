@@ -64,13 +64,14 @@ if [[ ${USE_COS_IMAGE} ]]; then
   export DOCKER_PARAMS="${DOCKER_PARAMS} \
    --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
    --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
-   --volume /run/tcpx:/tmp \
+   --volume /run/tcpx:/run/tcpx \
    --volume /var/lib/tcpx:/usr/local/tcpx \
    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
    --device /dev/nvidiactl:/dev/nvidiactl \
    --env NCCL_DEBUG=INFO \
    --env NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION \
    --env LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:/usr/local/nvidia/lib64 \
+   --env NCCL_GPUDIRECTTCPX_UNIX_CLIENT_PREFIX=/run/tcpx \
    --cap-add=IPC_LOCK \
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
