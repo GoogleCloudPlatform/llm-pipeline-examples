@@ -1,9 +1,9 @@
 {
     "data_file_name":"wiki_data_text_document",
     "tensor_parallel":4,
-    "pipeline_parallel":12,
+    "pipeline_parallel":2,
 
-    "nlayers":70,
+    "nlayers":11,
     "hidden":14336,
     "heads":112,
     "seq_len":2048,

@@ -8,3 +8,4 @@ RUN git clone https://github.com/microsoft/Megatron-DeepSpeed.git
 RUN mv Megatron-DeepSpeed/* .
 
 COPY scripts/gpt/ .
+COPY scripts/train/train_common.sh .

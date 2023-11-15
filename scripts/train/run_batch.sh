@@ -177,7 +177,7 @@ if [[ -n "${JOB_FOUND}" ]]; then
     exit 1
   fi
 else
-  echo "Provishioning cluster..."
+  echo "Provisioning cluster..."
 
   export GCS_PATH=${DATA_DIR}/deployment
   echo seed > deployment.txt

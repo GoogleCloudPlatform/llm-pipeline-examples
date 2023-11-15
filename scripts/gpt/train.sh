@@ -24,9 +24,9 @@ if [[ "$1" =~ gs://([^/]+)/*(.*) ]]; then
   else
     FOLDER=
   fi
-  export DATA_DIR=~/data/
+  export DATA_DIR=~/data
   mkdir ${DATA_DIR}
-  gcsfuse ${FOLDER} ${GCS_BUCKET} ${DATA_DIR}
+  gcsfuse --log-file=gcslog.txt --debug_fs --debug_fuse --debug_gcs ${FOLDER} ${GCS_BUCKET} ${DATA_DIR}/
 else
   export DATA_DIR=$1
 fi
