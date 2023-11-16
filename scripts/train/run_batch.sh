@@ -77,7 +77,7 @@ if [[ ${USE_COS_IMAGE} ]]; then
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
-  export VM_IMAGE=\"cos-105-17412-156-59\"
+  export VM_IMAGE=\"cos-105-17412-226-34\"
   export IMAGE_FAMILY=null
   export IMAGE_PROJECT=\"cos-cloud\"
 else
@@ -126,7 +126,8 @@ if [[ ${TCPX} ]]; then
     export N_OP_SHARDS=8; \
     export CYCLIC=false; \
     export ACCELERATORS_PER_POD=8; \
-    export NCCL_GPUDIRECTTCPX_FORCE_ACK=1; \
+    export NCCL_GPUDIRECTTCPX_FORCE_ACK=0; \
+    export NCCL_GPUDIRECTTCPX_TX_COMPLETION_NANOSLEEP=1000; \
     ${TRAIN_CMD}"
 fi
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
@@ -208,10 +209,9 @@ else
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
     export CPT_TEMPLATE=a3
-    sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
-        -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.6/g" \
-        -e "s/a3vm/a3vm --disable_quickack/g" \
-        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.5-v3-ns/g" \
+    sed -i -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.9/g" \
+        -e "s/a3vm/a3vm --setup_param \"--verbose 128 2 0\"/g" \
+        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.6_2023_10_06/g" \
         a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
   else
     echo ${START} > start.sh
