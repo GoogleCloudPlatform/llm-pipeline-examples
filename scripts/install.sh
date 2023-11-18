@@ -15,7 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 if [[ -z "$(pip list | grep deepspeed)" ]]; then
-  pip install --upgrade pip
   pip install 'datasets>=2.9.0' evaluate transformers
   pip install nltk
   pip install rouge_score
@@ -26,6 +25,6 @@ if [[ -z "$(pip list | grep deepspeed)" ]]; then
   pip install triton
   pip install deepspeed==0.12.3
   pip uninstall -y deepspeed
-  DS_BUILD_OPS=1 DS_BUILD_UTILS=1 pip install deepspeed==0.12.3 --global-option="build_ext"
+  DS_BUILD_EVOFORMER_ATTN=1 DS_BUILD_SPARSE_ATTN=1 DS_BUILD_RANDOM_LTD=1 DS_BUILD_QUANTIZER=1 DS_BUILD_CPU_ADAGRAD=1 DS_BUILD_FUSED_LION=1 DS_BUILD_CPU_LION=1 DS_BUILD_CCL_COMM=1 DS_BUILD_AIO=1 DS_BUILD_CPU_ADAM=1 DS_BUILD_FUSED_ADAM=1 DS_BUILD_FUSED_LAMB=1 DS_BUILD_TRANSFORMER=1 DS_BUILD_TRANSFORMER_INFERENCE=1 DS_BUILD_STOCHASTIC_TRANSFORMER=1 DS_BUILD_UTILS=1 pip install deepspeed==0.12.3 --global-option="build_ext"
 fi
 
