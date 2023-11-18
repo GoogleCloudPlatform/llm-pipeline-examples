@@ -23,6 +23,7 @@ if [[ -z "$(pip list | grep deepspeed)" ]]; then
   pip install scipy
   pip install sentencepiece
   pip install triton
+  pip install aiohttp aiosignal async_timeout attrs charset_normalizer
   pip install deepspeed==0.12.3
   pip uninstall -y deepspeed
   DS_BUILD_OPS=1 DS_BUILD_UTILS=1 pip install deepspeed==0.12.3 --global-option="build_ext"
