@@ -72,12 +72,14 @@ if [[ ${USE_COS_IMAGE} ]]; then
    --env NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION \
    --env LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:/usr/local/nvidia/lib64 \
    --env NCCL_GPUDIRECTTCPX_UNIX_CLIENT_PREFIX=/run/tcpx \
+   --env NCCL_GPUDIRECTTCPX_TX_BINDINGS='eth1:8-21,112-125;eth2:8-21,112-125;eth3:60-73,164-177;eth4:60-73,164-177' \
+   --env NCCL_GPUDIRECTTCPX_RX_BINDINGS='eth1:22-35,124-139;eth2:22-35,124-139;eth3:74-87,178-191;eth4:74-87,178-191' \
    --cap-add=IPC_LOCK \
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
-  export VM_IMAGE=\"cos-105-17412-226-25\"
+  export VM_IMAGE=\"cos-105-17412-226-34\"
   export IMAGE_FAMILY=null
   export IMAGE_PROJECT=\"cos-cloud\"
 else
@@ -209,9 +211,8 @@ else
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
     export CPT_TEMPLATE=a3
-    sed -i -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.9/g" \
+    sed -i -e "s/:v2.0.7/:v2.0.9/g" \
         -e "s/a3vm/a3vm --setup_param \"--verbose 128 2 0\"/g" \
-        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.6_2023_10_06/g" \
         a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
   else
     echo ${START} > start.sh

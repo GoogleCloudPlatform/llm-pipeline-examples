@@ -157,4 +157,5 @@ sed -i -e 's/$(shell python3 -m pybind11 --includes)/'"${pybinc//\//\\\/}"'/' \
     megatron/data/Makefile 
 cat megatron/data/Makefile 
 sed -i -e 's/loss_scale = None/loss_scale = 0.0/' megatron/training.py
+sudo sed -i -e "s/export {}={}/export {}='{}'/" /usr/local/lib/python3.10/dist-packages/deepspeed/launcher/multinode_runner.py
 ./train_common.sh "${TRAIN_CMD}"

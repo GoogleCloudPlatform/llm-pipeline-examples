@@ -24,8 +24,8 @@ if [[ -z "$(pip list | grep deepspeed)" ]]; then
   pip install scipy
   pip install sentencepiece
   pip install triton
-  pip install deepspeed==0.12.3
+  pip install deepspeed==0.12.2
   pip uninstall -y deepspeed
-  DS_BUILD_SPARSE_ATTN=0 DS_BUILD_CUTLASS_OPS=0 DS_BUILD_RAGGED_DEVICE_OPS=0 DS_BUILD_EVOFORMER_ATTN=0 DS_BUILD_OPS=1 DS_BUILD_UTILS=1 pip install deepspeed==0.12.3 --global-option="build_ext"
+  DS_BUILD_SPARSE_ATTN=0 DS_BUILD_CUTLASS_OPS=0 DS_BUILD_RAGGED_DEVICE_OPS=0 DS_BUILD_EVOFORMER_ATTN=0 DS_BUILD_OPS=1 DS_BUILD_UTILS=1 pip install deepspeed==0.12.2 --global-option="build_ext"
 fi
 
