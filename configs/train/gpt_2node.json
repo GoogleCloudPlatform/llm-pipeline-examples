@@ -8,6 +8,9 @@
     "heads":112,
     "seq_len":2048,
     
-    "micro_batch":2,
+    "train_steps":100,
+    "eval_steps":10,
+
+   "micro_batch":2,
     "gradient_acc_steps":128
 }

@@ -125,12 +125,12 @@ export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pret
     --max-position-embeddings $SEQ_LEN \
     --micro-batch-size $MICRO_BATCH \
     --global-batch-size $GLOBAL_BATCH \
-    --train-iters 1000 \
+    --train-iters ${TRAIN_STEPS} \
     --lr 6.0e-5 \
     --min-lr 6.0e-6 \
     --lr-decay-style cosine \
     --log-interval 1 \
-    --eval-iters 40 \
+    --eval-iters ${EVAL_STEPS} \
     --eval-interval 1000 \
     --data-path $DATA_PATH \
     --num-workers 2 \
