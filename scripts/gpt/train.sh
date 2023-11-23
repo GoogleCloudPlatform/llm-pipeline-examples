@@ -24,9 +24,9 @@ if [[ "$1" =~ gs://([^/]+)/*(.*) ]]; then
   else
     FOLDER=
   fi
-  export DATA_DIR=~/data/
+  export DATA_DIR=~/data
   mkdir ${DATA_DIR}
-  gcsfuse ${FOLDER} ${GCS_BUCKET} ${DATA_DIR}
+  gcsfuse ${FOLDER} ${GCS_BUCKET} ${DATA_DIR}/
 else
   export DATA_DIR=$1
 fi
@@ -125,12 +125,12 @@ export TRAIN_CMD="deepspeed --force_multi --num_nodes=$NODES --hostfile $HF pret
     --max-position-embeddings $SEQ_LEN \
     --micro-batch-size $MICRO_BATCH \
     --global-batch-size $GLOBAL_BATCH \
-    --train-iters 1000 \
+    --train-iters ${TRAIN_STEPS} \
     --lr 6.0e-5 \
     --min-lr 6.0e-6 \
     --lr-decay-style cosine \
     --log-interval 1 \
-    --eval-iters 40 \
+    --eval-iters ${EVAL_STEPS} \
     --eval-interval 1000 \
     --data-path $DATA_PATH \
     --num-workers 2 \
@@ -157,4 +157,5 @@ sed -i -e 's/$(shell python3 -m pybind11 --includes)/'"${pybinc//\//\\\/}"'/' \
     megatron/data/Makefile 
 cat megatron/data/Makefile 
 sed -i -e 's/loss_scale = None/loss_scale = 0.0/' megatron/training.py
+sudo sed -i -e "s/export {}={}/export {}='{}'/" /usr/local/lib/python3.10/dist-packages/deepspeed/launcher/multinode_runner.py
 ./train_common.sh "${TRAIN_CMD}"

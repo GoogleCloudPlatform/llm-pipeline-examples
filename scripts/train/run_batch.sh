@@ -64,19 +64,22 @@ if [[ ${USE_COS_IMAGE} ]]; then
   export DOCKER_PARAMS="${DOCKER_PARAMS} \
    --volume /var/lib/nvidia/lib64:/usr/local/nvidia/lib64 \
    --volume /var/lib/nvidia/bin:/usr/local/nvidia/bin \
-   --volume /run/tcpx:/tmp \
+   --volume /run/tcpx:/run/tcpx \
    --volume /var/lib/tcpx:/usr/local/tcpx \
    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
    --device /dev/nvidiactl:/dev/nvidiactl \
    --env NCCL_DEBUG=INFO \
    --env NCCL_DEBUG_SUBSYS=INIT,GRAPH,ENV,TUNING,NET,VERSION \
    --env LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:/usr/local/nvidia/lib64 \
+   --env NCCL_GPUDIRECTTCPX_UNIX_CLIENT_PREFIX=/run/tcpx \
+   --env NCCL_GPUDIRECTTCPX_TX_BINDINGS='eth1:8-21,112-125;eth2:8-21,112-125;eth3:60-73,164-177;eth4:60-73,164-177' \
+   --env NCCL_GPUDIRECTTCPX_RX_BINDINGS='eth1:22-35,124-139;eth2:22-35,124-139;eth3:74-87,178-191;eth4:74-87,178-191' \
    --cap-add=IPC_LOCK \
    --userns=host \
    -v /mnt/stateful_partition/etc/ssh:/mnt/stateful_partition/etc/ssh"
 
   export PRE_DOCKER_RUN="sudo sysctl -w net.ipv4.tcp_mtu_probing=0;"
-  export VM_IMAGE=\"cos-105-17412-156-59\"
+  export VM_IMAGE=\"cos-105-17412-226-34\"
   export IMAGE_FAMILY=null
   export IMAGE_PROJECT=\"cos-cloud\"
 else
@@ -125,7 +128,8 @@ if [[ ${TCPX} ]]; then
     export N_OP_SHARDS=8; \
     export CYCLIC=false; \
     export ACCELERATORS_PER_POD=8; \
-    export NCCL_GPUDIRECTTCPX_FORCE_ACK=1; \
+    export NCCL_GPUDIRECTTCPX_FORCE_ACK=0; \
+    export NCCL_GPUDIRECTTCPX_TX_COMPLETION_NANOSLEEP=1000; \
     ${TRAIN_CMD}"
 fi
 export START="docker pull ${TRAIN_IMAGE}; ${PRE_DOCKER_RUN} docker run --name train_llm \
@@ -177,7 +181,7 @@ if [[ -n "${JOB_FOUND}" ]]; then
     exit 1
   fi
 else
-  echo "Provishioning cluster..."
+  echo "Provisioning cluster..."
 
   export GCS_PATH=${DATA_DIR}/deployment
   echo seed > deployment.txt
@@ -207,10 +211,8 @@ else
     echo "startup_script  = \"${START}\"" >> /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig-cos
     export CPT_TEMPLATE=a3
-    sed -i -e "s/cos-extensions install gpu -- --version=latest/cos-extensions install gpu -- --version=525.125.06/g" \
-        -e "s/gpudirect-tcpx\\/tcpgpudmarxd/gpudirect-tcpx\\/tcpgpudmarxd-dev:v2.0.6/g" \
-        -e "s/a3vm/a3vm --disable_quickack/g" \
-        -e "s/nccl-plugin-gpudirecttcpx/nccl-plugin-gpudirecttcpx-dev:v3.1.5-v3-ns/g" \
+    sed -i -e "s/:v2.0.7/:v2.0.9/g" \
+        -e "s/a3vm/a3vm --setup_param \"--verbose 128 2 0\"/g" \
         a3/terraform/modules/cluster/mig-cos/cloudinit/templates/aiinfra_startup_scripts.yaml.template
   else
     echo ${START} > start.sh
