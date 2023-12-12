@@ -90,7 +90,7 @@ on a 96 H100 GPU cluster. The intruction are simplified to use Goolge Cloud Comp
 1.  **Download and Preprocess** Wikipedia dataset : 
 
     ```bash
-        docker run gcr.io/llm-containers/gpt_preprocess ./preprocess.sh gs://$BUCKET_NAME
+        docker run gcr.io/llm-containers/gpt_preprocess:release ./preprocess.sh gs://$BUCKET_NAME
     ```    
 
     Warning: This could take hours to finish running.
