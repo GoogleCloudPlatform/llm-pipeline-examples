@@ -14,34 +14,16 @@ In addition to these problems, we face the common production ready machine
 learning problems. Such as, reliable retraining, data storage, checkpoint
 storage, model versioning, tracking model quality and deployment to production.
 
-The
-[Hugging Face transformer library](https://huggingface.co/docs/transformers/index)
-is a very popular machine learning library that has made the most popular
-machine learning models available to a wide range of users. It provides a simple
-and standard approach to perform data preprocessing, training, fine tuning and
-inference. In addition, it provides support for deepspeed, which is a distributed
-machine learning framework that enables the training and finetuning of models
-across multiple GPUs and multiple nodes.
-
 Google Cloud Platform is one of the largest cloud providers which provides
 compute infrastructure suitable for training large language models. GCP is offering
  [A3](https://cloud.google.com/blog/products/compute/announcing-cloud-tpu-v5e-and-a3-gpus-in-ga)
  VMs, which are powered by Nvidia's latest [H100](https://www.nvidia.com/en-us/data-center/h100/)
   GPU.
 
-In this effort, we provide a fully functioning example of how can we use GCP
-tools as well as the HuggingFace transformer library in conjunction with
-deepseed to finetune a large language model (T5 XXL) for a text summarization
-task. We encapsulate the code in container images that you can easily run on GCP.
-Here is a summary of task and tooling we are going to use:
+There are multiple model pre-training frameworks. In these examples, we show how to 
+pretrain a GPT model using [Megatron-Deepspeed](https://github.com/Microsoft/Megatron-Deepspeed).
+We also show how to finetune a T5 model using the [Hugging Face transformer library](https://huggingface.co/docs/transformers/index).
 
-
-* **Task**: Text Summarization
-* **Implementation**: Hugging Face Transformers library
-* **Distributed Framework**: Deepspeed (ZeRO stage 3)
-* **Infrastructure**: Google Cloud
- * **Cluster Management**: AI Infra cluster provisioning tool
- * **Storage**: Google Cloud Storage
 
 ## Quick Start Guide
 ### Prerequisites
@@ -53,13 +35,6 @@ Here is a summary of task and tooling we are going to use:
     gcloud auth login
     gcloud auth application-default login
     ```
-
-### Instructions
-
-    
-The following instructions show how to train a T5 on a GPU cluster. The intruction 
-are simplified to use Goolge Cloud Compute Engine APIs only. In addition they use 
-Google Cloud Strorage for storing the data.:
 
 1.  **Enable Services** In your project, enable services needed to run the pipeline. You can do this
     by issuing the following command:
@@ -90,8 +65,60 @@ and launch training:
     ```bash
         export PROJECT_ID=<your project ID>
         export BUCKET_NAME=<your choice of a globally unique bucket ID>
-        gcloud alpha storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=us-central1 --uniform-bucket-level-access
+        gcloud storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=us-central1 --uniform-bucket-level-access
     ```
+
+
+### Megatron-Deepspeed GPT Pretraining Instructions
+
+    
+The following instructions show how to train a GPT model using Megatron-Deepspeed 
+on a 96 H100 GPU cluster. The intruction are simplified to use Goolge Cloud Compute Engine APIs
+ only. In addition they use Google Cloud Strorage for storing the data:
+
+* **Task**: LLM Pretraining
+* **Implementation**: Megatron-Deepspped
+* **Distributed Framework**: Deepspeed (ZeRO stage 3)
+* **Infrastructure**: Google Cloud
+* **Cluster Management**: AI Infra cluster provisioning tool
+* **Storage**: Google Cloud Storage
+* **Dataset**: Wikipedia
+* **Model Architecture**: GPT 3
+* **Model Size**: 176B
+
+
+1.  **Download and Preprocess** Wikipedia dataset : 
+
+    ```bash
+        docker run gcr.io/llm-containers/gpt_preprocess ./preprocess.sh gs://$BUCKET_NAME
+    ```    
+
+    Warning: This could take hours to finish running.
+
+2.  **Pretrain GPT 176B on an A3 VM cluster**
+
+    ```bash
+        sudo docker run -it gcr.io/llm-containers/batch:release $PROJECT_ID gcr.io/llm-containers/gpt_train:release gs://$BUCKET_NAME 0 0 0 ' {"data_file_name":"wiki_data_text_document", "tensor_parallel":4, "pipeline_parallel":12, "nlayers":70, "hidden":14336, "heads":112, "seq_len":2048, "train_steps":100, "eval_steps":10, "micro_batch":1, "gradient_acc_steps":128 }' '{ "name_prefix": "megatron-gpt", "zone": "us-central1-a", "node_count": 12, "machine_type": "a3-highgpu-8g", "gpu_type": "nvidia-h100-80gb", "gpu_count": 8 }'
+    ```
+
+### Huggingface T5 Finetuning Instructions
+    
+In this effort, we provide a fully functioning example of how can we use GCP
+tools as well as the HuggingFace transformer library in conjunction with
+deepseed to finetune a large language model (T5 XXL) for a text summarization
+task. We encapsulate the code in container images that you can easily run on GCP.
+Here is a summary of task and tooling we are going to use:
+
+
+* **Task**: Text Summarization
+* **Implementation**: Hugging Face Transformers library
+* **Distributed Framework**: Deepspeed (ZeRO stage 3)
+* **Infrastructure**: Google Cloud
+* **Cluster Management**: AI Infra cluster provisioning tool
+* **Storage**: Google Cloud Storage
+* **Dataset**: CNN Dailymail
+* **Model Architecture**: T5
+* **Model Size**: 11B
 
 1.  **Copy Data** Copy data and model checkpoint to GCS bucket.
     
