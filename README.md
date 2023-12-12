@@ -83,7 +83,7 @@ on a 96 H100 GPU cluster. The intruction are simplified to use Goolge Cloud Comp
 * **Cluster Management**: AI Infra cluster provisioning tool
 * **Storage**: Google Cloud Storage
 * **Dataset**: Wikipedia
-* **Model Architecture**: GPT 3
+* **Model Architecture**: GPT
 * **Model Size**: 176B
 
 
