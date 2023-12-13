@@ -73,7 +73,7 @@ and launch training:
 
     
 The following instructions show how to train a GPT model using Megatron-Deepspeed 
-on a 96 H100 GPU cluster. The intruction are simplified to use Goolge Cloud Compute Engine APIs
+on a 96 H100 GPU cluster. The intruction are simplified to use Google Cloud Compute Engine APIs
  only. In addition they use Google Cloud Strorage for storing the data:
 
 * **Task**: LLM Pretraining
