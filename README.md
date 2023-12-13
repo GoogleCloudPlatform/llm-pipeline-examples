@@ -58,7 +58,7 @@ Here is a summary of task and tooling we are going to use:
 
     
 The following instructions show how to train a T5 on a GPU cluster. The intruction 
-are simplified to use Goolge Cloud Compute Engine APIs only. In addition they use 
+are simplified to use Google Cloud Compute Engine APIs only. In addition they use 
 Google Cloud Strorage for storing the data.:
 
 1.  **Enable Services** In your project, enable services needed to run the pipeline. You can do this
