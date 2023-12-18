@@ -221,6 +221,8 @@ else
     /root/aiinfra/input/terraform.tfvars
     export CLUSTER_TYPE=mig
     export CPT_TEMPLATE=a2
+    sed -i -e "s/30m/2h/g" \
+        a2/terraform/modules/cluster/mig/main.tf
   fi
 
   cat /root/aiinfra/input/terraform.tfvars
